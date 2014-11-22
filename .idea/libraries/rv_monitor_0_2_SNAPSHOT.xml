@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="rv-monitor-0.2-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../rv-monitor/target/release/rv-monitor/lib/rv-monitor-0.2-SNAPSHOT.jar!/" />
+      <root url="jar://$PROJECT_DIR$/../rv-monitor/target/release/rv-monitor/lib/rvmonitorrt-0.2-SNAPSHOT.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
