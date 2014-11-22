@@ -1,3 +1,4 @@
+import reg.RegHelper;
 import rvm.LogEntry;
 import rvm.PubRuntimeMonitor;
 
@@ -84,9 +85,9 @@ public class TestPub {
 
         eventName=scan.next();
 
-        String regEx="\\p{Space}*\\(\\p{Alnum}*\\)\\p{Space}*";
-        while(scan.hasNext("\\p{Space}*\\(\\p{Alnum}*\\)\\p{Space}*")) {
-            String curTuple = scan.next("\\(\\p{Alnum}*\\)");
+
+        while(scan.hasNext(RegHelper.TupleRegEx)) {
+            String curTuple = scan.next(RegHelper.TupleRegEx);
             Object[] argsInTuple=new Object[]
                     {Integer.parseInt(curTuple.replace("(", "").replace(")", ""))};
              eventArgs.add( new LogEntry.EventArg
