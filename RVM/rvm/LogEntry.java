@@ -34,14 +34,14 @@ public class LogEntry {
      * This part should be derived from analyzing sig file.
      */
     public static class EventArg {
-        private int reportID;
+        private Object[] fields;
 
-        public EventArg(int reportID) {
-            this.reportID = reportID;
+        public EventArg(Object[] fields) {
+            this.fields = fields;
         }
 
-        public int getReportID() {
-            return reportID;
+        public Object[] getFields() {
+            return fields;
         }
     }
 }

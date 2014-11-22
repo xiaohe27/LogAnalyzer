@@ -41,12 +41,12 @@ public class TestPub {
                     case "approve":
                         for (int i=0; i<logEntry.getArgList().size(); i++) {
                             PubRuntimeMonitor.approveEvent(
-                                    logEntry.getArgList().get(i).getReportID(),
+                                    (int)(logEntry.getArgList().get(i).getFields()[0]),
                                     logEntry.getTime()
                             );
 
                             System.out.println("approve "+
-                                    logEntry.getArgList().get(i).getReportID());
+                                    (int)(logEntry.getArgList().get(i).getFields()[0]));
                         }
 
                         break;
@@ -54,11 +54,11 @@ public class TestPub {
                     case "publish":
                         for (int i=0; i<logEntry.getArgList().size(); i++) {
                             PubRuntimeMonitor.publishEvent(
-                                    logEntry.getArgList().get(i).getReportID(),
+                                    (int)(logEntry.getArgList().get(i).getFields()[0]),
                                     logEntry.getTime()
                             );
                             System.out.println("publish "+
-                                    logEntry.getArgList().get(i).getReportID());
+                                    (int)(logEntry.getArgList().get(i).getFields()[0]));
                         }
 
                         break;
@@ -78,14 +78,19 @@ public class TestPub {
             String nxt=scan.next();
             if(nxt.startsWith("@")){
                 time=Long.parseLong(nxt.replace("@",""));
-            }
+            } else {
+                System.err.println("Should have a time stamp for the event!");
+                System.exit(0);}
 
         eventName=scan.next();
 
-        while(scan.hasNext("\\(\\p{Alnum}*\\)")) {
+        String regEx="\\p{Space}*\\(\\p{Alnum}*\\)\\p{Space}*";
+        while(scan.hasNext("\\p{Space}*\\(\\p{Alnum}*\\)\\p{Space}*")) {
             String curTuple = scan.next("\\(\\p{Alnum}*\\)");
+            Object[] argsInTuple=new Object[]
+                    {Integer.parseInt(curTuple.replace("(", "").replace(")", ""))};
              eventArgs.add( new LogEntry.EventArg
-                    (Integer.parseInt(curTuple.replace("(", "").replace(")", ""))));
+                    (argsInTuple));
 
         }
 
