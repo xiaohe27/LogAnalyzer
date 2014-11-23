@@ -1,6 +1,6 @@
 package rvm;
 
-import java.awt.*;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -8,25 +8,19 @@ import java.util.List;
  */
 public class LogEntry {
     private long time;
-    private String eventName;
-    private List<EventArg> argList;
+    private HashMap<String, List<EventArg>> tableMap;
 
-    public LogEntry(long time, String eventName, List<EventArg> argList) {
+    public LogEntry(long time, HashMap<String, List<EventArg>> tmap) {
         this.time = time;
-        this.eventName = eventName;
-        this.argList = argList;
+        this.tableMap=tmap;
     }
 
     public long getTime() {
         return time;
     }
 
-    public String getEventName() {
-        return eventName;
-    }
-
-    public List<EventArg> getArgList() {
-        return argList;
+    public HashMap<String, List<EventArg>> getTableMap() {
+        return tableMap;
     }
 
     /**
