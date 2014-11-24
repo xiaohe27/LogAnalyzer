@@ -9,7 +9,7 @@ import java.util.*;
 /**
  * Class name is of the form "<logName>+LogAnalyzer"
  */
-public class PubLogAnalyzer {
+public class LogEntryExtractor implements Iterator<LogEntry> {
     /**
      * These are the event names.
      * Can gen them via analyzing all the events in sig file.
@@ -191,4 +191,13 @@ public class PubLogAnalyzer {
         return new LogEntry(time, tableMap);
     }
 
+    @Override
+    public boolean hasNext() {
+        return false;
+    }
+
+    @Override
+    public LogEntry next() {
+        return null;
+    }
 }
