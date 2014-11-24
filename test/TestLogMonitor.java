@@ -1,12 +1,14 @@
 import analysis.LogMonitor;
 import org.junit.Test;
 
+import java.lang.reflect.InvocationTargetException;
+
 /**
  * Created by xiaohe on 14-11-24.
  */
 public class TestLogMonitor {
     @Test
-    public void testLogEntryMain(){
+    public void testLogEntryMain() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         String[] args=new String[]{};
         LogMonitor.main(args);
 
