@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -17,27 +18,18 @@ import java.util.List;
  * Created by xiaohe on 11/24/14.
  */
 public class LogMonitor {
-    /**
-     * These are the event names.
-     * Can gen them via analyzing all the events in sig file.
-     */
-    public static final String PUBLISH = "publish";
-    public static final String APPROVE = "approve";
+    private HashMap<String, Integer[]> TableCol;
 
-    public static HashMap<String, Integer[]> TableCol = new HashMap<>();
+    private HashMap<String, Class[]> MethodArgListMap = new HashMap<>();
 
-    private static HashMap<String, Class[]> MethodArgListMap = new HashMap<>();
+    private Class monitorClass;
 
-    private static Class MonitorClass;
-
-    private static void init() {
-        //the arg types can be inferred from the signature file
-        Integer[] argTy4Publish = new Integer[]{RegHelper.INT_TYPE};
-        Integer[] argTy4Approve = new Integer[]{RegHelper.INT_TYPE};
-        TableCol.put(PUBLISH, argTy4Publish);
-        TableCol.put(APPROVE, argTy4Approve);
-
-        MonitorClass=PubRuntimeMonitor.class;
+    public LogMonitor(HashMap<String, Integer[]> tableCol, String libName) throws ClassNotFoundException {
+        this.TableCol = tableCol;
+        init(); //instantiate the MethodArgListMap
+        this.monitorClass=Class.forName(libName);
+    }
+    private void init() {
 
         for (String tableName: TableCol.keySet()){
             Integer[] types4CurTable= TableCol.get(tableName);
@@ -81,25 +73,11 @@ public class LogMonitor {
         }
     }
 
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    //These two methods can be gen automatically.
-    //event name is the name of the method, and arguments include args of the event plus the additional arg 'time'.
-    public static void approve(int report, int time) {
-        PubRuntimeMonitor.approveEvent(report, time);
-    }
-
-    public static void publish(int report, int time) {
-
-        PubRuntimeMonitor.publishEvent(report, time);
-    }
-
-    public static void main(String[] args) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        init();
+    public void monitor(Path path2LogFile) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
         //the path to the log file should be obtained from outside as an argument of 'main'
-        File logFile = new File("Pub.log");
+        File logFile = path2LogFile.toFile();
         try {
-            LogEntryExtractor lee=new LogEntryExtractor(TableCol, logFile);
+            LogEntryExtractor lee=new LogEntryExtractor(this.TableCol, logFile);
 
             while (lee.hasNext()) {
                 //by comparing the list of args of list of types,
@@ -131,13 +109,11 @@ public class LogMonitor {
                         //the last arg is the timestamp.
                         args4MonitorMethod[args4MonitorMethod.length-1]=logEntry.getTime();
 
-                        Method monitorMethod= MonitorClass.getDeclaredMethod(methName, paramTypes);
+                        Method monitorMethod= this.monitorClass.getDeclaredMethod(methName, paramTypes);
                         monitorMethod.invoke(null, args4MonitorMethod);
 
                     }
                 }
-
-
             }
         } catch (FileNotFoundException e) {
             e.printStackTrace();
