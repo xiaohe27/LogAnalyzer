@@ -1,4 +1,5 @@
 import analysis.LogMonitor;
+import fsl.uiuc.Main;
 import org.junit.Test;
 
 import java.lang.reflect.InvocationTargetException;
@@ -8,9 +9,9 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class TestLogMonitor {
     @Test
-    public void testLogEntryMain() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void testMain() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, ClassNotFoundException {
         String[] args=new String[]{};
-        LogMonitor.main(args);
+        Main.main(args);
 
         //after refactoring, assert whether the log file has been fully read
         //by testing whether hasNext() returns false;
