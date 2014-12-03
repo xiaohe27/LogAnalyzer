@@ -1,12 +1,11 @@
 package fsl.uiuc;
 
 import analysis.LogMonitor;
-import reg.RegHelper;
+import gen.MonitorGenerator;
 
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 
 public class Main {
 
@@ -14,26 +13,35 @@ public class Main {
      * These are the event names.
      * Can gen them via analyzing all the events in sig file.
      */
-    public static final String PUBLISH = "publish";
-    public static final String APPROVE = "approve";
 
-    public static HashMap<String, Integer[]> TableCol = initTableCol();
 
-    private static HashMap<String, Integer[]> initTableCol() {
-        HashMap<String, Integer[]> tmp=new HashMap<>();
-        //the arg types can be inferred from the signature file
-        Integer[] argTy4Publish = new Integer[]{RegHelper.INT_TYPE};
-        Integer[] argTy4Approve = new Integer[]{RegHelper.INT_TYPE};
-        tmp.put(PUBLISH, argTy4Publish);
-        tmp.put(APPROVE, argTy4Approve);
-        return tmp;
-    }
+    /**
+     * Given the path to signature file, formula file and log file, checks whether the properties stated in
+     * the formula file are violated by the log file.
+     * @param args Three arguments need to be provided in the order of: sig file, formula file, log file.
+     * @throws ClassNotFoundException
+     * @throws NoSuchMethodException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
 
     public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        Path path2Log= Paths.get("Pub.log");
-        String monitorClassName="rvm.PubRuntimeMonitor";
 
-        LogMonitor lm=new LogMonitor(TableCol, monitorClassName);
+        if(args.length != 3)
+        {
+            System.err.println("Three args should be provided in this order: <path to signature file>" +
+                    " <path to formula file> <path to log file>");
+        }
+
+        Path path2SigFile= Paths.get(args[0]);
+
+        Path path2FormulaFile= Paths.get(args[1]);
+
+        Path path2Log= Paths.get(args[2]);
+
+        MonitorGenerator mg=new MonitorGenerator(path2SigFile,path2FormulaFile);
+
+        LogMonitor lm=new LogMonitor(mg.getMethoArgsMappingFromSigFile(), mg.getMonitorClassPath());
         lm.monitor(path2Log);
     }
 }
