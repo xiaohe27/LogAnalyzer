@@ -15,14 +15,29 @@ public class Main {
      */
 
 
-
+    /**
+     * Given the path to signature file, formula file and log file, checks whether the properties stated in
+     * the formula file are violated by the log file.
+     * @param args Three arguments need to be provided in the order of: sig file, formula file, log file.
+     * @throws ClassNotFoundException
+     * @throws NoSuchMethodException
+     * @throws IllegalAccessException
+     * @throws InvocationTargetException
+     */
 
     public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        Path path2Log= Paths.get("./test/Pub.log");
 
-        Path path2SigFile= Paths.get("./test/pub.sig");
+        if(args.length != 3)
+        {
+            System.err.println("Three args should be provided in this order: <path to signature file>" +
+                    " <path to formula file> <path to log file>");
+        }
 
-        Path path2FormulaFile= Paths.get("./test/pub.fl");
+        Path path2SigFile= Paths.get(args[0]);
+
+        Path path2FormulaFile= Paths.get(args[1]);
+
+        Path path2Log= Paths.get(args[2]);
 
         MonitorGenerator mg=new MonitorGenerator(path2SigFile,path2FormulaFile);
 
