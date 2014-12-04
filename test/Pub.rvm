@@ -4,9 +4,11 @@ Pub(Integer report) {
   Integer report;
   long time;
   String sig;
+  String org;
 
-  event publish (Integer report, long time) {
+  event publish (Integer report, String org, long time) {
 		this.report=report;
+		this.org=org;
 		this.time=time;		
 	} 
 

@@ -12,7 +12,21 @@ public class RegHelper {
     public static final int LONG_TYPE=3;
     public static final int STRING_TYPE=4;
 
+    public static final String getTypeName(int typeId){
+        switch (typeId){
+            case INT_TYPE : return "int";
 
+            case FLOAT_TYPE : return "float";
+
+            case DOUBLE_TYPE : return "double";
+
+            case LONG_TYPE : return "long";
+
+            case STRING_TYPE : return "string";
+
+            default: return "Unknown type";
+        }
+    }
     public static final String FieldRegEx=  addToGroup(addSpace("\\p{Alnum}+"));
     public static final String FieldsRegEx = FieldRegEx + addToGroup(","+FieldRegEx)+"*";
 
@@ -26,7 +40,7 @@ public class RegHelper {
     public static final String TableRegEx = addToGroup(EventName + addToGroup(TupleRegEx +"+"));
 
     public static final String Delim4FindingTimeStamp= "[a-zA-Z]";
-    public static final String Delim4FindingTupleList = TableRegEx;
+    public static final String Delim4FindingTupleList = TableRegEx + "|@";
     public static final String Delim4FindingEvent= "\\(";
 
     public static final String addRealParen(String str) {

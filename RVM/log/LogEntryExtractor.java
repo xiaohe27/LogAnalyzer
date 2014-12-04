@@ -46,6 +46,7 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
         }
         do {
             String eventName = scan.next(RegHelper.EventName).replaceAll("\\s","");
+
             List<LogEntry.EventArg> eventArgs = new ArrayList<LogEntry.EventArg>();
 
             do {
@@ -67,7 +68,8 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
                        for (int i = 0; i < TableCol.get(eventName).length; i++) {
                            String dataI= fieldsData[i].replaceAll("\\s","");
 
-                           System.out.println("Event name is "+TableCol.get(eventName)[i]);
+//                           System.out.println("No."+i+" field type of table "+
+//                     eventName+" is "+RegHelper.getTypeName(TableCol.get(eventName)[i]));
 
                            switch (TableCol.get(eventName)[i]) {
                                case RegHelper.INT_TYPE:
@@ -103,8 +105,8 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
 
             tableMap.put(eventName, eventArgs);
 
-        System.out.println("event is "+eventName+" and time is "+time);
-        System.out.println(eventArgs.size()+" is the num of args");
+//        System.out.println("event is "+eventName+" and time is "+time);
+//        System.out.println(eventArgs.size()+" is the num of tuples");
         } while (scan.useDelimiter(RegHelper.Delim4FindingEvent).hasNext(RegHelper.EventName));
 
         return new LogEntry(time, tableMap);
