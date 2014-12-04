@@ -19,7 +19,7 @@ public class SigExtractor {
         HashMap<String, Integer[]> tmp=new HashMap<>();
         //the arg types can be inferred from the signature file
         Integer[] argTy4Publish = new Integer[]{RegHelper.INT_TYPE};
-        Integer[] argTy4Approve = new Integer[]{RegHelper.INT_TYPE};
+        Integer[] argTy4Approve = new Integer[]{RegHelper.INT_TYPE, RegHelper.STRING_TYPE};
         tmp.put(PUBLISH, argTy4Publish);
         tmp.put(APPROVE, argTy4Approve);
         return tmp;

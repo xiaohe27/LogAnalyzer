@@ -67,6 +67,7 @@ public class MonitorGenerator {
     }
 
     private void genMonitorMain() {
+        String monitorName=this.getMonitorClassPath();
 
     }
 

@@ -1,8 +1,6 @@
 package reg;
 
 import java.util.Scanner;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by xiaohe on 14-11-22.
@@ -14,9 +12,6 @@ public class RegHelper {
     public static final int LONG_TYPE=3;
     public static final int STRING_TYPE=4;
 
-    public static final String Delim4FindingTimeStamp= "[a-zA-Z]";
-    public static final String Delim4FindingTupleList = "[a-zA-Z]|@";
-    public static final String Delim4FindingEvent= "\\(";
 
     public static final String FieldRegEx=  addToGroup(addSpace("\\p{Alnum}+"));
     public static final String FieldsRegEx = FieldRegEx + addToGroup(","+FieldRegEx)+"*";
@@ -29,6 +24,10 @@ public class RegHelper {
     public static final String TimeStamp = addToGroup(addSpace("@"+("\\d+")));
 
     public static final String TableRegEx = addToGroup(EventName + addToGroup(TupleRegEx +"+"));
+
+    public static final String Delim4FindingTimeStamp= "[a-zA-Z]";
+    public static final String Delim4FindingTupleList = TableRegEx;
+    public static final String Delim4FindingEvent= "\\(";
 
     public static final String addRealParen(String str) {
         return addToGroup(addSpace("\\(") + str + addSpace("\\)"));
@@ -65,10 +64,33 @@ public static void main(String[] args) {
 //        }
 //
 //    }
-    String input=" (a) (b) ";
+    String input=" (a) (a, b, 2) (2, a)";
     System.out.println(input.matches(TupleRegEx+"+"));
 
-    input="(a)";
+    input="(a, b, 2)";
     System.out.println(input.matches(TupleRegEx));
+
+    input= "approve (2, a)";
+    System.out.println(input.matches(TableRegEx));
+
+    input= " @0 approve (2, a) publish(7)";
+    System.out.println(input.matches(TimeStamp+TableRegEx+"+"));
+
+//    input="(2, a)(a,b)";
+//    Scanner scan=new Scanner(input);
+//    System.out.println("Has next tuple list?: "+scan.hasNext(TupleListRegEx));
+
+    input="(a, b)(2,a)publish(7)";
+    Scanner scan=new Scanner(input);
+    System.out.println("Has next tuple list?: "+scan.useDelimiter(TableRegEx).hasNext(TupleRegEx+"+"));
+
+
+    System.out.println("(2, a)(a,b) ".matches(TupleListRegEx));
+
+    input="@0 approve (2, a) publish(7)@1 approve (3,b)\n" +
+            "@5publish (3)(9)(77)approve (9,a) (77, d)";
+
+    System.out.println("The above expression matches ts-db list: "+ input.matches("("+TimeStamp+TableRegEx+"+)+"));
+
 }
 }

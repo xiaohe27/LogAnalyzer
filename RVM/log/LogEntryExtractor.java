@@ -66,6 +66,9 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
                        String[] fieldsData = fields.split(",");
                        for (int i = 0; i < TableCol.get(eventName).length; i++) {
                            String dataI= fieldsData[i].replaceAll("\\s","");
+
+                           System.out.println("Event name is "+TableCol.get(eventName)[i]);
+
                            switch (TableCol.get(eventName)[i]) {
                                case RegHelper.INT_TYPE:
                                    argsInTuple[i] = Integer.parseInt(dataI);
@@ -100,8 +103,8 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
 
             tableMap.put(eventName, eventArgs);
 
-//        System.out.println("event is "+eventName+" and time is "+time);
-//        System.out.println(eventArgs.size()+" is the num of args");
+        System.out.println("event is "+eventName+" and time is "+time);
+        System.out.println(eventArgs.size()+" is the num of args");
         } while (scan.useDelimiter(RegHelper.Delim4FindingEvent).hasNext(RegHelper.EventName));
 
         return new LogEntry(time, tableMap);

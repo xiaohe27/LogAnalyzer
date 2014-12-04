@@ -3,15 +3,17 @@ package rvm;
 Pub(Integer report) {
   Integer report;
   long time;
+  String sig;
 
   event publish (Integer report, long time) {
 		this.report=report;
 		this.time=time;		
 	} 
 
-  event approve (Integer report, long time) {
+  event approve (Integer report, String sig, long time) {
 		this.report=report;
 		this.time=time;		
+		this.sig=sig;
 	}
 
   ltl: [](publish => (*) approve)
