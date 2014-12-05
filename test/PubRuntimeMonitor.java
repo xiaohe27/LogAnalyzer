@@ -84,8 +84,8 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
 
 	HashMap<String,String> init(){
 		HashMap<String,String> map=new HashMap<String,String>();
-		map.put("org2","a");
-		map.put("org1","b");
+		map.put("org2","b");
+		map.put("org1","a");
 		return map;
 	}
 
@@ -138,7 +138,9 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
 			this.time=time;
 
 			String legalMgr=this.orgMgr.get(org);
-			if(legalMgr ==null || this.manager== null || !(legalMgr.equals(this.manager))){
+			if(legalMgr ==null || this.manager== null)
+			{}
+			else( !(legalMgr.equals(this.manager))){
 				System.out.println("Signature on report "+this.report+" is not valid, should be approved by "+legalMgr+".\n"
 				+"but the mgr signed the report is "+this.manager);
 				return true;

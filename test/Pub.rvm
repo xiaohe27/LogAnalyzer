@@ -3,23 +3,42 @@ package rvm;
 Pub(Integer report) {
   Integer report;
   long time;
-  String sig;
+  String manager;
   String org;
+
+  HashMap<String,String> orgMgr=init();
+
+  HashMap<String,String> init(){
+    HashMap<String,String> map=new HashMap<String,String>();
+    map.put("org2","b");
+    map.put("org1","a");
+    return map;
+  }
 
   event publish (Integer report, String org, long time) {
 		this.report=report;
 		this.org=org;
-		this.time=time;		
+		this.time=time;
+
+		String legalMgr=this.orgMgr.get(org);
+		if(legalMgr ==null || this.manager== null)
+		 {}
+		else( !(legalMgr.equals(this.manager))){
+            System.out.println("Signature on report "+this.report+" is not valid, should be approved by "+legalMgr+".\n"
+            +"but the mgr signed the report is "+this.manager);
+            return;
+		}
 	} 
 
-  event approve (Integer report, String sig, long time) {
+  event approve (Integer report, String manager, long time) {
 		this.report=report;
 		this.time=time;		
-		this.sig=sig;
+		this.manager=manager;
 	}
 
   ltl: [](publish => (*) approve)
 
-  @violation { System.out.println("should not publish financial report "+this.report+" without pre-approval");}
+  @violation { System.out.println("should not publish financial report "+this.report+
+    " to "+this.org+" without pre-approval of manager "+this.manager);}
  
 }
