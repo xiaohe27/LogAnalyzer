@@ -84,8 +84,8 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
 
 	HashMap<String,String> init(){
 		HashMap<String,String> map=new HashMap<String,String>();
-		map.put("org2","a");
-		map.put("org1","b");
+		map.put("org2","b");
+		map.put("org1","a");
 		return map;
 	}
 
@@ -138,223 +138,225 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
 			this.time=time;
 
 			String legalMgr=this.orgMgr.get(org);
-			if(legalMgr ==null || this.manager== null || !(legalMgr.equals(this.manager))){
+			if(legalMgr ==null || this.manager== null)
+			{}
+			else if ( !(legalMgr.equals(this.manager))){
 				System.out.println("Signature on report "+this.report+" is not valid, should be approved by "+legalMgr+".\n"
 				+"but the mgr signed the report is "+this.manager);
 				return true;
+				} else {}
 			}
+
+			int nextstate = this.handleEvent(0, Prop_1_transition_publish) ;
+			this.Prop_1_Category_violation = nextstate == 2;
+
+			return true;
 		}
 
-		int nextstate = this.handleEvent(0, Prop_1_transition_publish) ;
-		this.Prop_1_Category_violation = nextstate == 2;
+		final boolean Prop_1_event_approve(Integer report, String manager, long time) {
+			{
+				this.report=report;
+				this.time=time;
+				this.manager=manager;
+			}
 
-		return true;
-	}
+			int nextstate = this.handleEvent(1, Prop_1_transition_approve) ;
+			this.Prop_1_Category_violation = nextstate == 2;
 
-	final boolean Prop_1_event_approve(Integer report, String manager, long time) {
-		{
-			this.report=report;
-			this.time=time;
-			this.manager=manager;
+			return true;
 		}
 
-		int nextstate = this.handleEvent(1, Prop_1_transition_approve) ;
-		this.Prop_1_Category_violation = nextstate == 2;
+		final void Prop_1_handler_violation (){
+			{ System.out.println("should not publish financial report "+this.report+
+			" to "+this.org+" without pre-approval of manager "+this.manager);}
 
-		return true;
-	}
-
-	final void Prop_1_handler_violation (){
-		{ System.out.println("should not publish financial report "+this.report+
-		" to "+this.org+" without pre-approval of manager "+this.manager);}
-
-	}
-
-	final void reset() {
-		this.pairValue.set(this.calculatePairValue(-1, 0) ) ;
-
-		Prop_1_Category_violation = false;
-	}
-
-	// RVMRef_report was suppressed to reduce memory overhead
-
-	//alive_parameters_0 = [Integer report]
-	boolean alive_parameters_0 = true;
-
-	@Override
-	protected final void terminateInternal(int idnum) {
-		int lastEvent = this.getLastEvent();
-
-		switch(idnum){
-			case 0:
-			alive_parameters_0 = false;
-			break;
 		}
-		switch(lastEvent) {
-			case -1:
+
+		final void reset() {
+			this.pairValue.set(this.calculatePairValue(-1, 0) ) ;
+
+			Prop_1_Category_violation = false;
+		}
+
+		// RVMRef_report was suppressed to reduce memory overhead
+
+		//alive_parameters_0 = [Integer report]
+		boolean alive_parameters_0 = true;
+
+		@Override
+		protected final void terminateInternal(int idnum) {
+			int lastEvent = this.getLastEvent();
+
+			switch(idnum){
+				case 0:
+				alive_parameters_0 = false;
+				break;
+			}
+			switch(lastEvent) {
+				case -1:
+				return;
+				case 0:
+				//publish
+				//alive_report
+				if(!(alive_parameters_0)){
+					RVM_terminated = true;
+					return;
+				}
+				break;
+
+				case 1:
+				//approve
+				//alive_report
+				if(!(alive_parameters_0)){
+					RVM_terminated = true;
+					return;
+				}
+				break;
+
+			}
 			return;
-			case 0:
-			//publish
-			//alive_report
-			if(!(alive_parameters_0)){
-				RVM_terminated = true;
-				return;
+		}
+
+		public static int getNumberOfEvents() {
+			return 2;
+		}
+
+		public static int getNumberOfStates() {
+			return 4;
+		}
+
+	}
+
+	public final class PubRuntimeMonitor implements com.runtimeverification.rvmonitor.java.rt.RVMObject {
+		private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager PubMapManager;
+		static {
+			PubMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
+			PubMapManager.start();
+		}
+
+		// Declarations for the Lock
+		static final ReentrantLock Pub_RVMLock = new ReentrantLock();
+		static final Condition Pub_RVMLock_cond = Pub_RVMLock.newCondition();
+
+		private static boolean Pub_activated = false;
+
+		// Declarations for Indexing Trees
+		private static Object Pub_report_Map_cachekey_report;
+		private static PubMonitor Pub_report_Map_cachevalue;
+		private static final MapOfMonitor<PubMonitor> Pub_report_Map = new MapOfMonitor<PubMonitor>(0) ;
+
+		public static int cleanUp() {
+			int collected = 0;
+			// indexing trees
+			collected += Pub_report_Map.cleanUpUnnecessaryMappings();
+			return collected;
+		}
+
+		// Removing terminated monitors from partitioned sets
+		static {
+			TerminatedMonitorCleaner.start() ;
+		}
+		// Setting the behavior of the runtime library according to the compile-time option
+		static {
+			RuntimeOption.enableFineGrainedLock(false) ;
+		}
+
+		public static final void publishEvent(Integer report, String org, long time) {
+			Pub_activated = true;
+			while (!Pub_RVMLock.tryLock()) {
+				Thread.yield();
 			}
-			break;
 
-			case 1:
-			//approve
-			//alive_report
-			if(!(alive_parameters_0)){
-				RVM_terminated = true;
-				return;
+			CachedWeakReference wr_report = null;
+			MapOfMonitor<PubMonitor> matchedLastMap = null;
+			PubMonitor matchedEntry = null;
+			boolean cachehit = false;
+			if ((report == Pub_report_Map_cachekey_report) ) {
+				matchedEntry = Pub_report_Map_cachevalue;
+				cachehit = true;
 			}
-			break;
-
-		}
-		return;
-	}
-
-	public static int getNumberOfEvents() {
-		return 2;
-	}
-
-	public static int getNumberOfStates() {
-		return 4;
-	}
-
-}
-
-public final class PubRuntimeMonitor implements com.runtimeverification.rvmonitor.java.rt.RVMObject {
-	private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager PubMapManager;
-	static {
-		PubMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
-		PubMapManager.start();
-	}
-
-	// Declarations for the Lock
-	static final ReentrantLock Pub_RVMLock = new ReentrantLock();
-	static final Condition Pub_RVMLock_cond = Pub_RVMLock.newCondition();
-
-	private static boolean Pub_activated = false;
-
-	// Declarations for Indexing Trees
-	private static Object Pub_report_Map_cachekey_report;
-	private static PubMonitor Pub_report_Map_cachevalue;
-	private static final MapOfMonitor<PubMonitor> Pub_report_Map = new MapOfMonitor<PubMonitor>(0) ;
-
-	public static int cleanUp() {
-		int collected = 0;
-		// indexing trees
-		collected += Pub_report_Map.cleanUpUnnecessaryMappings();
-		return collected;
-	}
-
-	// Removing terminated monitors from partitioned sets
-	static {
-		TerminatedMonitorCleaner.start() ;
-	}
-	// Setting the behavior of the runtime library according to the compile-time option
-	static {
-		RuntimeOption.enableFineGrainedLock(false) ;
-	}
-
-	public static final void publishEvent(Integer report, String org, long time) {
-		Pub_activated = true;
-		while (!Pub_RVMLock.tryLock()) {
-			Thread.yield();
-		}
-
-		CachedWeakReference wr_report = null;
-		MapOfMonitor<PubMonitor> matchedLastMap = null;
-		PubMonitor matchedEntry = null;
-		boolean cachehit = false;
-		if ((report == Pub_report_Map_cachekey_report) ) {
-			matchedEntry = Pub_report_Map_cachevalue;
-			cachehit = true;
-		}
-		else {
-			wr_report = new CachedWeakReference(report) ;
-			{
-				// FindOrCreateEntry
-				MapOfMonitor<PubMonitor> itmdMap = Pub_report_Map;
-				matchedLastMap = itmdMap;
-				PubMonitor node_report = Pub_report_Map.getNodeEquivalent(wr_report) ;
-				matchedEntry = node_report;
-			}
-		}
-		// D(X) main:1
-		if ((matchedEntry == null) ) {
-			if ((wr_report == null) ) {
+			else {
 				wr_report = new CachedWeakReference(report) ;
+				{
+					// FindOrCreateEntry
+					MapOfMonitor<PubMonitor> itmdMap = Pub_report_Map;
+					matchedLastMap = itmdMap;
+					PubMonitor node_report = Pub_report_Map.getNodeEquivalent(wr_report) ;
+					matchedEntry = node_report;
+				}
 			}
-			// D(X) main:4
-			PubMonitor created = new PubMonitor() ;
-			matchedEntry = created;
-			matchedLastMap.putNode(wr_report, created) ;
-		}
-		// D(X) main:8--9
-		final PubMonitor matchedEntryfinalMonitor = matchedEntry;
-		matchedEntry.Prop_1_event_publish(report, org, time);
-		if(matchedEntryfinalMonitor.Prop_1_Category_violation) {
-			matchedEntryfinalMonitor.Prop_1_handler_violation();
-		}
-
-		if ((cachehit == false) ) {
-			Pub_report_Map_cachekey_report = report;
-			Pub_report_Map_cachevalue = matchedEntry;
-		}
-
-		Pub_RVMLock.unlock();
-	}
-
-	public static final void approveEvent(Integer report, String manager, long time) {
-		Pub_activated = true;
-		while (!Pub_RVMLock.tryLock()) {
-			Thread.yield();
-		}
-
-		CachedWeakReference wr_report = null;
-		MapOfMonitor<PubMonitor> matchedLastMap = null;
-		PubMonitor matchedEntry = null;
-		boolean cachehit = false;
-		if ((report == Pub_report_Map_cachekey_report) ) {
-			matchedEntry = Pub_report_Map_cachevalue;
-			cachehit = true;
-		}
-		else {
-			wr_report = new CachedWeakReference(report) ;
-			{
-				// FindOrCreateEntry
-				MapOfMonitor<PubMonitor> itmdMap = Pub_report_Map;
-				matchedLastMap = itmdMap;
-				PubMonitor node_report = Pub_report_Map.getNodeEquivalent(wr_report) ;
-				matchedEntry = node_report;
+			// D(X) main:1
+			if ((matchedEntry == null) ) {
+				if ((wr_report == null) ) {
+					wr_report = new CachedWeakReference(report) ;
+				}
+				// D(X) main:4
+				PubMonitor created = new PubMonitor() ;
+				matchedEntry = created;
+				matchedLastMap.putNode(wr_report, created) ;
 			}
+			// D(X) main:8--9
+			final PubMonitor matchedEntryfinalMonitor = matchedEntry;
+			matchedEntry.Prop_1_event_publish(report, org, time);
+			if(matchedEntryfinalMonitor.Prop_1_Category_violation) {
+				matchedEntryfinalMonitor.Prop_1_handler_violation();
+			}
+
+			if ((cachehit == false) ) {
+				Pub_report_Map_cachekey_report = report;
+				Pub_report_Map_cachevalue = matchedEntry;
+			}
+
+			Pub_RVMLock.unlock();
 		}
-		// D(X) main:1
-		if ((matchedEntry == null) ) {
-			if ((wr_report == null) ) {
+
+		public static final void approveEvent(Integer report, String manager, long time) {
+			Pub_activated = true;
+			while (!Pub_RVMLock.tryLock()) {
+				Thread.yield();
+			}
+
+			CachedWeakReference wr_report = null;
+			MapOfMonitor<PubMonitor> matchedLastMap = null;
+			PubMonitor matchedEntry = null;
+			boolean cachehit = false;
+			if ((report == Pub_report_Map_cachekey_report) ) {
+				matchedEntry = Pub_report_Map_cachevalue;
+				cachehit = true;
+			}
+			else {
 				wr_report = new CachedWeakReference(report) ;
+				{
+					// FindOrCreateEntry
+					MapOfMonitor<PubMonitor> itmdMap = Pub_report_Map;
+					matchedLastMap = itmdMap;
+					PubMonitor node_report = Pub_report_Map.getNodeEquivalent(wr_report) ;
+					matchedEntry = node_report;
+				}
 			}
-			// D(X) main:4
-			PubMonitor created = new PubMonitor() ;
-			matchedEntry = created;
-			matchedLastMap.putNode(wr_report, created) ;
-		}
-		// D(X) main:8--9
-		final PubMonitor matchedEntryfinalMonitor = matchedEntry;
-		matchedEntry.Prop_1_event_approve(report, manager, time);
-		if(matchedEntryfinalMonitor.Prop_1_Category_violation) {
-			matchedEntryfinalMonitor.Prop_1_handler_violation();
+			// D(X) main:1
+			if ((matchedEntry == null) ) {
+				if ((wr_report == null) ) {
+					wr_report = new CachedWeakReference(report) ;
+				}
+				// D(X) main:4
+				PubMonitor created = new PubMonitor() ;
+				matchedEntry = created;
+				matchedLastMap.putNode(wr_report, created) ;
+			}
+			// D(X) main:8--9
+			final PubMonitor matchedEntryfinalMonitor = matchedEntry;
+			matchedEntry.Prop_1_event_approve(report, manager, time);
+			if(matchedEntryfinalMonitor.Prop_1_Category_violation) {
+				matchedEntryfinalMonitor.Prop_1_handler_violation();
+			}
+
+			if ((cachehit == false) ) {
+				Pub_report_Map_cachekey_report = report;
+				Pub_report_Map_cachevalue = matchedEntry;
+			}
+
+			Pub_RVMLock.unlock();
 		}
 
-		if ((cachehit == false) ) {
-			Pub_report_Map_cachekey_report = report;
-			Pub_report_Map_cachevalue = matchedEntry;
-		}
-
-		Pub_RVMLock.unlock();
 	}
-
-}

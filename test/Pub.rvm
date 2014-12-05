@@ -23,11 +23,11 @@ Pub(Integer report) {
 		String legalMgr=this.orgMgr.get(org);
 		if(legalMgr ==null || this.manager== null)
 		 {}
-		else( !(legalMgr.equals(this.manager))){
+		else if ( !(legalMgr.equals(this.manager))){
             System.out.println("Signature on report "+this.report+" is not valid, should be approved by "+legalMgr+".\n"
             +"but the mgr signed the report is "+this.manager);
             return;
-		}
+		} else {}
 	} 
 
   event approve (Integer report, String manager, long time) {
