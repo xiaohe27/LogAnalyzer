@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
 public class TestLogMonitor {
     @Test
     public void testMain() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, ClassNotFoundException {
-        String[] args=new String[]{"./test/pub.sig","./test/pub.fl","./test/Pub.log"};
+        String[] args=new String[]{"./test/pub/pub.sig","./test/pub/pub.fl","./test/pub/Pub.log"};
         Main.main(args);
 
         //after refactoring, assert whether the log file has been fully read

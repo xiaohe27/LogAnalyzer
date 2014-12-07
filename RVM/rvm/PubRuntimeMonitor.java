@@ -168,7 +168,7 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
 
 		final void Prop_1_handler_violation (){
 			{ System.out.println("should not publish financial report "+this.report+
-			" to "+this.org+" without pre-approval of manager "+this.manager);}
+			" to "+this.org+" without pre-approval of manager "+(this.manager==null ? "":this.manager) );}
 
 		}
 

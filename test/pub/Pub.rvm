@@ -39,6 +39,6 @@ Pub(Integer report) {
   ltl: [](publish => (*) approve)
 
   @violation { System.out.println("should not publish financial report "+this.report+
-    " to "+this.org+" without pre-approval of manager "+this.manager);}
+    " to "+this.org+" without pre-approval of manager "+(this.manager==null ? "":this.manager) );}
  
 }
