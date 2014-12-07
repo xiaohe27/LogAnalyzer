@@ -10,18 +10,17 @@ import java.util.HashMap;
  */
 public class SigExtractor {
 
-    public static final String PUBLISH = "publish";
-    public static final String APPROVE = "approve";
+    public static final String INSERT = "insert";
 
     public static HashMap<String, Integer[]> TableCol = initTableCol();
 
     private static HashMap<String, Integer[]> initTableCol() {
         HashMap<String, Integer[]> tmp=new HashMap<>();
         //the arg types can be inferred from the signature file
-        Integer[] argTy4Publish = new Integer[]{RegHelper.INT_TYPE, RegHelper.STRING_TYPE};
-        Integer[] argTy4Approve = new Integer[]{RegHelper.INT_TYPE, RegHelper.STRING_TYPE};
-        tmp.put(PUBLISH, argTy4Publish);
-        tmp.put(APPROVE, argTy4Approve);
+        Integer[] argTy4Insert = new Integer[]{RegHelper.STRING_TYPE,RegHelper.STRING_TYPE,
+                                                RegHelper.STRING_TYPE,RegHelper.STRING_TYPE};
+
+        tmp.put(INSERT, argTy4Insert);
         return tmp;
     }
 

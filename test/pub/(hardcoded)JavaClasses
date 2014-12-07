@@ -1,0 +1,65 @@
+package sig;
+
+import reg.RegHelper;
+
+import java.io.File;
+import java.util.HashMap;
+
+/**
+ * Created by xiaohe on 12/3/14.
+ */
+public class SigExtractor {
+
+    public static final String PUBLISH = "publish";
+    public static final String APPROVE = "approve";
+
+    public static HashMap<String, Integer[]> TableCol = initTableCol();
+
+    private static HashMap<String, Integer[]> initTableCol() {
+        HashMap<String, Integer[]> tmp=new HashMap<>();
+        //the arg types can be inferred from the signature file
+        Integer[] argTy4Publish = new Integer[]{RegHelper.INT_TYPE, RegHelper.STRING_TYPE};
+        Integer[] argTy4Approve = new Integer[]{RegHelper.INT_TYPE, RegHelper.STRING_TYPE};
+        tmp.put(PUBLISH, argTy4Publish);
+        tmp.put(APPROVE, argTy4Approve);
+        return tmp;
+    }
+
+
+    public static HashMap<String, Integer[]> extractMethoArgsMappingFromSigFile(File f){
+        //fake method at the moment, needs to be implemented.
+        return TableCol;
+    }
+}
+
+
+public class FormulaExtractor {
+
+    private String monitorName;
+    private List<String> methodNameList;
+
+    public FormulaExtractor(Path formulaPath) {
+        //analyze the formula file and set the fields accordingly.
+        init();
+    }
+
+    private void init() {
+        //needs real impl. it is fake method here
+        this.monitorName="rvm.PubRuntimeMonitor";
+
+        this.methodNameList =new ArrayList<>();
+        String PUBLISH = "publish";
+        String APPROVE = "approve";
+        this.methodNameList.add(PUBLISH);
+        this.methodNameList.add(APPROVE);
+    }
+
+
+    public String getMonitorName() {
+        return monitorName;
+    }
+
+    public List<String> getMethodNameList() {
+        return methodNameList;
+    }
+}

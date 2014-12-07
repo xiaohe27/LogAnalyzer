@@ -1,0 +1,6 @@
+1. solve the problem that when multiple events with same name happen at the same time,
+only one event will be recorded. (avoid the use of HashMap should work)
+
+2. try the little insert log.
+
+3. try the huge log on the insert property, record the time.
