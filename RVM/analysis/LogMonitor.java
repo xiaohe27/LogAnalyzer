@@ -3,7 +3,6 @@ package analysis;
 import log.LogEntry;
 import log.LogEntryExtractor;
 import reg.RegHelper;
-import rvm.PubRuntimeMonitor;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -96,6 +95,10 @@ public class LogMonitor {
 
 
                     String eventName = tableNameIter.next();
+
+                    //if we found the event is not of our interest, then skip
+
+
                     List<LogEntry.EventArg> tuples = logEntry.getTableMap().get(eventName);
                     for (int i = 0; i < tuples.size(); i++) {
                         LogEntry.EventArg curTuple = tuples.get(i);

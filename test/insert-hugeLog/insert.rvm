@@ -10,7 +10,6 @@ package rvm;
 
 
   event insert (String user,String db,String p,String data, long time) {
-        System.out.println(user+" insert "+ data+" to "+ db+" at time "+time);
 
 		if(db.equals("db2"))
 		{

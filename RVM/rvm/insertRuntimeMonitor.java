@@ -65,7 +65,6 @@ class InsertRawMonitor extends com.runtimeverification.rvmonitor.java.rt.tableba
 	final boolean event_insert(String user, String db, String p, String data, long time) {
 		RVM_lastevent = 0;
 		{
-			System.out.println(user+" insert "+ data+" to "+ db+" at time "+time);
 
 			if(db.equals("db2"))
 			{

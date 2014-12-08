@@ -47,6 +47,7 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
         do {
             String eventName = scan.next(RegHelper.EventName).replaceAll("\\s","");
 
+            //list of tuples in the table with name 'eventName'
             List<LogEntry.EventArg> eventArgs = new ArrayList<LogEntry.EventArg>();
 
             do {
@@ -103,7 +104,14 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
                 }
             } while (scan.hasNext(RegHelper.TupleRegEx));
 
-            tableMap.put(eventName, eventArgs);
+            //it is possible that multiple tables have the same name, then they can be combined to a single table
+            //by merge their tuple sets.
+            List<LogEntry.EventArg> prevRecords=tableMap.get(eventName);
+            if (prevRecords == null) {
+                tableMap.put(eventName, eventArgs);
+            } else{
+                prevRecords.addAll(eventArgs);
+            }
 
 //        System.out.println("event is "+eventName+" and time is "+time);
 //        System.out.println(eventArgs.size()+" is the num of tuples");
