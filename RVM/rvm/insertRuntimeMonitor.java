@@ -1,20 +1,12 @@
 package rvm;
-import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
-import java.util.*;
-import java.lang.ref.*;
-import com.runtimeverification.rvmonitor.java.rt.*;
-import com.runtimeverification.rvmonitor.java.rt.ref.*;
-import com.runtimeverification.rvmonitor.java.rt.table.*;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractIndexingTree;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.SetEventDelegator;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.TableAdopter.Tuple2;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.TableAdopter.Tuple3;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.IDisableHolder;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.IMonitor;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.DisableHolder;
+import com.runtimeverification.rvmonitor.java.rt.RuntimeOption;
+import com.runtimeverification.rvmonitor.java.rt.ref.CachedWeakReference;
+import com.runtimeverification.rvmonitor.java.rt.table.MapOfMap;
+import com.runtimeverification.rvmonitor.java.rt.table.MapOfMonitor;
 import com.runtimeverification.rvmonitor.java.rt.tablebase.TerminatedMonitorCleaner;
-import java.util.concurrent.atomic.AtomicInteger;
+
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 final class InsertRawMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractMonitorSet<InsertRawMonitor> {
 
@@ -70,7 +62,7 @@ class InsertRawMonitor extends com.runtimeverification.rvmonitor.java.rt.tableba
 			{
 				if(user.equals("script1")) {}
 				else{
-					System.out.println("@"+this.time+" User "+user+" insert to db2 the data: "+data);
+					System.out.println("@"+time+" User "+user+" insert to db2 the data: "+data);
 					return true;
 				}
 			}

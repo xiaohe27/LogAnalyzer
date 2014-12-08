@@ -15,7 +15,7 @@ package rvm;
 		{
 		if(user.equals("script1")) {}
 		else{
-		    System.out.println("@"+this.time+" User "+user+" insert to db2 the data: "+data);
+		    System.out.println("@"+time+" User "+user+" insert to db2 the data: "+data);
 		    return;
 		}
 		}
