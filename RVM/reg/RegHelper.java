@@ -27,13 +27,19 @@ public class RegHelper {
             default: return "Unknown type";
         }
     }
-    public static final String FieldRegEx=  addToGroup(addSpace("[\\p{Alnum}.]+"));
+
+    // '_' | '[' | ']' | '/' | ':' | '-' | '.' | '!')* | '"'[^'"']*'"'
+    public static final String DoubleQuotesRegEx= "\"([^\"]+)\"";
+    public static final String StringRegEx= addSpace("([\\p{Alnum}_\\[\\]\\/\\:\\-\\.\\!]+)")
+                                             +"|" +addSpace("("+DoubleQuotesRegEx+")");
+
+    public static final String FieldRegEx=  addToGroup(StringRegEx);
     public static final String FieldsRegEx = FieldRegEx + addToGroup(","+FieldRegEx)+"*";
 
     public static final String TupleRegEx = RegHelper.addRealParen(FieldsRegEx);
     public static final String TupleListRegEx= TupleRegEx+"+";
 
-    public static final String EventName = addToGroup(addSpace("\\p{Alpha}"+"\\p{Alnum}*"));
+    public static final String EventName = addToGroup(StringRegEx);
 
     public static final String TimeStamp = addToGroup(addSpace("@"+("\\d+")));
 
@@ -97,17 +103,60 @@ public static void main(String[] args) {
     input="(a, b)(2,a)publish(7)";
     Scanner scan=new Scanner(input);
     System.out.println("Has next tuple list?: "+scan.useDelimiter(TableRegEx).hasNext(TupleRegEx+"+"));
+    System.out.println("Has next tuple list?: "+scan.useDelimiter(TableRegEx).hasNext(TupleListRegEx));
 
+    String table="(g)(7)";
+    System.out.println(table+" is table? "+table.matches(TableRegEx));
 
-    System.out.println("(2, a)(a,b) ".matches(TupleListRegEx));
+//    System.out.println("(2, a)(a,b) ".matches(TupleListRegEx));
 
-    input="@0 approve (2, a) publish(7)@1 approve (3,b)\n" +
-            "@5publish (3)(9)(77)approve (9,a) (77, d)";
+//    input="@0 approve (2, a) publish(7)@1 approve (3,b)\n" +
+//            "@5publish (3)(9)(77)approve (9,a) (77, d)";
+//
+//    System.out.println("The above expression matches ts-db list: "+ input.matches("("+TimeStamp+TableRegEx+"+)+"));
+//
+//
+//    System.out.println("commit ([abc], 5, 2.2) matches table reg? "+ "commit (abc, 5, 22)".matches(TableRegEx));
+//
+//
+//    input="@1272882926 commit (url1,1)\n" +
+//            "commit (url10,1)\n" +
+//            "commit (url11,1)";
+//    scan=new Scanner(input);
+//
+//    System.out.println("Has next time stamp: "+scan.useDelimiter(Delim4FindingTimeStamp).hasNext(TimeStamp));
+//
+//    System.out.println(scan.next(TimeStamp) + " is the next ts!");
+//
+////    System.out.println("Has next event? "+scan.useDelimiter(RegHelper.Delim4FindingEvent).hasNext(RegHelper.EventName));
+////    System.out.println(scan.next(EventName));
+//
+////    input="Good-._2A][:";
+////    System.out.println(input+" matches string reg? "+input.matches(StringRegEx));
+////
+////    input="\" hi(!)\"";
+////    System.out.println(input+" matches string reg? "+input.matches(StringRegEx));
+//
+//    input=" Good-._2A][: ";
+//    System.out.println(input+" matches eventName reg? "+input.matches(EventName));
+//
+//    input=" \"Good-._2A][: \"";
+//    System.out.println(input+" matches eventName reg? "+input.matches(EventName));
+//
+//
+//    input=" \"Good-._2A][: \"";
+//    System.out.println(input+" matches field reg? "+input.matches(FieldRegEx));
+//
+//    input=" \"Good-._2A][: \", abc";
+//    System.out.println(input+" matches field list reg? "+input.matches(FieldsRegEx));
+//
+//    input=" ( 28u, abc ) ";
+//    System.out.println(input+" matches tuple reg? "+input.matches(TupleRegEx));
+//
+//
+//    input=" insert (script,db2,5,49887299) ";
+//    System.out.println(input+" matches table reg? "+input.matches(TableRegEx));
 
-    System.out.println("The above expression matches ts-db list: "+ input.matches("("+TimeStamp+TableRegEx+"+)+"));
-
-
-    System.out.println("commit (abc, 5, 2.2) matches table reg? "+ "commit (abc, 5, 22)".matches(TableRegEx));
 
 }
 }

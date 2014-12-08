@@ -17,15 +17,15 @@ public class TestLogMonitor {
 
     }
 
-//    @Test
+    @Test
     public void testMain1() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, ClassNotFoundException {
-        String[] args=new String[]{"./test/insert-hugeLog/insert.sig","./test/insert-hugeLog/insert.fl",
-                                     "./test/insert-hugeLog/insert.log"};
+        String[] args=new String[]{"./test/insert-smallLog/insert.sig","./test/insert-smallLog/insert.fl",
+                                     "./test/insert-smallLog/insert.log"};
         Main.main(args);
     }
 
 
-    @Test
+//    @Test
     public void testMain() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, ClassNotFoundException {
         String[] args=new String[]{"./test/insert-hugeLog/insert.sig", "./test/insert-hugeLog/insert.fl"
 //                ,"/home/xiaohe/SW/offline-log-analysis/ldcc.csv"

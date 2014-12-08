@@ -68,7 +68,7 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
                     System.err.println("Not well formed tuple list.");
                 }
             } else{
-
+//                System.out.println("Has record for "+eventName);
             }
 
 
@@ -124,7 +124,7 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
                    }
 
                 } else {
-                    System.err.println("Should have at least one tuple in the table.");
+                    System.err.println("Should have at least one tuple in the table " + eventName);
                     System.exit(0);
                 }
             } while (scan.hasNext(RegHelper.TupleRegEx));
