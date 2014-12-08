@@ -4,6 +4,7 @@ import reg.RegHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.InputStreamReader;
 import java.util.*;
 
 /**
@@ -20,6 +21,12 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol, File logFile) throws FileNotFoundException {
         this.TableCol = tableCol;
         scan=new Scanner(logFile);
+    }
+
+    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
+        this.TableCol = tableCol;
+        InputStreamReader isReader = new InputStreamReader(System.in);
+        scan=new Scanner(isReader);
     }
 
     /**

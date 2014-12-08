@@ -73,10 +73,19 @@ public class LogMonitor {
     }
 
     public void monitor(Path path2LogFile) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        //the path to the log file should be obtained from outside as an argument of 'main'
-        File logFile = path2LogFile.toFile();
+
         try {
-            LogEntryExtractor lee=new LogEntryExtractor(this.TableCol, logFile);
+            LogEntryExtractor lee=null;
+
+            if (path2LogFile != null) {
+                //the path to the log file should be obtained from outside as an argument of 'main'
+                File logFile = path2LogFile.toFile();
+
+                lee = new LogEntryExtractor(this.TableCol, logFile);
+
+            } else{ //path to log file is null: indicating the scanner will read log entries from System.in
+                lee = new LogEntryExtractor(this.TableCol);
+            }
 
             while (lee.hasNext()) {
                 //by comparing the list of args of list of types,

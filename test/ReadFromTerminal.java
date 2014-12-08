@@ -1,3 +1,6 @@
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 class ReadFromTerminal{
 public static void main(String[] args){
 InputStreamReader isReader = new InputStreamReader(System.in);
