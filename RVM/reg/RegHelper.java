@@ -27,7 +27,7 @@ public class RegHelper {
             default: return "Unknown type";
         }
     }
-    public static final String FieldRegEx=  addToGroup(addSpace("\\p{Alnum}+"));
+    public static final String FieldRegEx=  addToGroup(addSpace("[\\p{Alnum}.]+"));
     public static final String FieldsRegEx = FieldRegEx + addToGroup(","+FieldRegEx)+"*";
 
     public static final String TupleRegEx = RegHelper.addRealParen(FieldsRegEx);
