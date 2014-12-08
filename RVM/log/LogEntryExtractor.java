@@ -47,6 +47,24 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
         do {
             String eventName = scan.next(RegHelper.EventName).replaceAll("\\s","");
 
+            //if we found the event is not of our interest, then skip
+            if (TableCol.get(eventName) == null){
+//                System.out.println("No record for "+eventName);
+
+                if (scan.useDelimiter(RegHelper.Delim4FindingTupleList).
+                        hasNext(RegHelper.TupleListRegEx)){
+
+                    scan.next(RegHelper.TupleListRegEx);
+                    continue;
+
+                } else{
+                    System.err.println("Not well formed tuple list.");
+                }
+            } else{
+
+            }
+
+
             //list of tuples in the table with name 'eventName'
             List<LogEntry.EventArg> eventArgs = new ArrayList<LogEntry.EventArg>();
 

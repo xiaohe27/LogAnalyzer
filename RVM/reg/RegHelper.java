@@ -106,5 +106,8 @@ public static void main(String[] args) {
 
     System.out.println("The above expression matches ts-db list: "+ input.matches("("+TimeStamp+TableRegEx+"+)+"));
 
+
+    System.out.println("commit (abc, 5, 2.2) matches table reg? "+ "commit (abc, 5, 22)".matches(TableRegEx));
+
 }
 }
