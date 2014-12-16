@@ -1,6 +1,9 @@
-1. solve the problem that when multiple events with same name happen at the same time,
-only one event will be recorded. (avoid the use of HashMap should work)
+1. measure base execution time (read all insert) on cur settings 
 
-2. try the little insert log.
+2. test the time for reading all events (use a fake one for Monpoly)
 
-3. try the huge log on the insert property, record the time.
+
+
+ try the little insert log.
+
+ try the huge log on the insert property, record the time.
