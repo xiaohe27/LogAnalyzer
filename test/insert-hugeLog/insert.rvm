@@ -1,13 +1,6 @@
 package rvm;
 
-  Insert(String user,String db,String p,String data) {
-  String user;
-  String db;
-  String p;
-  String data;
-  long time;
-
-
+  Insert() {
 
   event insert (String user,String db,String p,String data, long time) {
 

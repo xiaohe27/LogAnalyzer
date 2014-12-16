@@ -1,13 +1,6 @@
 package rvm;
 
-  Insert(String user,String db,String p,String data) {
-  String user;
-  String db;
-  String p;
-  String data;
-  long time;
-
-
+  Insert() {
 
   event insert (String user,String db,String p,String data, long time) {
 
@@ -15,7 +8,7 @@ package rvm;
 		{
 		if(user.equals("script1")) {}
 		else{
-		    System.out.println("@"+this.time+" User "+user+" insert to db2 the data: "+data);
+		    System.out.println("@"+time+" User "+user+" insert to db2 the data: "+data);
 		    return;
 		}
 		}
