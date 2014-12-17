@@ -7,7 +7,6 @@ import reg.RegHelper;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -105,22 +104,29 @@ public class LogMonitor {
 
                     String eventName = tableNameIter.next();
 
+                    if (!eventName.equals("insert"))
+                        continue;
+
 
                     List<LogEntry.EventArg> tuples = logEntry.getTableMap().get(eventName);
                     for (int i = 0; i < tuples.size(); i++) {
                         LogEntry.EventArg curTuple = tuples.get(i);
-                        Object[] fields = curTuple.getFields();
 
+                        String userName= (String) (curTuple.getFields()[0]);
+                        if (!userName.equals("notARealUserInTheDB"))
+                            curTuple.print();
 
-                        String methName= eventName+"Event";
-                        Class[] paramTypes= MethodArgListMap.get(eventName);
-                        Object[] args4MonitorMethod=new Object[fields.length+1];
-                        System.arraycopy(fields, 0, args4MonitorMethod, 0, fields.length);
-                        //the last arg is the timestamp.
-                        args4MonitorMethod[args4MonitorMethod.length-1]=logEntry.getTime();
+//                        Object[] fields = curTuple.getFields();
 
-                        Method monitorMethod= this.monitorClass.getDeclaredMethod(methName, paramTypes);
-                        monitorMethod.invoke(null, args4MonitorMethod);
+//                        String methName= eventName+"Event";
+//                        Class[] paramTypes= MethodArgListMap.get(eventName);
+//                        Object[] args4MonitorMethod=new Object[fields.length+1];
+//                        System.arraycopy(fields, 0, args4MonitorMethod, 0, fields.length);
+//                        //the last arg is the timestamp.
+//                        args4MonitorMethod[args4MonitorMethod.length-1]=logEntry.getTime();
+
+//                        Method monitorMethod= this.monitorClass.getDeclaredMethod(methName, paramTypes);
+//                        monitorMethod.invoke(null, args4MonitorMethod);
 
                     }
                 }

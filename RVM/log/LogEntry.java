@@ -26,6 +26,7 @@ public class LogEntry {
     /**
      * Different log may have different event arg.
      * This part should be derived from analyzing sig file.
+     * Event is like table, while an eventArg is like a tuple.
      */
     public static class EventArg {
         private Object[] fields;
@@ -36,6 +37,15 @@ public class LogEntry {
 
         public Object[] getFields() {
             return fields;
+        }
+
+        public void print() {
+            System.out.print("(");
+            for (int i=0 ; i< fields.length -1 ; i++){
+                System.out.print(fields[i]+", ");
+            }
+
+            System.out.print(fields[fields.length-1]+")");
         }
     }
 }

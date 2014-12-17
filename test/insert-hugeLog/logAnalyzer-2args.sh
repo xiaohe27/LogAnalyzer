@@ -1,1 +1,1 @@
-java -cp /home/xiaohe/Projects/LogAnalyzer/out/pgm:$CLASSPATH fsl.uiuc.Main insert.sig insert.fl
+java -cp /home/xiaohe/Projects/LogAnalyzer/out/production/LogAnalyzer:$CLASSPATH fsl.uiuc.Main insert.sig insert.fl
