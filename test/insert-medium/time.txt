@@ -1,4 +1,4 @@
-Start time : 1418858971
-Finish time : 1418859621
+Start time : 1419020465
+Finish time : 1419020515
 
-It took 650 seconds to retrieve all the insert events in the 9M log ldcc4Monpoly
+It took 50 seconds to read all the insert events in the 9M log

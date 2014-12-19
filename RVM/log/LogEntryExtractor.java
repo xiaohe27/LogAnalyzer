@@ -20,7 +20,7 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
 
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol, File logFile) throws FileNotFoundException {
         this.TableCol = tableCol;
-        scan=new Scanner(logFile);
+        scan=new Scanner(logFile, "ISO-8859-1");
     }
 
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {

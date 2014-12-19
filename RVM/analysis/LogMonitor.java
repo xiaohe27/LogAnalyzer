@@ -6,11 +6,14 @@ import reg.RegHelper;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Scanner;
 
 /**
  * Created by xiaohe on 11/24/14.
@@ -71,7 +74,55 @@ public class LogMonitor {
         }
     }
 
-    public void monitor(Path path2LogFile) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+
+    /**
+     * A method only for testing purpose.
+     * @param path
+     */
+    public void monitor(Path path) throws IOException {
+        Scanner scan=new Scanner(path);
+        while (scan.hasNextLine()){
+            if(scan.nextLine().contains("insert")){
+                System.out.println("insert found");
+            }
+        }
+    }
+
+        /**
+     * A method only for testing purpose.
+     * @param path2LogFile
+     */
+    public void monitor2(Path path2LogFile) throws FileNotFoundException {
+        LogEntryExtractor lee=null;
+
+        if (path2LogFile != null) {
+            //the path to the log file should be obtained from outside as an argument of 'main'
+            File logFile = path2LogFile.toFile();
+
+            lee = new LogEntryExtractor(this.TableCol, logFile);
+
+        } else{ //path to log file is null: indicating the scanner will read log entries from System.in
+            lee = new LogEntryExtractor(this.TableCol);
+        }
+
+        while (lee.hasNext()) {
+            //by comparing the list of args of list of types,
+            //we will know which arg has what type. Types of each field for
+            //every event can be obtained from the sig file (gen a map of
+            // string(event name) to list(type list of the tuple)).
+            LogEntry logEntry = lee.nextLogEntry();
+        }
+    }
+
+
+    /**
+     *
+     * @param path2LogFile
+     * @throws NoSuchMethodException
+     * @throws InvocationTargetException
+     * @throws IllegalAccessException
+     */
+    public void monitor_real(Path path2LogFile) throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
 
         try {
             LogEntryExtractor lee=null;
@@ -112,21 +163,22 @@ public class LogMonitor {
                     for (int i = 0; i < tuples.size(); i++) {
                         LogEntry.EventArg curTuple = tuples.get(i);
 
-                        String userName= (String) (curTuple.getFields()[0]);
-                        if (!userName.equals("notARealUserInTheDB"))
-                            curTuple.print();
+//                        if(curTuple.getFields()[1].equals("db2") && !(curTuple.getFields()[0].equals("script1"))) {
+////                            curTuple.print();
+//                        }
 
-//                        Object[] fields = curTuple.getFields();
 
-//                        String methName= eventName+"Event";
-//                        Class[] paramTypes= MethodArgListMap.get(eventName);
-//                        Object[] args4MonitorMethod=new Object[fields.length+1];
-//                        System.arraycopy(fields, 0, args4MonitorMethod, 0, fields.length);
-//                        //the last arg is the timestamp.
-//                        args4MonitorMethod[args4MonitorMethod.length-1]=logEntry.getTime();
+                        Object[] fields = curTuple.getFields();
 
-//                        Method monitorMethod= this.monitorClass.getDeclaredMethod(methName, paramTypes);
-//                        monitorMethod.invoke(null, args4MonitorMethod);
+                        String methName= eventName+"Event";
+                        Class[] paramTypes= MethodArgListMap.get(eventName);
+                        Object[] args4MonitorMethod=new Object[fields.length+1];
+                        System.arraycopy(fields, 0, args4MonitorMethod, 0, fields.length);
+                        //the last arg is the timestamp.
+                        args4MonitorMethod[args4MonitorMethod.length-1]=logEntry.getTime();
+
+                        Method monitorMethod= this.monitorClass.getDeclaredMethod(methName, paramTypes);
+                        monitorMethod.invoke(null, args4MonitorMethod);
 
                     }
                 }

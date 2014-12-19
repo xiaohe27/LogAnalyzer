@@ -3,6 +3,7 @@ package fsl.uiuc;
 import analysis.LogMonitor;
 import gen.MonitorGenerator;
 
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -25,7 +26,7 @@ public class Main {
      * @throws InvocationTargetException
      */
 
-    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
 
         if(args.length > 3 || args.length < 2)
         {
