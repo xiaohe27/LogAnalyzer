@@ -2,9 +2,7 @@ package log;
 
 import reg.RegHelper;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.util.*;
 
 /**
@@ -20,13 +18,14 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
 
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol, File logFile) throws FileNotFoundException {
         this.TableCol = tableCol;
-        scan=new Scanner(logFile, "ISO-8859-1");
+        FileInputStream fis=new FileInputStream(logFile.getPath());
+        scan=new Scanner(new BufferedInputStream(fis), "ISO-8859-1");
     }
 
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
         this.TableCol = tableCol;
         InputStreamReader isReader = new InputStreamReader(System.in);
-        scan=new Scanner(isReader);
+        scan=new Scanner(new BufferedReader(isReader));
     }
 
     /**
