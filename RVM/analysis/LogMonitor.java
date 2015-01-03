@@ -80,12 +80,16 @@ public class LogMonitor {
      * @param path
      */
     public void monitor(Path path) throws IOException {
+        int num=0;
         Scanner scan=new Scanner(path);
         while (scan.hasNextLine()){
-            if(scan.nextLine().contains("insert")){
-                System.out.println("insert found");
+            if(scan.nextLine().contains("@")){
+//                System.out.println("log entry found");
+                num++;
             }
         }
+
+        System.out.println("There are totally "+num+" log entries in the log file!");
     }
 
         /**
