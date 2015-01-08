@@ -79,7 +79,7 @@ public class LogMonitor {
      * A method only for testing purpose.
      * @param path
      */
-    public void monitor(Path path) throws IOException {
+    public void monitor3(Path path) throws IOException {
         Scanner scan=new Scanner(path);
         while (scan.hasNextLine()){
             if(scan.nextLine().contains("insert")){
@@ -88,11 +88,11 @@ public class LogMonitor {
         }
     }
 
-        /**
+    /**
      * A method only for testing purpose.
      * @param path2LogFile
      */
-    public void monitor2(Path path2LogFile) throws FileNotFoundException {
+    public void monitor(Path path2LogFile) throws FileNotFoundException {
         LogEntryExtractor lee=null;
 
         if (path2LogFile != null) {
@@ -105,13 +105,13 @@ public class LogMonitor {
             lee = new LogEntryExtractor(this.TableCol);
         }
 
+        long numOfLogEntries=0;
         while (lee.hasNext()) {
-            //by comparing the list of args of list of types,
-            //we will know which arg has what type. Types of each field for
-            //every event can be obtained from the sig file (gen a map of
-            // string(event name) to list(type list of the tuple)).
             LogEntry logEntry = lee.nextLogEntry();
+            numOfLogEntries++;
         }
+
+        System.out.println("There are "+numOfLogEntries+" log entries!");
     }
 
 
