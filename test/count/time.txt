@@ -1,0 +1,4 @@
+Start time : 1420325574
+Finish time : 1420325580
+
+It took 6 seconds to count all the events in the 9M log ldcc4Monpoly
