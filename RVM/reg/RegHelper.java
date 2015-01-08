@@ -47,7 +47,7 @@ public class RegHelper {
 
     public static final String Delim4FindingTimeStamp= "[a-zA-Z]";
     public static final String Delim4FindingTupleList = TableRegEx + "|@";
-    public static final String Delim4FindingEvent= "\\(";
+    public static final String Delim4FindingEvent= TupleListRegEx;
 
     public static final String addRealParen(String str) {
         return addToGroup(addSpace("\\(") + str + addSpace("\\)"));

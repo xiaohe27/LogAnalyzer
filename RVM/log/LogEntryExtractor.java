@@ -38,34 +38,19 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
         long time = 0;
         HashMap<String, List<LogEntry.EventArg>> tableMap = new HashMap<>();
 
-        if (scan.useDelimiter(RegHelper.Delim4FindingTimeStamp).hasNext(RegHelper.TimeStamp)) {
-            time = Long.parseLong(scan.next(RegHelper.TimeStamp).replaceAll("\\s","").replace("@", ""));
-        }
-        else {
-            System.err.println("Should have a time stamp for the event!");
-            System.exit(0);
-        }
 
-        if (!scan.useDelimiter(RegHelper.Delim4FindingEvent).hasNext(RegHelper.EventName)) {
-            System.err.println("Should have at least one event name after time stamp.");
-            System.exit(0);
-        }
+        time = Long.parseLong(scan.useDelimiter
+                (RegHelper.Delim4FindingTimeStamp)
+                .next(RegHelper.TimeStamp).replaceAll("\\s","").replace("@", ""));
+
         do {
-            String eventName = scan.next(RegHelper.EventName).replaceAll("\\s","");
+            String eventName = scan.useDelimiter(RegHelper.Delim4FindingEvent)
+                    .next(RegHelper.EventName).replaceAll("\\s","");
 
             //if we found the event is not of our interest, then skip
             if (TableCol.get(eventName) == null){
-//                System.out.println("No record for "+eventName);
-
-                if (scan.useDelimiter(RegHelper.Delim4FindingTupleList).
-                        hasNext(RegHelper.TupleListRegEx)){
-
-                    scan.next(RegHelper.TupleListRegEx);
+                System.out.println("No record for "+eventName);
                     continue;
-
-                } else{
-                    System.err.println("Not well formed tuple list.");
-                }
             } else{
 //                System.out.println("Has record for "+eventName);
             }
