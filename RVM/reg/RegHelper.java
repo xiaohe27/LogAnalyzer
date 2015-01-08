@@ -45,7 +45,7 @@ public class RegHelper {
 
     public static final String TableRegEx = addToGroup(EventName + addToGroup(TupleRegEx +"+"));
 
-    public static final String Delim4FindingTimeStamp= "[a-zA-Z]";
+    public static final String Delim4FindingTimeStamp= "[a-zA-Z]|" + TupleListRegEx;
     public static final String Delim4FindingTupleList = TableRegEx + "|@";
     public static final String Delim4FindingEvent= TupleListRegEx;
 

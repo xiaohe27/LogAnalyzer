@@ -49,7 +49,7 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
 
             //if we found the event is not of our interest, then skip
             if (TableCol.get(eventName) == null){
-                System.out.println("No record for "+eventName);
+//                System.out.println("No record for "+eventName);
                     continue;
             } else{
 //                System.out.println("Has record for "+eventName);
