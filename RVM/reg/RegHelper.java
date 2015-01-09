@@ -1,6 +1,7 @@
 package reg;
 
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 /**
  * Created by xiaohe on 14-11-22.
@@ -35,25 +36,25 @@ public class RegHelper {
 //    }
 
     // '_' | '[' | ']' | '/' | ':' | '-' | '.' | '!')* | '"'[^'"']*'"'
-    public static final String DoubleQuotesRegEx = "\"([^\"]+)\"";
-    public static final String StringRegEx = addSpace("([\\p{Alnum}_\\[\\]\\/\\:\\-\\.\\!]+)")
-            + "|" + addSpace("(" + DoubleQuotesRegEx + ")");
+    public static final Pattern DoubleQuotesRegEx = Pattern.compile("\"([^\"]+)\"");
+    public static final Pattern StringRegEx = Pattern.compile(addSpace("([\\p{Alnum}_\\[\\]\\/\\:\\-\\.\\!]+)")
+            + "|" + addSpace("(" + DoubleQuotesRegEx + ")"));
 
-    public static final String FieldRegEx = addToGroup(StringRegEx);
-    public static final String FieldsRegEx = FieldRegEx + addToGroup("," + FieldRegEx) + "*";
+    public static final Pattern FieldRegEx = Pattern.compile(addToGroup(StringRegEx.toString()));
+    public static final Pattern FieldsRegEx = Pattern.compile(FieldRegEx + addToGroup("," + FieldRegEx) + "*");
 
-    public static final String TupleRegEx = RegHelper.addRealParen(FieldsRegEx);
-    public static final String TupleListRegEx = TupleRegEx + "+";
+    public static final Pattern TupleRegEx = Pattern.compile(RegHelper.addRealParen(FieldsRegEx.toString()));
+    public static final Pattern TupleListRegEx = Pattern.compile(TupleRegEx + "+");
 
-    public static final String EventName = addToGroup(StringRegEx);
+    public static final Pattern EventName = Pattern.compile(addToGroup(StringRegEx.toString()));
 
-    public static final String TimeStamp = addToGroup(addSpace("@" + ("\\d+")));
+    public static final Pattern TimeStamp = Pattern.compile(addToGroup(addSpace("@" + ("\\d+"))));
 
-    public static final String TableRegEx = addToGroup(EventName + addToGroup(TupleRegEx + "+"));
+    public static final Pattern TableRegEx = Pattern.compile(addToGroup(EventName + addToGroup(TupleRegEx + "+")));
 
-    public static final String Delim4FindingTimeStamp = "[a-zA-Z]" + "|" + TupleListRegEx;
-    public static final String Delim4FindingTupleList = TableRegEx + "|@";
-    public static final String Delim4FindingEvent = TupleListRegEx;
+    public static final Pattern Delim4FindingTimeStamp = Pattern.compile("[a-zA-Z]" + "|" + TupleListRegEx);
+    public static final Pattern Delim4FindingTupleList = Pattern.compile(TableRegEx + "|@");
+    public static final Pattern Delim4FindingEvent = Pattern.compile(TupleListRegEx.toString());
 
     public static final String addRealParen(String str) {
         return addToGroup(addSpace("\\(") + str + addSpace("\\)"));
@@ -98,13 +99,13 @@ public class RegHelper {
         System.out.println(input.matches(TupleRegEx + "+"));
 
         input = "(a, b, 2)";
-        System.out.println(input.matches(TupleRegEx));
+        System.out.println(input.matches(TupleRegEx.toString()));
 
         input = "approve (2, a)";
-        System.out.println(input.matches(TableRegEx));
+        System.out.println(input.matches(TableRegEx.toString()));
 
         input = " @0 approve (2, a) publish(7)";
-        System.out.println(input.matches(TimeStamp + TableRegEx + "+"));
+        System.out.println(input.matches(TimeStamp.toString() + TableRegEx + "+"));
 
 //    input="(2, a)(a,b)";
 //    Scanner scan=new Scanner(input);
@@ -116,10 +117,10 @@ public class RegHelper {
         System.out.println("Has next tuple list?: " + scan.useDelimiter(TableRegEx).hasNext(TupleListRegEx));
 
         String table = "(g)(7)";
-        System.out.println(table + " is table? " + table.matches(TableRegEx));
+        System.out.println(table + " is table? " + table.matches(TableRegEx.toString()));
 
         String table2 = "event(g)(7)";
-        System.out.println(table2 + " is table? " + table2.matches(TableRegEx));
+        System.out.println(table2 + " is table? " + table2.matches(TableRegEx.toString()));
 
 //    System.out.println("(2, a)(a,b) ".matches(TupleListRegEx));
 
