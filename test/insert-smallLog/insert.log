@@ -8,5 +8,5 @@ insert (script, db2,5,4.9888075)
 
 commit (abc,5,22)
 
-@1277201625 insert(script2,db2,5,4987299)
+@1277201625 insert (script2,db2,5,4987299)
 

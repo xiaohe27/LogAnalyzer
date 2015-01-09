@@ -16,35 +16,16 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
     private HashMap<String, Integer[]> TableCol;
     private Scanner scan;
 
-    //different scanners for different purpose
-    private static Scanner scanner4FindingTimeStamp;
-    private static Scanner scanner4FindingEvent;
-    private static Scanner scanner4FindTupleList;
-
-
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol, File logFile) throws FileNotFoundException {
         this.TableCol = tableCol;
         FileInputStream fis = new FileInputStream(logFile.getPath());
         scan = new Scanner(new BufferedInputStream(fis), "ISO-8859-1");
-
-        initScanners();
     }
 
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
         this.TableCol = tableCol;
         InputStreamReader isReader = new InputStreamReader(System.in);
         scan = new Scanner(new BufferedReader(isReader));
-
-        initScanners();
-    }
-
-    private void initScanners(){
-        scanner4FindingTimeStamp = this.scan.useDelimiter
-                (RegHelper.Delim4FindingTimeStamp);
-
-        scanner4FindingEvent = this.scan.useDelimiter(RegHelper.Delim4FindingEvent);
-
-        scanner4FindTupleList = this.scan.useDelimiter(RegHelper.Delim4FindingTupleList);
     }
 
     /**
@@ -58,19 +39,14 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
         HashMap<String, List<LogEntry.EventArg>> tableMap = new HashMap<>();
 
 
-        String time = scanner4FindingTimeStamp
-                .next(RegHelper.TimeStamp);
+        String time = scan.useDelimiter
+                (RegHelper.Delim4FindingTimeStamp)
+                .next(RegHelper.TimeStamp).replaceAll("\\s", "").replace("@", "");
 
-        System.out.println("time is "+ time);
-
-        scanner4FindingEvent = scanner4FindingTimeStamp.useDelimiter(RegHelper.Delim4FindingEvent);
-
+//        System.out.println("Time is "+time);
         do {
-            String eventName = scanner4FindingEvent
+            String eventName = scan.useDelimiter(RegHelper.Delim4FindingEvent)
                     .next(RegHelper.EventName).replaceAll("\\s", "");
-
-
-            scanner4FindTupleList = scanner4FindingEvent.useDelimiter(RegHelper.Delim4FindingTupleList);
 
 //            System.out.println("event is "+eventName);
             //if we found the event is not of our interest, then skip
@@ -86,53 +62,51 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
             List<LogEntry.EventArg> eventArgs = new ArrayList<LogEntry.EventArg>();
 
 
-                String curTupleList = scanner4FindTupleList
-                        .next(RegHelper.TupleListRegEx).replaceAll("\\s", "");
-                String[] tuples = curTupleList.split("\\)\\(");
-                //after splitting, only the first and last tuple need to be further processed,
-                //all the tuples in the middle have already been in the form of fields.
-                if (tuples.length > 0) {
-                    tuples[0] = tuples[0].replace("(", "");
-                    tuples[tuples.length - 1] = tuples[tuples.length - 1].replace(")", "");
-                }
+            String curTupleList = scan.useDelimiter(RegHelper.Delim4FindingTupleList)
+                    .next(RegHelper.TupleListRegEx).replaceAll("\\s", "");
+            String[] tuples = curTupleList.split("\\)\\(");
+            //after splitting, only the first and last tuple need to be further processed,
+            //all the tuples in the middle have already been in the form of fields.
+            if (tuples.length > 0) {
+                tuples[0] = tuples[0].replace("(", "");
+                tuples[tuples.length - 1] = tuples[tuples.length - 1].replace(")", "");
+            }
 
-            //retrieve all the tuples in the table
-                for (int k = 0; k < tuples.length; k++) {
-                    String fields = tuples[k];
-                    Object[] argsInTuple = new Object[TableCol.get(eventName).length];
-                    String[] fieldsData = fields.split(",");
-                    for (int i = 0; i < TableCol.get(eventName).length; i++) {
-                        String dataI = fieldsData[i].replaceAll("\\s", "");
+            for (int k = 0; k < tuples.length; k++) {
+                String fields = tuples[k];
+                Object[] argsInTuple = new Object[TableCol.get(eventName).length];
+                String[] fieldsData = fields.split(",");
+                for (int i = 0; i < TableCol.get(eventName).length; i++) {
+                    String dataI = fieldsData[i].replaceAll("\\s", "");
 
 //                           System.out.println("No."+i+" field type of table "+
 //                     eventName+" is "+RegHelper.getTypeName(TableCol.get(eventName)[i]));
 
-                        switch (TableCol.get(eventName)[i]) {
-                            case RegHelper.INT_TYPE:
-                                argsInTuple[i] = Integer.parseInt(dataI);
-                                break;
+                    switch (TableCol.get(eventName)[i]) {
+                        case RegHelper.INT_TYPE:
+                            argsInTuple[i] = Integer.parseInt(dataI);
+                            break;
 
-                            case RegHelper.LONG_TYPE:
-                                argsInTuple[i] = Long.parseLong(dataI);
-                                break;
+                        case RegHelper.LONG_TYPE:
+                            argsInTuple[i] = Long.parseLong(dataI);
+                            break;
 
-                            case RegHelper.FLOAT_TYPE:
-                                argsInTuple[i] = Float.parseFloat(dataI);
-                                break;
+                        case RegHelper.FLOAT_TYPE:
+                            argsInTuple[i] = Float.parseFloat(dataI);
+                            break;
 
-                            case RegHelper.DOUBLE_TYPE:
-                                argsInTuple[i] = Double.parseDouble(dataI);
-                                break;
+                        case RegHelper.DOUBLE_TYPE:
+                            argsInTuple[i] = Double.parseDouble(dataI);
+                            break;
 
-                            case RegHelper.STRING_TYPE:
-                                argsInTuple[i] = dataI;
-                                break;
-                        }
+                        case RegHelper.STRING_TYPE:
+                            argsInTuple[i] = dataI;
+                            break;
                     }
-                    eventArgs.add(new LogEntry.EventArg
-                            (argsInTuple));
                 }
-
+                eventArgs.add(new LogEntry.EventArg
+                        (argsInTuple));
+            }
 
 
             //it is possible that multiple tables have the same name, then they can be combined to a single table
@@ -146,10 +120,7 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
 
 //        System.out.println("event is "+eventName+" and time is "+time);
 //        System.out.println(eventArgs.size()+" is the num of tuples");
-            scanner4FindingEvent = scanner4FindTupleList.useDelimiter(RegHelper.Delim4FindingEvent);
-        } while (scanner4FindingEvent.hasNext(RegHelper.EventName));
-
-        scanner4FindingTimeStamp = scanner4FindingEvent.useDelimiter(RegHelper.Delim4FindingTimeStamp);
+        } while (scan.useDelimiter(RegHelper.Delim4FindingEvent).hasNext(RegHelper.EventName));
 
         return new LogEntry(time, tableMap);
     }
@@ -177,9 +148,15 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
      */
     public void start() {
         long numOfLogEntries = 0;
+        this.scan.skip("\\s*");
 
-        while (scanner4FindingTimeStamp.hasNext()) {
-            LogEntry logEntry = this.getLogEntry();
+        while (this.scan.useDelimiter(RegHelper.Delim4FindingTimeStamp).hasNext(RegHelper.TimeStamp)) {
+//            LogEntry logEntry = this.getLogEntry();
+
+            System.out.println(this.scan.next(RegHelper.TimeStamp));;
+
+            this.scan.skip("\\s*");
+
             numOfLogEntries++;
         }
 
