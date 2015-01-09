@@ -1,11 +1,12 @@
-@1277201624 insert (script,db2,5,49887299)
+ @1277201624 insert (script,db2,5,49887299)
 insert (script,db2,5,49887389)
 insert (script1,db2,5,49887438)
 insert (script,db2,5,49887479)
 insert (script,db2,5,49888034)
-commit (abc, 5, 2.2)
-insert (script,db2,5,4.9888075)
-commit (abc, 5, 22)
+commit (abc,5,2.2)
+insert (script, db2,5,4.9888075)
 
-@1277201625 insert (script2,db2,5,4987299)
+commit (abc,5,22)
+
+@1277201625 insert(script2,db2,5,4987299)
 
