@@ -150,7 +150,7 @@ public class LogMonitor {
                 // string(event name) to list(type list of the tuple)).
                 LogEntry logEntry = lee.nextLogEntry();
 
-                long ts = logEntry.getTime();
+                String ts = logEntry.getTime();
                 Iterator<String> tableNameIter = logEntry.getTableMap().keySet().iterator();
                 while (tableNameIter.hasNext()) {
 

@@ -12,27 +12,27 @@ public class RegHelper {
     public static final int LONG_TYPE = 3;
     public static final int STRING_TYPE = 4;
 
-    public static final String getTypeName(int typeId) {
-        switch (typeId) {
-            case INT_TYPE:
-                return "int";
-
-            case FLOAT_TYPE:
-                return "float";
-
-            case DOUBLE_TYPE:
-                return "double";
-
-            case LONG_TYPE:
-                return "long";
-
-            case STRING_TYPE:
-                return "string";
-
-            default:
-                return "Unknown type";
-        }
-    }
+//    public static final String getTypeName(int typeId) {
+//        switch (typeId) {
+//            case INT_TYPE:
+//                return "int";
+//
+//            case FLOAT_TYPE:
+//                return "float";
+//
+//            case DOUBLE_TYPE:
+//                return "double";
+//
+//            case LONG_TYPE:
+//                return "long";
+//
+//            case STRING_TYPE:
+//                return "string";
+//
+//            default:
+//                return "Unknown type";
+//        }
+//    }
 
     // '_' | '[' | ']' | '/' | ':' | '-' | '.' | '!')* | '"'[^'"']*'"'
     public static final String DoubleQuotesRegEx = "\"([^\"]+)\"";
@@ -51,7 +51,8 @@ public class RegHelper {
 
     public static final String TableRegEx = addToGroup(EventName + addToGroup(TupleRegEx + "+"));
 
-    public static final String Delim4FindingTimeStamp = "[a-zA-Z]|" + TupleListRegEx;
+//    public static final String Delim4FindingTimeStamp = EventName + "|" + TupleRegEx;
+public static final String Delim4FindingTimeStamp = "insert";
     public static final String Delim4FindingTupleList = TableRegEx + "|@";
     public static final String Delim4FindingEvent = TupleListRegEx;
 
@@ -117,6 +118,9 @@ public class RegHelper {
 
         String table = "(g)(7)";
         System.out.println(table + " is table? " + table.matches(TableRegEx));
+
+        String table2 = "event(g)(7)";
+        System.out.println(table2 + " is table? " + table2.matches(TableRegEx));
 
 //    System.out.println("(2, a)(a,b) ".matches(TupleListRegEx));
 

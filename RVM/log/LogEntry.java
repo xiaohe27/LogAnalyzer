@@ -7,15 +7,15 @@ import java.util.List;
  * Created by xiaohe on 14-11-22.
  */
 public class LogEntry {
-    private long time;
+    private String time;
     private HashMap<String, List<EventArg>> tableMap;
 
-    public LogEntry(long time, HashMap<String, List<EventArg>> tmap) {
+    public LogEntry(String time, HashMap<String, List<EventArg>> tmap) {
         this.time = time;
         this.tableMap = tmap;
     }
 
-    public long getTime() {
+    public String getTime() {
         return time;
     }
 

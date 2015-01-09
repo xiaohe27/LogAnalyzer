@@ -16,16 +16,35 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
     private HashMap<String, Integer[]> TableCol;
     private Scanner scan;
 
+    //different scanners for different purpose
+    private static Scanner scanner4FindingTimeStamp;
+    private static Scanner scanner4FindingEvent;
+    private static Scanner scanner4FindTupleList;
+
+
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol, File logFile) throws FileNotFoundException {
         this.TableCol = tableCol;
         FileInputStream fis = new FileInputStream(logFile.getPath());
         scan = new Scanner(new BufferedInputStream(fis), "ISO-8859-1");
+
+        initScanners();
     }
 
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
         this.TableCol = tableCol;
         InputStreamReader isReader = new InputStreamReader(System.in);
         scan = new Scanner(new BufferedReader(isReader));
+
+        initScanners();
+    }
+
+    private void initScanners(){
+        scanner4FindingTimeStamp = this.scan.useDelimiter
+                (RegHelper.Delim4FindingTimeStamp);
+
+        scanner4FindingEvent = this.scan.useDelimiter(RegHelper.Delim4FindingEvent);
+
+        scanner4FindTupleList = this.scan.useDelimiter(RegHelper.Delim4FindingTupleList);
     }
 
     /**
@@ -35,18 +54,23 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
      * @return
      */
     private LogEntry getLogEntry() {
-        long time = 0;
+
         HashMap<String, List<LogEntry.EventArg>> tableMap = new HashMap<>();
 
 
-        time = Long.parseLong(scan.useDelimiter
-                (RegHelper.Delim4FindingTimeStamp)
-                .next(RegHelper.TimeStamp).replaceAll("\\s", "").replace("@", ""));
+        String time = scanner4FindingTimeStamp
+                .next(RegHelper.TimeStamp);
 
-//        System.out.println("Time is "+time);
+        System.out.println("time is "+ time);
+
+        scanner4FindingEvent = scanner4FindingTimeStamp.useDelimiter(RegHelper.Delim4FindingEvent);
+
         do {
-            String eventName = scan.useDelimiter(RegHelper.Delim4FindingEvent)
+            String eventName = scanner4FindingEvent
                     .next(RegHelper.EventName).replaceAll("\\s", "");
+
+
+            scanner4FindTupleList = scanner4FindingEvent.useDelimiter(RegHelper.Delim4FindingTupleList);
 
 //            System.out.println("event is "+eventName);
             //if we found the event is not of our interest, then skip
@@ -61,8 +85,8 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
             //list of tuples in the table with name 'eventName'
             List<LogEntry.EventArg> eventArgs = new ArrayList<LogEntry.EventArg>();
 
-            do {
-                String curTupleList = scan.useDelimiter(RegHelper.Delim4FindingTupleList)
+
+                String curTupleList = scanner4FindTupleList
                         .next(RegHelper.TupleListRegEx).replaceAll("\\s", "");
                 String[] tuples = curTupleList.split("\\)\\(");
                 //after splitting, only the first and last tuple need to be further processed,
@@ -72,6 +96,7 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
                     tuples[tuples.length - 1] = tuples[tuples.length - 1].replace(")", "");
                 }
 
+            //retrieve all the tuples in the table
                 for (int k = 0; k < tuples.length; k++) {
                     String fields = tuples[k];
                     Object[] argsInTuple = new Object[TableCol.get(eventName).length];
@@ -108,7 +133,7 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
                             (argsInTuple));
                 }
 
-            } while (scan.hasNext(RegHelper.TupleRegEx));
+
 
             //it is possible that multiple tables have the same name, then they can be combined to a single table
             //by merge their tuple sets.
@@ -121,7 +146,10 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
 
 //        System.out.println("event is "+eventName+" and time is "+time);
 //        System.out.println(eventArgs.size()+" is the num of tuples");
-        } while (scan.useDelimiter(RegHelper.Delim4FindingEvent).hasNext(RegHelper.EventName));
+            scanner4FindingEvent = scanner4FindTupleList.useDelimiter(RegHelper.Delim4FindingEvent);
+        } while (scanner4FindingEvent.hasNext(RegHelper.EventName));
+
+        scanner4FindingTimeStamp = scanner4FindingEvent.useDelimiter(RegHelper.Delim4FindingTimeStamp);
 
         return new LogEntry(time, tableMap);
     }
@@ -149,8 +177,9 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
      */
     public void start() {
         long numOfLogEntries = 0;
-        while (this.scan.useDelimiter(RegHelper.Delim4FindingTimeStamp).hasNext()) {
-            LogEntry logEntry = this.nextLogEntry();
+
+        while (scanner4FindingTimeStamp.hasNext()) {
+            LogEntry logEntry = this.getLogEntry();
             numOfLogEntries++;
         }
 
