@@ -43,15 +43,15 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
                 (RegHelper.Delim4FindingTimeStamp)
                 .next(RegHelper.TimeStamp).replaceAll("\\s", "").replace("@", ""));
 
-        System.out.println("Time is "+time);
+//        System.out.println("Time is "+time);
         do {
             String eventName = scan.useDelimiter(RegHelper.Delim4FindingEvent)
                     .next(RegHelper.EventName).replaceAll("\\s", "");
 
-            System.out.println("event is "+eventName);
+//            System.out.println("event is "+eventName);
             //if we found the event is not of our interest, then skip
             if (TableCol.get(eventName) == null) {
-                System.out.println("No record for "+eventName);
+//                System.out.println("No record for "+eventName);
                 continue;
             } else {
 //                System.out.println("Has record for "+eventName);
@@ -142,5 +142,18 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
 
     public LogEntry nextLogEntry() {
         return this.next();
+    }
+
+    /**
+     * Just test whether the efficiency can be improved.
+     */
+    public void start() {
+        long numOfLogEntries = 0;
+        while (this.scan.useDelimiter(RegHelper.Delim4FindingTimeStamp).hasNext()) {
+            LogEntry logEntry = this.nextLogEntry();
+            numOfLogEntries++;
+        }
+
+        System.out.println("There are " + numOfLogEntries + " log entries!");
     }
 }

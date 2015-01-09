@@ -51,9 +51,9 @@ public class RegHelper {
 
     public static final String TableRegEx = addToGroup(EventName + addToGroup(TupleRegEx + "+"));
 
-    public static final String Delim4FindingTimeStamp = "[a-zA-Z]|\\s|" + TupleListRegEx;
-    public static final String Delim4FindingTupleList = TableRegEx + "|@|\\s";
-    public static final String Delim4FindingEvent = TupleListRegEx + "|\\s";
+    public static final String Delim4FindingTimeStamp = "[a-zA-Z]|" + TupleListRegEx;
+    public static final String Delim4FindingTupleList = TableRegEx + "|@";
+    public static final String Delim4FindingEvent = TupleListRegEx;
 
     public static final String addRealParen(String str) {
         return addToGroup(addSpace("\\(") + str + addSpace("\\)"));
@@ -64,8 +64,7 @@ public class RegHelper {
     }
 
     public static final String addSpace(String str) {
-//        return "\\s*" + str + "\\s*";
-        return str;
+        return "\\s*" + str + "\\s*";
     }
 
     public static void main(String[] args) {
@@ -111,9 +110,9 @@ public class RegHelper {
 //    Scanner scan=new Scanner(input);
 //    System.out.println("Has next tuple list?: "+scan.hasNext(TupleListRegEx));
 
-        input = "(a,b)(2,a)publish(7)";
+        input = "(a, b)(2,a)publish(7)";
         Scanner scan = new Scanner(input);
-        System.out.println("Has next tuple list?: " + scan.useDelimiter(TableRegEx).skip("\\s*").hasNext(TupleRegEx + "+"));
+        System.out.println("Has next tuple list?: " + scan.useDelimiter(TableRegEx).hasNext(TupleRegEx + "+"));
         System.out.println("Has next tuple list?: " + scan.useDelimiter(TableRegEx).hasNext(TupleListRegEx));
 
         String table = "(g)(7)";

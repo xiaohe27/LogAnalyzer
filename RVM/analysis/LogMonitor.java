@@ -113,14 +113,10 @@ public class LogMonitor {
         }
 
         long startT = System.currentTimeMillis();
-        long numOfLogEntries = 0;
-        while (lee.hasNext()) {
-            LogEntry logEntry = lee.nextLogEntry();
-            numOfLogEntries++;
-        }
+        lee.start();
 
         long totalT = System.currentTimeMillis() - startT;
-        System.out.println("There are " + numOfLogEntries + " log entries!");
+
         System.out.println("It took my log analyzer " + totalT + " ms to " +
                 "count all the log entries in the log file.");
     }
