@@ -11,9 +11,9 @@ import java.nio.file.StandardOpenOption;
  */
 public class Utils {
 
-    public static void writeToFile(String contents, String fileName){
-        Path p= Paths.get(fileName);
-        byte[] bytes=contents.getBytes();
+    public static void writeToFile(String contents, String fileName) {
+        Path p = Paths.get(fileName);
+        byte[] bytes = contents.getBytes();
         try {
             Files.write(p, bytes, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
         } catch (IOException e) {

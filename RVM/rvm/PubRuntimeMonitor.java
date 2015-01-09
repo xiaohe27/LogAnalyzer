@@ -1,8 +1,10 @@
 package rvm;
+
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 import java.util.*;
 import java.lang.ref.*;
+
 import com.runtimeverification.rvmonitor.java.rt.*;
 import com.runtimeverification.rvmonitor.java.rt.ref.*;
 import com.runtimeverification.rvmonitor.java.rt.table.*;
@@ -14,349 +16,361 @@ import com.runtimeverification.rvmonitor.java.rt.tablebase.IDisableHolder;
 import com.runtimeverification.rvmonitor.java.rt.tablebase.IMonitor;
 import com.runtimeverification.rvmonitor.java.rt.tablebase.DisableHolder;
 import com.runtimeverification.rvmonitor.java.rt.tablebase.TerminatedMonitorCleaner;
+
 import java.util.concurrent.atomic.AtomicInteger;
 
 final class PubMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractMonitorSet<PubMonitor> {
 
-	PubMonitor_Set(){
-		this.size = 0;
-		this.elements = new PubMonitor[4];
-	}
-	final void event_publish(Integer report, String org, long time) {
-		int numAlive = 0 ;
-		for(int i = 0; i < this.size; i++){
-			PubMonitor monitor = this.elements[i];
-			if(!monitor.isTerminated()){
-				elements[numAlive] = monitor;
-				numAlive++;
+    PubMonitor_Set() {
+        this.size = 0;
+        this.elements = new PubMonitor[4];
+    }
 
-				final PubMonitor monitorfinalMonitor = monitor;
-				monitor.Prop_1_event_publish(report, org, time);
-				if(monitorfinalMonitor.Prop_1_Category_violation) {
-					monitorfinalMonitor.Prop_1_handler_violation();
-				}
-			}
-		}
-		for(int i = numAlive; i < this.size; i++){
-			this.elements[i] = null;
-		}
-		size = numAlive;
-	}
-	final void event_approve(Integer report, String manager, long time) {
-		int numAlive = 0 ;
-		for(int i = 0; i < this.size; i++){
-			PubMonitor monitor = this.elements[i];
-			if(!monitor.isTerminated()){
-				elements[numAlive] = monitor;
-				numAlive++;
+    final void event_publish(Integer report, String org, long time) {
+        int numAlive = 0;
+        for (int i = 0; i < this.size; i++) {
+            PubMonitor monitor = this.elements[i];
+            if (!monitor.isTerminated()) {
+                elements[numAlive] = monitor;
+                numAlive++;
 
-				final PubMonitor monitorfinalMonitor = monitor;
-				monitor.Prop_1_event_approve(report, manager, time);
-				if(monitorfinalMonitor.Prop_1_Category_violation) {
-					monitorfinalMonitor.Prop_1_handler_violation();
-				}
-			}
-		}
-		for(int i = numAlive; i < this.size; i++){
-			this.elements[i] = null;
-		}
-		size = numAlive;
-	}
+                final PubMonitor monitorfinalMonitor = monitor;
+                monitor.Prop_1_event_publish(report, org, time);
+                if (monitorfinalMonitor.Prop_1_Category_violation) {
+                    monitorfinalMonitor.Prop_1_handler_violation();
+                }
+            }
+        }
+        for (int i = numAlive; i < this.size; i++) {
+            this.elements[i] = null;
+        }
+        size = numAlive;
+    }
+
+    final void event_approve(Integer report, String manager, long time) {
+        int numAlive = 0;
+        for (int i = 0; i < this.size; i++) {
+            PubMonitor monitor = this.elements[i];
+            if (!monitor.isTerminated()) {
+                elements[numAlive] = monitor;
+                numAlive++;
+
+                final PubMonitor monitorfinalMonitor = monitor;
+                monitor.Prop_1_event_approve(report, manager, time);
+                if (monitorfinalMonitor.Prop_1_Category_violation) {
+                    monitorfinalMonitor.Prop_1_handler_violation();
+                }
+            }
+        }
+        for (int i = numAlive; i < this.size; i++) {
+            this.elements[i] = null;
+        }
+        size = numAlive;
+    }
 }
 
 class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractAtomicMonitor implements Cloneable, com.runtimeverification.rvmonitor.java.rt.RVMObject {
-	protected Object clone() {
-		try {
-			PubMonitor ret = (PubMonitor) super.clone();
-			return ret;
-		}
-		catch (CloneNotSupportedException e) {
-			throw new InternalError(e.toString());
-		}
-	}
+    protected Object clone() {
+        try {
+            PubMonitor ret = (PubMonitor) super.clone();
+            return ret;
+        } catch (CloneNotSupportedException e) {
+            throw new InternalError(e.toString());
+        }
+    }
 
-	Integer report;
-	long time;
-	String manager;
-	String org;
+    Integer report;
+    long time;
+    String manager;
+    String org;
 
-	HashMap<String,String> orgMgr=init();
+    HashMap<String, String> orgMgr = init();
 
-	HashMap<String,String> init(){
-		HashMap<String,String> map=new HashMap<String,String>();
-		map.put("org2","b");
-		map.put("org1","a");
-		return map;
-	}
+    HashMap<String, String> init() {
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put("org2", "b");
+        map.put("org1", "a");
+        return map;
+    }
 
-	static final int Prop_1_transition_publish[] = {2, 0, 3, 3};;
-	static final int Prop_1_transition_approve[] = {1, 1, 3, 3};;
+    static final int Prop_1_transition_publish[] = {2, 0, 3, 3};
+    ;
+    static final int Prop_1_transition_approve[] = {1, 1, 3, 3};
+    ;
 
-	volatile boolean Prop_1_Category_violation = false;
+    volatile boolean Prop_1_Category_violation = false;
 
-	private final AtomicInteger pairValue;
+    private final AtomicInteger pairValue;
 
-	PubMonitor() {
-		this.pairValue = new AtomicInteger(this.calculatePairValue(-1, 0) ) ;
+    PubMonitor() {
+        this.pairValue = new AtomicInteger(this.calculatePairValue(-1, 0));
 
-	}
+    }
 
-	@Override public final int getState() {
-		return this.getState(this.pairValue.get() ) ;
-	}
-	@Override public final int getLastEvent() {
-		return this.getLastEvent(this.pairValue.get() ) ;
-	}
-	private final int getState(int pairValue) {
-		return (pairValue & 3) ;
-	}
-	private final int getLastEvent(int pairValue) {
-		return (pairValue >> 2) ;
-	}
-	private final int calculatePairValue(int lastEvent, int state) {
-		return (((lastEvent + 1) << 2) | state) ;
-	}
+    @Override
+    public final int getState() {
+        return this.getState(this.pairValue.get());
+    }
 
-	private final int handleEvent(int eventId, int[] table) {
-		int nextstate;
-		while (true) {
-			int oldpairvalue = this.pairValue.get() ;
-			int oldstate = this.getState(oldpairvalue) ;
-			nextstate = table [ oldstate ];
-			int nextpairvalue = this.calculatePairValue(eventId, nextstate) ;
-			if (this.pairValue.compareAndSet(oldpairvalue, nextpairvalue) ) {
-				break;
-			}
-		}
-		return nextstate;
-	}
+    @Override
+    public final int getLastEvent() {
+        return this.getLastEvent(this.pairValue.get());
+    }
 
-	final boolean Prop_1_event_publish(Integer report, String org, long time) {
-		{
-			this.report=report;
-			this.org=org;
-			this.time=time;
+    private final int getState(int pairValue) {
+        return (pairValue & 3);
+    }
 
-			String legalMgr=this.orgMgr.get(org);
-			if(legalMgr ==null || this.manager== null)
-			{}
-			else if ( !(legalMgr.equals(this.manager))){
-				System.out.println("Signature on report "+this.report+" is not valid, should be approved by "+legalMgr+".\n"
-				+"but the mgr signed the report is "+this.manager);
-				return true;
-				} else {}
-			}
+    private final int getLastEvent(int pairValue) {
+        return (pairValue >> 2);
+    }
 
-			int nextstate = this.handleEvent(0, Prop_1_transition_publish) ;
-			this.Prop_1_Category_violation = nextstate == 2;
+    private final int calculatePairValue(int lastEvent, int state) {
+        return (((lastEvent + 1) << 2) | state);
+    }
 
-			return true;
-		}
+    private final int handleEvent(int eventId, int[] table) {
+        int nextstate;
+        while (true) {
+            int oldpairvalue = this.pairValue.get();
+            int oldstate = this.getState(oldpairvalue);
+            nextstate = table[oldstate];
+            int nextpairvalue = this.calculatePairValue(eventId, nextstate);
+            if (this.pairValue.compareAndSet(oldpairvalue, nextpairvalue)) {
+                break;
+            }
+        }
+        return nextstate;
+    }
 
-		final boolean Prop_1_event_approve(Integer report, String manager, long time) {
-			{
-				this.report=report;
-				this.time=time;
-				this.manager=manager;
-			}
+    final boolean Prop_1_event_publish(Integer report, String org, long time) {
+        {
+            this.report = report;
+            this.org = org;
+            this.time = time;
 
-			int nextstate = this.handleEvent(1, Prop_1_transition_approve) ;
-			this.Prop_1_Category_violation = nextstate == 2;
+            String legalMgr = this.orgMgr.get(org);
+            if (legalMgr == null || this.manager == null) {
+            } else if (!(legalMgr.equals(this.manager))) {
+                System.out.println("Signature on report " + this.report + " is not valid, should be approved by " + legalMgr + ".\n"
+                        + "but the mgr signed the report is " + this.manager);
+                return true;
+            } else {
+            }
+        }
 
-			return true;
-		}
+        int nextstate = this.handleEvent(0, Prop_1_transition_publish);
+        this.Prop_1_Category_violation = nextstate == 2;
 
-		final void Prop_1_handler_violation (){
-			{ System.out.println("should not publish financial report "+this.report+
-			" to "+this.org+" without pre-approval of manager "+(this.manager==null ? "":this.manager) );}
+        return true;
+    }
 
-		}
+    final boolean Prop_1_event_approve(Integer report, String manager, long time) {
+        {
+            this.report = report;
+            this.time = time;
+            this.manager = manager;
+        }
 
-		final void reset() {
-			this.pairValue.set(this.calculatePairValue(-1, 0) ) ;
+        int nextstate = this.handleEvent(1, Prop_1_transition_approve);
+        this.Prop_1_Category_violation = nextstate == 2;
 
-			Prop_1_Category_violation = false;
-		}
+        return true;
+    }
 
-		// RVMRef_report was suppressed to reduce memory overhead
+    final void Prop_1_handler_violation() {
+        {
+            System.out.println("should not publish financial report " + this.report +
+                    " to " + this.org + " without pre-approval of manager " + (this.manager == null ? "" : this.manager));
+        }
 
-		//alive_parameters_0 = [Integer report]
-		boolean alive_parameters_0 = true;
+    }
 
-		@Override
-		protected final void terminateInternal(int idnum) {
-			int lastEvent = this.getLastEvent();
+    final void reset() {
+        this.pairValue.set(this.calculatePairValue(-1, 0));
 
-			switch(idnum){
-				case 0:
-				alive_parameters_0 = false;
-				break;
-			}
-			switch(lastEvent) {
-				case -1:
-				return;
-				case 0:
-				//publish
-				//alive_report
-				if(!(alive_parameters_0)){
-					RVM_terminated = true;
-					return;
-				}
-				break;
+        Prop_1_Category_violation = false;
+    }
 
-				case 1:
-				//approve
-				//alive_report
-				if(!(alive_parameters_0)){
-					RVM_terminated = true;
-					return;
-				}
-				break;
+    // RVMRef_report was suppressed to reduce memory overhead
 
-			}
-			return;
-		}
+    //alive_parameters_0 = [Integer report]
+    boolean alive_parameters_0 = true;
 
-		public static int getNumberOfEvents() {
-			return 2;
-		}
+    @Override
+    protected final void terminateInternal(int idnum) {
+        int lastEvent = this.getLastEvent();
 
-		public static int getNumberOfStates() {
-			return 4;
-		}
+        switch (idnum) {
+            case 0:
+                alive_parameters_0 = false;
+                break;
+        }
+        switch (lastEvent) {
+            case -1:
+                return;
+            case 0:
+                //publish
+                //alive_report
+                if (!(alive_parameters_0)) {
+                    RVM_terminated = true;
+                    return;
+                }
+                break;
 
-	}
+            case 1:
+                //approve
+                //alive_report
+                if (!(alive_parameters_0)) {
+                    RVM_terminated = true;
+                    return;
+                }
+                break;
 
-	public final class PubRuntimeMonitor implements com.runtimeverification.rvmonitor.java.rt.RVMObject {
-		private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager PubMapManager;
-		static {
-			PubMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
-			PubMapManager.start();
-		}
+        }
+        return;
+    }
 
-		// Declarations for the Lock
-		static final ReentrantLock Pub_RVMLock = new ReentrantLock();
-		static final Condition Pub_RVMLock_cond = Pub_RVMLock.newCondition();
+    public static int getNumberOfEvents() {
+        return 2;
+    }
 
-		private static boolean Pub_activated = false;
+    public static int getNumberOfStates() {
+        return 4;
+    }
 
-		// Declarations for Indexing Trees
-		private static Object Pub_report_Map_cachekey_report;
-		private static PubMonitor Pub_report_Map_cachevalue;
-		private static final MapOfMonitor<PubMonitor> Pub_report_Map = new MapOfMonitor<PubMonitor>(0) ;
+}
 
-		public static int cleanUp() {
-			int collected = 0;
-			// indexing trees
-			collected += Pub_report_Map.cleanUpUnnecessaryMappings();
-			return collected;
-		}
+public final class PubRuntimeMonitor implements com.runtimeverification.rvmonitor.java.rt.RVMObject {
+    private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager PubMapManager;
 
-		// Removing terminated monitors from partitioned sets
-		static {
-			TerminatedMonitorCleaner.start() ;
-		}
-		// Setting the behavior of the runtime library according to the compile-time option
-		static {
-			RuntimeOption.enableFineGrainedLock(false) ;
-		}
+    static {
+        PubMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
+        PubMapManager.start();
+    }
 
-		public static final void publishEvent(Integer report, String org, long time) {
-			Pub_activated = true;
-			while (!Pub_RVMLock.tryLock()) {
-				Thread.yield();
-			}
+    // Declarations for the Lock
+    static final ReentrantLock Pub_RVMLock = new ReentrantLock();
+    static final Condition Pub_RVMLock_cond = Pub_RVMLock.newCondition();
 
-			CachedWeakReference wr_report = null;
-			MapOfMonitor<PubMonitor> matchedLastMap = null;
-			PubMonitor matchedEntry = null;
-			boolean cachehit = false;
-			if ((report == Pub_report_Map_cachekey_report) ) {
-				matchedEntry = Pub_report_Map_cachevalue;
-				cachehit = true;
-			}
-			else {
-				wr_report = new CachedWeakReference(report) ;
-				{
-					// FindOrCreateEntry
-					MapOfMonitor<PubMonitor> itmdMap = Pub_report_Map;
-					matchedLastMap = itmdMap;
-					PubMonitor node_report = Pub_report_Map.getNodeEquivalent(wr_report) ;
-					matchedEntry = node_report;
-				}
-			}
-			// D(X) main:1
-			if ((matchedEntry == null) ) {
-				if ((wr_report == null) ) {
-					wr_report = new CachedWeakReference(report) ;
-				}
-				// D(X) main:4
-				PubMonitor created = new PubMonitor() ;
-				matchedEntry = created;
-				matchedLastMap.putNode(wr_report, created) ;
-			}
-			// D(X) main:8--9
-			final PubMonitor matchedEntryfinalMonitor = matchedEntry;
-			matchedEntry.Prop_1_event_publish(report, org, time);
-			if(matchedEntryfinalMonitor.Prop_1_Category_violation) {
-				matchedEntryfinalMonitor.Prop_1_handler_violation();
-			}
+    private static boolean Pub_activated = false;
 
-			if ((cachehit == false) ) {
-				Pub_report_Map_cachekey_report = report;
-				Pub_report_Map_cachevalue = matchedEntry;
-			}
+    // Declarations for Indexing Trees
+    private static Object Pub_report_Map_cachekey_report;
+    private static PubMonitor Pub_report_Map_cachevalue;
+    private static final MapOfMonitor<PubMonitor> Pub_report_Map = new MapOfMonitor<PubMonitor>(0);
 
-			Pub_RVMLock.unlock();
-		}
+    public static int cleanUp() {
+        int collected = 0;
+        // indexing trees
+        collected += Pub_report_Map.cleanUpUnnecessaryMappings();
+        return collected;
+    }
 
-		public static final void approveEvent(Integer report, String manager, long time) {
-			Pub_activated = true;
-			while (!Pub_RVMLock.tryLock()) {
-				Thread.yield();
-			}
+    // Removing terminated monitors from partitioned sets
+    static {
+        TerminatedMonitorCleaner.start();
+    }
 
-			CachedWeakReference wr_report = null;
-			MapOfMonitor<PubMonitor> matchedLastMap = null;
-			PubMonitor matchedEntry = null;
-			boolean cachehit = false;
-			if ((report == Pub_report_Map_cachekey_report) ) {
-				matchedEntry = Pub_report_Map_cachevalue;
-				cachehit = true;
-			}
-			else {
-				wr_report = new CachedWeakReference(report) ;
-				{
-					// FindOrCreateEntry
-					MapOfMonitor<PubMonitor> itmdMap = Pub_report_Map;
-					matchedLastMap = itmdMap;
-					PubMonitor node_report = Pub_report_Map.getNodeEquivalent(wr_report) ;
-					matchedEntry = node_report;
-				}
-			}
-			// D(X) main:1
-			if ((matchedEntry == null) ) {
-				if ((wr_report == null) ) {
-					wr_report = new CachedWeakReference(report) ;
-				}
-				// D(X) main:4
-				PubMonitor created = new PubMonitor() ;
-				matchedEntry = created;
-				matchedLastMap.putNode(wr_report, created) ;
-			}
-			// D(X) main:8--9
-			final PubMonitor matchedEntryfinalMonitor = matchedEntry;
-			matchedEntry.Prop_1_event_approve(report, manager, time);
-			if(matchedEntryfinalMonitor.Prop_1_Category_violation) {
-				matchedEntryfinalMonitor.Prop_1_handler_violation();
-			}
+    // Setting the behavior of the runtime library according to the compile-time option
+    static {
+        RuntimeOption.enableFineGrainedLock(false);
+    }
 
-			if ((cachehit == false) ) {
-				Pub_report_Map_cachekey_report = report;
-				Pub_report_Map_cachevalue = matchedEntry;
-			}
+    public static final void publishEvent(Integer report, String org, long time) {
+        Pub_activated = true;
+        while (!Pub_RVMLock.tryLock()) {
+            Thread.yield();
+        }
 
-			Pub_RVMLock.unlock();
-		}
+        CachedWeakReference wr_report = null;
+        MapOfMonitor<PubMonitor> matchedLastMap = null;
+        PubMonitor matchedEntry = null;
+        boolean cachehit = false;
+        if ((report == Pub_report_Map_cachekey_report)) {
+            matchedEntry = Pub_report_Map_cachevalue;
+            cachehit = true;
+        } else {
+            wr_report = new CachedWeakReference(report);
+            {
+                // FindOrCreateEntry
+                MapOfMonitor<PubMonitor> itmdMap = Pub_report_Map;
+                matchedLastMap = itmdMap;
+                PubMonitor node_report = Pub_report_Map.getNodeEquivalent(wr_report);
+                matchedEntry = node_report;
+            }
+        }
+        // D(X) main:1
+        if ((matchedEntry == null)) {
+            if ((wr_report == null)) {
+                wr_report = new CachedWeakReference(report);
+            }
+            // D(X) main:4
+            PubMonitor created = new PubMonitor();
+            matchedEntry = created;
+            matchedLastMap.putNode(wr_report, created);
+        }
+        // D(X) main:8--9
+        final PubMonitor matchedEntryfinalMonitor = matchedEntry;
+        matchedEntry.Prop_1_event_publish(report, org, time);
+        if (matchedEntryfinalMonitor.Prop_1_Category_violation) {
+            matchedEntryfinalMonitor.Prop_1_handler_violation();
+        }
 
-	}
+        if ((cachehit == false)) {
+            Pub_report_Map_cachekey_report = report;
+            Pub_report_Map_cachevalue = matchedEntry;
+        }
+
+        Pub_RVMLock.unlock();
+    }
+
+    public static final void approveEvent(Integer report, String manager, long time) {
+        Pub_activated = true;
+        while (!Pub_RVMLock.tryLock()) {
+            Thread.yield();
+        }
+
+        CachedWeakReference wr_report = null;
+        MapOfMonitor<PubMonitor> matchedLastMap = null;
+        PubMonitor matchedEntry = null;
+        boolean cachehit = false;
+        if ((report == Pub_report_Map_cachekey_report)) {
+            matchedEntry = Pub_report_Map_cachevalue;
+            cachehit = true;
+        } else {
+            wr_report = new CachedWeakReference(report);
+            {
+                // FindOrCreateEntry
+                MapOfMonitor<PubMonitor> itmdMap = Pub_report_Map;
+                matchedLastMap = itmdMap;
+                PubMonitor node_report = Pub_report_Map.getNodeEquivalent(wr_report);
+                matchedEntry = node_report;
+            }
+        }
+        // D(X) main:1
+        if ((matchedEntry == null)) {
+            if ((wr_report == null)) {
+                wr_report = new CachedWeakReference(report);
+            }
+            // D(X) main:4
+            PubMonitor created = new PubMonitor();
+            matchedEntry = created;
+            matchedLastMap.putNode(wr_report, created);
+        }
+        // D(X) main:8--9
+        final PubMonitor matchedEntryfinalMonitor = matchedEntry;
+        matchedEntry.Prop_1_event_approve(report, manager, time);
+        if (matchedEntryfinalMonitor.Prop_1_Category_violation) {
+            matchedEntryfinalMonitor.Prop_1_handler_violation();
+        }
+
+        if ((cachehit == false)) {
+            Pub_report_Map_cachekey_report = report;
+            Pub_report_Map_cachevalue = matchedEntry;
+        }
+
+        Pub_RVMLock.unlock();
+    }
+
+}

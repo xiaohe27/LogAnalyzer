@@ -19,9 +19,9 @@ public class FormulaExtractor {
 
     private void init() {
         //needs real impl. it is fake method here
-        this.monitorName="rvm.insertRuntimeMonitor";
+        this.monitorName = "rvm.insertRuntimeMonitor";
 
-        this.methodNameList =new ArrayList<>();
+        this.methodNameList = new ArrayList<>();
         String INSERT = "insert";
 
         this.methodNameList.add(INSERT);

@@ -12,7 +12,7 @@ public class LogEntry {
 
     public LogEntry(long time, HashMap<String, List<EventArg>> tmap) {
         this.time = time;
-        this.tableMap=tmap;
+        this.tableMap = tmap;
     }
 
     public long getTime() {
@@ -41,11 +41,11 @@ public class LogEntry {
 
         public void print() {
             System.out.print("(");
-            for (int i=0 ; i< fields.length -1 ; i++){
-                System.out.print(fields[i]+", ");
+            for (int i = 0; i < fields.length - 1; i++) {
+                System.out.print(fields[i] + ", ");
             }
 
-            System.out.print(fields[fields.length-1]+")");
+            System.out.print(fields[fields.length - 1] + ")");
         }
     }
 }
