@@ -120,11 +120,9 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
      */
     public void start() {
         long numOfLogEntries = 0;
-//        this.scan.skip("\\s*");
 
         while (this.scan.hasNext()) {
             LogEntry logEntry = this.getLogEntry();
-//            this.scan.skip("\\s*");
             numOfLogEntries++;
         }
         System.out.println("There are " + numOfLogEntries + " log entries!");
