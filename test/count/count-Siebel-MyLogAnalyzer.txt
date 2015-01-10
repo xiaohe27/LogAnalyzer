@@ -1,0 +1,7 @@
+Start time : 1420926069
+There are 93149 log entries!
+It took my log analyzer 19525 ms to count all the log entries in the log file.
+
+Finish time : 1420926089
+
+It took my log analyzer 20 seconds to count all the events in the 9M log ldcc4Monpoly at Siebel
