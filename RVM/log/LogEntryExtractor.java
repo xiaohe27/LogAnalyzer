@@ -38,7 +38,6 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
 
         HashMap<String, List<LogEntry.EventArg>> tableMap = new HashMap<>();
 
-
         String time = scan.useDelimiter
                 (RegHelper.Delim4FindingTimeStamp)
                 .next(RegHelper.TimeStamp).replaceAll("\\s", "").replace("@", "");
@@ -130,10 +129,6 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
         return scan.useDelimiter(RegHelper.Delim4FindingTimeStamp).hasNext();
     }
 
-    public boolean hasNextLogEntry() {
-        return this.hasNext();
-    }
-
     @Override
     public LogEntry next() {
         return this.getLogEntry();
@@ -148,18 +143,13 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
      */
     public void start() {
         long numOfLogEntries = 0;
-        this.scan.skip("\\s*");
+//        this.scan.skip("\\s*");
 
-        while (this.scan.useDelimiter(RegHelper.Delim4FindingTimeStamp).hasNext(RegHelper.TimeStamp)) {
-//            LogEntry logEntry = this.getLogEntry();
-
-            System.out.println(this.scan.next(RegHelper.TimeStamp));;
-
-            this.scan.skip("\\s*");
-
+        while (this.scan.hasNext()) {
+            LogEntry logEntry = this.getLogEntry();
+//            this.scan.skip("\\s*");
             numOfLogEntries++;
         }
-
         System.out.println("There are " + numOfLogEntries + " log entries!");
     }
 }
