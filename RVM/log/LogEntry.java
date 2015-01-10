@@ -18,6 +18,16 @@ public class LogEntry {
         return time;
     }
 
+    public String toString(){
+        String output=this.time + "\n";
+
+        for (int i = 0; i < db.size(); i++) {
+            output += db.get(i).toString() + "\n";
+        }
+
+        return output;
+    }
+
     /**
      * Different log may have different event arg.
      * This part should be derived from analyzing sig file.
@@ -36,13 +46,16 @@ public class LogEntry {
             return fields;
         }
 
-        public void print() {
-            System.out.print(this.name + "(");
+        public String toString() {
+
+            String output=this.name + "(";
             for (int i = 0; i < fields.length - 1; i++) {
-                System.out.print(fields[i] + ", ");
+                output += fields[i] + ", ";
             }
 
-            System.out.print(fields[fields.length - 1] + ")");
+            output += fields[fields.length - 1] + ")";
+
+            return output;
         }
 
         public String getName() {
