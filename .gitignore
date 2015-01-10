@@ -2,3 +2,9 @@ out/*
 .idea/*
 *~
 *.class
+*Log.txt
+*.jar
+*.iml
+production/*
+test-out/*
+*.bak

@@ -5,6 +5,7 @@ import com.runtimeverification.rvmonitor.java.rt.ref.CachedWeakReference;
 import com.runtimeverification.rvmonitor.java.rt.table.MapOfMonitor;
 import com.runtimeverification.rvmonitor.java.rt.tablebase.TerminatedMonitorCleaner;
 
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -16,7 +17,7 @@ final class PubMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tab
         this.elements = new PubMonitor[4];
     }
 
-    final void event_publish(Integer report, long time) {
+    final void event_publish(Integer report, String org, long time) {
         int numAlive = 0;
         for (int i = 0; i < this.size; i++) {
             PubMonitor monitor = this.elements[i];
@@ -25,7 +26,7 @@ final class PubMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tab
                 numAlive++;
 
                 final PubMonitor monitorfinalMonitor = monitor;
-                monitor.Prop_1_event_publish(report, time);
+                monitor.Prop_1_event_publish(report, org, time);
                 if (monitorfinalMonitor.Prop_1_Category_violation) {
                     monitorfinalMonitor.Prop_1_handler_violation();
                 }
@@ -37,7 +38,7 @@ final class PubMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tab
         size = numAlive;
     }
 
-    final void event_approve(Integer report, long time) {
+    final void event_approve(Integer report, String manager, long time) {
         int numAlive = 0;
         for (int i = 0; i < this.size; i++) {
             PubMonitor monitor = this.elements[i];
@@ -46,7 +47,7 @@ final class PubMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tab
                 numAlive++;
 
                 final PubMonitor monitorfinalMonitor = monitor;
-                monitor.Prop_1_event_approve(report, time);
+                monitor.Prop_1_event_approve(report, manager, time);
                 if (monitorfinalMonitor.Prop_1_Category_violation) {
                     monitorfinalMonitor.Prop_1_handler_violation();
                 }
@@ -60,14 +61,17 @@ final class PubMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tab
 }
 
 class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractAtomicMonitor implements Cloneable, com.runtimeverification.rvmonitor.java.rt.RVMObject {
-    static final int Prop_1_transition_publish[] = {1, 3, 0, 3};
-    static final int Prop_1_transition_approve[] = {2, 3, 2, 3};
+    static final int Prop_1_transition_publish[] = {2, 0, 3, 3};
+    static final int Prop_1_transition_approve[] = {1, 1, 3, 3};
     private final AtomicInteger pairValue;
     Integer report;
-    ;
     long time;
+    String manager;
+    String org;
+    HashMap<String, String> orgMgr = init();
     ;
     volatile boolean Prop_1_Category_violation = false;
+    ;
     //alive_parameters_0 = [Integer report]
     boolean alive_parameters_0 = true;
 
@@ -91,6 +95,13 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
         } catch (CloneNotSupportedException e) {
             throw new InternalError(e.toString());
         }
+    }
+
+    HashMap<String, String> init() {
+        HashMap<String, String> map = new HashMap<String, String>();
+        map.put("org2", "b");
+        map.put("org1", "a");
+        return map;
     }
 
     @Override
@@ -129,35 +140,47 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
         return nextstate;
     }
 
-    final boolean Prop_1_event_publish(Integer report, long time) {
+    final boolean Prop_1_event_publish(Integer report, String org, long time) {
         {
             this.report = report;
+            this.org = org;
             this.time = time;
+
+            String legalMgr = this.orgMgr.get(org);
+            if (legalMgr == null || this.manager == null) {
+            } else if (!(legalMgr.equals(this.manager))) {
+                System.out.println("Signature on report " + this.report + " is not valid, should be approved by " + legalMgr + ".\n"
+                        + "but the mgr signed the report is " + this.manager);
+                return true;
+            } else {
+            }
         }
 
         int nextstate = this.handleEvent(0, Prop_1_transition_publish);
-        this.Prop_1_Category_violation = nextstate == 1;
+        this.Prop_1_Category_violation = nextstate == 2;
 
         return true;
     }
 
     // RVMRef_report was suppressed to reduce memory overhead
 
-    final boolean Prop_1_event_approve(Integer report, long time) {
+    final boolean Prop_1_event_approve(Integer report, String manager, long time) {
         {
             this.report = report;
             this.time = time;
+            this.manager = manager;
         }
 
         int nextstate = this.handleEvent(1, Prop_1_transition_approve);
-        this.Prop_1_Category_violation = nextstate == 1;
+        this.Prop_1_Category_violation = nextstate == 2;
 
         return true;
     }
 
     final void Prop_1_handler_violation() {
         {
-            System.out.println("should not publish financial report " + this.report + " without pre-approval");
+            System.out.println("should not publish financial report " + this.report +
+                    " to " + this.org + " without pre-approval of manager " + (this.manager == null ? "" : this.manager));
         }
 
     }
@@ -236,7 +259,7 @@ public final class PubRuntimeMonitor implements com.runtimeverification.rvmonito
         RuntimeOption.enableFineGrainedLock(false);
     }
 
-    public static final void publishEvent(Integer report, long time) {
+    public static final void publishEvent(Integer report, String org, long time) {
         Pub_activated = true;
         while (!Pub_RVMLock.tryLock()) {
             Thread.yield();
@@ -271,7 +294,7 @@ public final class PubRuntimeMonitor implements com.runtimeverification.rvmonito
         }
         // D(X) main:8--9
         final PubMonitor matchedEntryfinalMonitor = matchedEntry;
-        matchedEntry.Prop_1_event_publish(report, time);
+        matchedEntry.Prop_1_event_publish(report, org, time);
         if (matchedEntryfinalMonitor.Prop_1_Category_violation) {
             matchedEntryfinalMonitor.Prop_1_handler_violation();
         }
@@ -284,7 +307,7 @@ public final class PubRuntimeMonitor implements com.runtimeverification.rvmonito
         Pub_RVMLock.unlock();
     }
 
-    public static final void approveEvent(Integer report, long time) {
+    public static final void approveEvent(Integer report, String manager, long time) {
         Pub_activated = true;
         while (!Pub_RVMLock.tryLock()) {
             Thread.yield();
@@ -319,7 +342,7 @@ public final class PubRuntimeMonitor implements com.runtimeverification.rvmonito
         }
         // D(X) main:8--9
         final PubMonitor matchedEntryfinalMonitor = matchedEntry;
-        matchedEntry.Prop_1_event_approve(report, time);
+        matchedEntry.Prop_1_event_approve(report, manager, time);
         if (matchedEntryfinalMonitor.Prop_1_Category_violation) {
             matchedEntryfinalMonitor.Prop_1_handler_violation();
         }

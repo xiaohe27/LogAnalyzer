@@ -1,0 +1,10 @@
+@1277201624 insert (script,db2,5,49887299)
+insert (script,db2,5,49887389)
+
+@1277201636 
+insert (script,db2,5,49887299)
+insert (script,db2,5,49887389)
+fake (script1,insert,5,49887438)
+commit (abc, 5, 2.2)
+insert (script,db2,5,4.9888075)
+insert (a)

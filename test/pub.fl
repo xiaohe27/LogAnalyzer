@@ -1,2 +1,0 @@
- ltl: [](publish => (*) approve)
- @violation { System.out.println("should not publish financial report "+this.report+" without pre-approval");}

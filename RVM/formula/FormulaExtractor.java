@@ -19,13 +19,13 @@ public class FormulaExtractor {
 
     private void init() {
         //needs real impl. it is fake method here
-        this.monitorName="rvm.PubRuntimeMonitor";
+        this.monitorName = "rvm.insertRuntimeMonitor";
 
-        this.methodNameList =new ArrayList<>();
-        String PUBLISH = "publish";
-        String APPROVE = "approve";
-        this.methodNameList.add(PUBLISH);
-        this.methodNameList.add(APPROVE);
+        this.methodNameList = new ArrayList<>();
+        String INSERT = "insert";
+
+        this.methodNameList.add(INSERT);
+
     }
 
 
