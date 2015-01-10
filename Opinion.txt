@@ -4,3 +4,6 @@ then invoke the event methods!
 
 Just save (maybe no need to save at all, each time a event is parsed,
 we can discard it or use its data to call the monitoring method) to a list.
+
+***********************
+Monpoly allows optional white spaces in between event names and event args (tuples)

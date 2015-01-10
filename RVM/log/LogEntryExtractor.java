@@ -124,8 +124,6 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
         while (this.scan.hasNext()) {
             LogEntry logEntry = this.getLogEntry();
 
-            System.out.println(logEntry.toString());
-
             numOfLogEntries++;
         }
         System.out.println("There are " + numOfLogEntries + " log entries!");
