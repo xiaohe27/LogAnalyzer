@@ -1,23 +1,14 @@
 package rvm;
 
-import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
-import java.util.*;
-import java.lang.ref.*;
-
-import com.runtimeverification.rvmonitor.java.rt.*;
-import com.runtimeverification.rvmonitor.java.rt.ref.*;
-import com.runtimeverification.rvmonitor.java.rt.table.*;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractIndexingTree;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.SetEventDelegator;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.TableAdopter.Tuple2;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.TableAdopter.Tuple3;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.IDisableHolder;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.IMonitor;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.DisableHolder;
+import com.runtimeverification.rvmonitor.java.rt.RuntimeOption;
+import com.runtimeverification.rvmonitor.java.rt.ref.CachedWeakReference;
+import com.runtimeverification.rvmonitor.java.rt.table.MapOfMonitor;
 import com.runtimeverification.rvmonitor.java.rt.tablebase.TerminatedMonitorCleaner;
 
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 final class PubMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractMonitorSet<PubMonitor> {
 
@@ -70,6 +61,33 @@ final class PubMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tab
 }
 
 class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractAtomicMonitor implements Cloneable, com.runtimeverification.rvmonitor.java.rt.RVMObject {
+    static final int Prop_1_transition_publish[] = {2, 0, 3, 3};
+    static final int Prop_1_transition_approve[] = {1, 1, 3, 3};
+    private final AtomicInteger pairValue;
+    Integer report;
+    long time;
+    String manager;
+    String org;
+    HashMap<String, String> orgMgr = init();
+    ;
+    volatile boolean Prop_1_Category_violation = false;
+    ;
+    //alive_parameters_0 = [Integer report]
+    boolean alive_parameters_0 = true;
+
+    PubMonitor() {
+        this.pairValue = new AtomicInteger(this.calculatePairValue(-1, 0));
+
+    }
+
+    public static int getNumberOfEvents() {
+        return 2;
+    }
+
+    public static int getNumberOfStates() {
+        return 4;
+    }
+
     protected Object clone() {
         try {
             PubMonitor ret = (PubMonitor) super.clone();
@@ -79,32 +97,11 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
         }
     }
 
-    Integer report;
-    long time;
-    String manager;
-    String org;
-
-    HashMap<String, String> orgMgr = init();
-
     HashMap<String, String> init() {
         HashMap<String, String> map = new HashMap<String, String>();
         map.put("org2", "b");
         map.put("org1", "a");
         return map;
-    }
-
-    static final int Prop_1_transition_publish[] = {2, 0, 3, 3};
-    ;
-    static final int Prop_1_transition_approve[] = {1, 1, 3, 3};
-    ;
-
-    volatile boolean Prop_1_Category_violation = false;
-
-    private final AtomicInteger pairValue;
-
-    PubMonitor() {
-        this.pairValue = new AtomicInteger(this.calculatePairValue(-1, 0));
-
     }
 
     @Override
@@ -165,6 +162,8 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
         return true;
     }
 
+    // RVMRef_report was suppressed to reduce memory overhead
+
     final boolean Prop_1_event_approve(Integer report, String manager, long time) {
         {
             this.report = report;
@@ -191,11 +190,6 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
 
         Prop_1_Category_violation = false;
     }
-
-    // RVMRef_report was suppressed to reduce memory overhead
-
-    //alive_parameters_0 = [Integer report]
-    boolean alive_parameters_0 = true;
 
     @Override
     protected final void terminateInternal(int idnum) {
@@ -231,34 +225,22 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
         return;
     }
 
-    public static int getNumberOfEvents() {
-        return 2;
-    }
-
-    public static int getNumberOfStates() {
-        return 4;
-    }
-
 }
 
 public final class PubRuntimeMonitor implements com.runtimeverification.rvmonitor.java.rt.RVMObject {
+    // Declarations for the Lock
+    static final ReentrantLock Pub_RVMLock = new ReentrantLock();
+    static final Condition Pub_RVMLock_cond = Pub_RVMLock.newCondition();
+    private static final MapOfMonitor<PubMonitor> Pub_report_Map = new MapOfMonitor<PubMonitor>(0);
     private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager PubMapManager;
-
     static {
         PubMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
         PubMapManager.start();
     }
-
-    // Declarations for the Lock
-    static final ReentrantLock Pub_RVMLock = new ReentrantLock();
-    static final Condition Pub_RVMLock_cond = Pub_RVMLock.newCondition();
-
     private static boolean Pub_activated = false;
-
     // Declarations for Indexing Trees
     private static Object Pub_report_Map_cachekey_report;
     private static PubMonitor Pub_report_Map_cachevalue;
-    private static final MapOfMonitor<PubMonitor> Pub_report_Map = new MapOfMonitor<PubMonitor>(0);
 
     public static int cleanUp() {
         int collected = 0;

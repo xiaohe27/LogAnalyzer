@@ -1,6 +1,5 @@
 package log;
 
-import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -8,19 +7,15 @@ import java.util.List;
  */
 public class LogEntry {
     private String time;
-    private HashMap<String, List<EventArg>> tableMap;
+    private List<Event> db;
 
-    public LogEntry(String time, HashMap<String, List<EventArg>> tmap) {
+    public LogEntry(String time, List<Event> db) {
         this.time = time;
-        this.tableMap = tmap;
+        this.db = db;
     }
 
     public String getTime() {
         return time;
-    }
-
-    public HashMap<String, List<EventArg>> getTableMap() {
-        return tableMap;
     }
 
     /**
@@ -28,10 +23,12 @@ public class LogEntry {
      * This part should be derived from analyzing sig file.
      * Event is like table, while an eventArg is like a tuple.
      */
-    public static class EventArg {
+    public static class Event {
+        private String name;
         private Object[] fields;
 
-        public EventArg(Object[] fields) {
+        public Event(String name, Object[] fields) {
+            this.name = name;
             this.fields = fields;
         }
 
@@ -40,12 +37,16 @@ public class LogEntry {
         }
 
         public void print() {
-            System.out.print("(");
+            System.out.print(this.name + "(");
             for (int i = 0; i < fields.length - 1; i++) {
                 System.out.print(fields[i] + ", ");
             }
 
             System.out.print(fields[fields.length - 1] + ")");
+        }
+
+        public String getName() {
+            return name;
         }
     }
 }

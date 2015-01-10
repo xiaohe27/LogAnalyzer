@@ -1,23 +1,10 @@
 package rvm;
 
-import java.util.concurrent.*;
-import java.util.concurrent.locks.*;
-import java.util.*;
-import java.lang.ref.*;
-
-import com.runtimeverification.rvmonitor.java.rt.*;
-import com.runtimeverification.rvmonitor.java.rt.ref.*;
-import com.runtimeverification.rvmonitor.java.rt.table.*;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractIndexingTree;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.SetEventDelegator;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.TableAdopter.Tuple2;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.TableAdopter.Tuple3;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.IDisableHolder;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.IMonitor;
-import com.runtimeverification.rvmonitor.java.rt.tablebase.DisableHolder;
+import com.runtimeverification.rvmonitor.java.rt.RuntimeOption;
 import com.runtimeverification.rvmonitor.java.rt.tablebase.TerminatedMonitorCleaner;
 
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 
 final class InsertRawMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractMonitorSet<InsertRawMonitor> {
 
@@ -96,21 +83,17 @@ class InsertRawMonitor extends com.runtimeverification.rvmonitor.java.rt.tableba
 }
 
 public final class insertRuntimeMonitor implements com.runtimeverification.rvmonitor.java.rt.RVMObject {
+    // Declarations for the Lock
+    static final ReentrantLock insert_RVMLock = new ReentrantLock();
+    static final Condition insert_RVMLock_cond = insert_RVMLock.newCondition();
+    // Declarations for Indexing Trees
+    private static final InsertRawMonitor Insert__Map = new InsertRawMonitor();
     private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager insertMapManager;
-
     static {
         insertMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
         insertMapManager.start();
     }
-
-    // Declarations for the Lock
-    static final ReentrantLock insert_RVMLock = new ReentrantLock();
-    static final Condition insert_RVMLock_cond = insert_RVMLock.newCondition();
-
     private static boolean Insert_activated = false;
-
-    // Declarations for Indexing Trees
-    private static final InsertRawMonitor Insert__Map = new InsertRawMonitor();
 
     public static int cleanUp() {
         int collected = 0;

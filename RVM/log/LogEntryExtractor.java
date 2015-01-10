@@ -36,21 +36,23 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
      */
     private LogEntry getLogEntry() {
 
-        HashMap<String, List<LogEntry.EventArg>> tableMap = new HashMap<>();
+        List<LogEntry.Event> eventList = new ArrayList<>();
 
-        String time = scan.useDelimiter
-                (RegHelper.Delim4FindingTimeStamp)
-                .next(RegHelper.TimeStamp).replaceAll("\\s", "").replace("@", "");
+        String time = scan.next();
 
-//        System.out.println("Time is "+time);
+//        System.out.println("Time is " + time);
         do {
-            String eventName = scan.useDelimiter(RegHelper.Delim4FindingEvent)
-                    .next(RegHelper.EventName).replaceAll("\\s", "");
+            String eventName = scan
+                    .next();
 
-//            System.out.println("event is "+eventName);
+//            System.out.println("event is " + eventName);
             //if we found the event is not of our interest, then skip
             if (TableCol.get(eventName) == null) {
-//                System.out.println("No record for "+eventName);
+//                System.out.println("No record for " + eventName);
+                while (scan.hasNext(RegHelper.TupleRegEx)) {
+                    scan.skip(RegHelper.SkipEvent);
+                }
+
                 continue;
             } else {
 //                System.out.println("Has record for "+eventName);
@@ -58,25 +60,12 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
 
 
             //list of tuples in the table with name 'eventName'
-            List<LogEntry.EventArg> eventArgs = new ArrayList<LogEntry.EventArg>();
-
-
-            String curTupleList = scan.useDelimiter(RegHelper.Delim4FindingTupleList)
-                    .next(RegHelper.TupleListRegEx).replaceAll("\\s", "");
-            String[] tuples = curTupleList.split("\\)\\(");
-            //after splitting, only the first and last tuple need to be further processed,
-            //all the tuples in the middle have already been in the form of fields.
-            if (tuples.length > 0) {
-                tuples[0] = tuples[0].replace("(", "");
-                tuples[tuples.length - 1] = tuples[tuples.length - 1].replace(")", "");
-            }
-
-            for (int k = 0; k < tuples.length; k++) {
-                String fields = tuples[k];
+            do {
+                String curTuple = scan.next();
                 Object[] argsInTuple = new Object[TableCol.get(eventName).length];
-                String[] fieldsData = fields.split(",");
+                String[] fieldsData = curTuple.substring(1, curTuple.length() - 1).split(",");
                 for (int i = 0; i < TableCol.get(eventName).length; i++) {
-                    String dataI = fieldsData[i].replaceAll("\\s", "");
+                    String dataI = fieldsData[i];
 
 //                           System.out.println("No."+i+" field type of table "+
 //                     eventName+" is "+RegHelper.getTypeName(TableCol.get(eventName)[i]));
@@ -103,25 +92,17 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
                             break;
                     }
                 }
-                eventArgs.add(new LogEntry.EventArg
-                        (argsInTuple));
-            }
+                eventList.add(new LogEntry.Event
+                        (eventName, argsInTuple));
 
-
-            //it is possible that multiple tables have the same name, then they can be combined to a single table
-            //by merge their tuple sets.
-            List<LogEntry.EventArg> prevRecords = tableMap.get(eventName);
-            if (prevRecords == null) {
-                tableMap.put(eventName, eventArgs);
-            } else {
-                prevRecords.addAll(eventArgs);
-            }
+            } while (scan.hasNext(RegHelper.TupleRegEx));
 
 //        System.out.println("event is "+eventName+" and time is "+time);
 //        System.out.println(eventArgs.size()+" is the num of tuples");
-        } while (scan.useDelimiter(RegHelper.Delim4FindingEvent).hasNext(RegHelper.EventName));
+        } while (scan.hasNext(RegHelper.EventName));
 
-        return new LogEntry(time, tableMap);
+//        System.out.println("Log entry generated, " + eventList.size() + " events inside");
+        return new LogEntry(time, eventList);
     }
 
     @Override
@@ -132,10 +113,6 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
     @Override
     public LogEntry next() {
         return this.getLogEntry();
-    }
-
-    public LogEntry nextLogEntry() {
-        return this.next();
     }
 
     /**

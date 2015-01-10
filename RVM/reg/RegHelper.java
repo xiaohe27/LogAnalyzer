@@ -13,28 +13,6 @@ public class RegHelper {
     public static final int LONG_TYPE = 3;
     public static final int STRING_TYPE = 4;
 
-//    public static final String getTypeName(int typeId) {
-//        switch (typeId) {
-//            case INT_TYPE:
-//                return "int";
-//
-//            case FLOAT_TYPE:
-//                return "float";
-//
-//            case DOUBLE_TYPE:
-//                return "double";
-//
-//            case LONG_TYPE:
-//                return "long";
-//
-//            case STRING_TYPE:
-//                return "string";
-//
-//            default:
-//                return "Unknown type";
-//        }
-//    }
-
     // '_' | '[' | ']' | '/' | ':' | '-' | '.' | '!')* | '"'[^'"']*'"'
     public static final Pattern DoubleQuotesRegEx = Pattern.compile("\"([^\"]+)\"");
     public static final Pattern StringRegEx = Pattern.compile(addSpace("([\\p{Alnum}_\\[\\]\\/\\:\\-\\.\\!]+)")
@@ -56,6 +34,8 @@ public class RegHelper {
     public static final Pattern Delim4FindingTupleList = Pattern.compile(TableRegEx + "|@");
     public static final Pattern Delim4FindingEvent = Pattern.compile(TupleListRegEx.toString());
 
+    public static final Pattern SkipEvent = Pattern.compile("\\s|" + TupleRegEx);
+
     public static final String addRealParen(String str) {
         return addToGroup(addSpace("\\(") + str + addSpace("\\)"));
     }
@@ -65,7 +45,9 @@ public class RegHelper {
     }
 
     public static final String addSpace(String str) {
-        return "\\s*" + str + "\\s*";
+
+//        return "\\s*" + str + "\\s*";
+        return str;
     }
 
     public static void main(String[] args) {
