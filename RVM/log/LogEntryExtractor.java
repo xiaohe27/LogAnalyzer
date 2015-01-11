@@ -8,7 +8,7 @@ import java.util.*;
 /**
  * Serves as lexer and parser for log file.
  */
-public class LogEntryExtractor implements Iterator<LogEntry> {
+public class LogEntryExtractor {
 
     /**
      * Given a table name, return the list of types that represent the types for each column (table schema).
@@ -27,6 +27,116 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
         InputStreamReader isReader = new InputStreamReader(System.in);
         scan = new Scanner(new BufferedReader(isReader));
     }
+
+    /**
+     * Use methods in nio.
+     */
+
+    private static String EventName;
+
+    /**
+     * Read file line by line.
+     */
+    public void startLineByLine() {
+        long numOfLogEntries = 0;
+//        scan.skip("\\s*");
+        //Read the first line
+        String line = null;
+        if (scan.hasNextLine()) {
+            line = scan.nextLine();
+            numOfLogEntries++;
+        } else {
+            System.out.println("Empty file");
+            System.exit(0);
+        }
+        List<LogEntry.Event> eventList = new ArrayList<>();
+        String[] tsAndFirstEvent = line.split("\\s+");
+//        if (tsAndFirstEvent[0].charAt(0) != '@'){
+//            throw new Exception("Not well formed log entry");
+//        }
+        EventName = tsAndFirstEvent[1];
+        for (int i = 2; i < tsAndFirstEvent.length; i++) {
+            eventList.add(this.getEvent(tsAndFirstEvent[i]));
+        }
+
+        //read the remaining lines
+        String[] eventLine = null;
+        try {
+            while (true) {
+                line = scan.skip("\\s*").nextLine();
+                if (line.charAt(0) == '@') {
+                    numOfLogEntries++;
+                    //encounter new log entry, so we can construct the old one now
+                    LogEntry logEntry = new LogEntry(tsAndFirstEvent[0], eventList);
+
+//                    System.out.println("No." + (numOfLogEntries - 2) + " log entry is ");
+//                    System.out.println(logEntry.toString());
+
+                    //process the new log entry
+                    eventList = new ArrayList<>();
+                    tsAndFirstEvent = line.split("\\s+");
+                    EventName = tsAndFirstEvent[1];
+
+                    for (int i = 2; i < tsAndFirstEvent.length; i++) {
+                        eventList.add(this.getEvent(tsAndFirstEvent[i]));
+                    }
+                } else {
+                    eventLine = line.split("\\s+");
+                    EventName = eventLine[0];
+
+                    for (int i = 1; i < eventLine.length; i++) {
+                        eventList.add(this.getEvent(eventLine[i]));
+                    }
+                }
+            }
+        } catch (NoSuchElementException e) {
+//            System.out.println("End of file");
+            System.out.println("There are " + numOfLogEntries + " log entries in the log file!~!");
+
+            LogEntry logEntry = new LogEntry(tsAndFirstEvent[0], eventList);
+
+//            System.out.println("No."+(numOfLogEntries-1)+" event is ");
+//            System.out.println(logEntry.toString());
+
+        }
+
+    }
+
+    private LogEntry.Event getEvent(String tuple) {
+        Object[] argsInTuple = new Object[TableCol.get(EventName).length];
+        String[] fieldsData = tuple.substring(1, tuple.length() - 1).split(",");
+        for (int i = 0; i < TableCol.get(EventName).length; i++) {
+            String dataI = fieldsData[i];
+
+//                           System.out.println("No."+i+" field type of table "+
+//                     eventName+" is "+RegHelper.getTypeName(TableCol.get(eventName)[i]));
+
+            switch (TableCol.get(EventName)[i]) {
+                case RegHelper.INT_TYPE:
+                    argsInTuple[i] = Integer.parseInt(dataI);
+                    break;
+
+                case RegHelper.LONG_TYPE:
+                    argsInTuple[i] = Long.parseLong(dataI);
+                    break;
+
+                case RegHelper.FLOAT_TYPE:
+                    argsInTuple[i] = Float.parseFloat(dataI);
+                    break;
+
+                case RegHelper.DOUBLE_TYPE:
+                    argsInTuple[i] = Double.parseDouble(dataI);
+                    break;
+
+                case RegHelper.STRING_TYPE:
+                    argsInTuple[i] = dataI;
+                    break;
+            }
+        }
+        return new LogEntry.Event
+                (EventName, argsInTuple);
+    }
+
 
     /**
      * A log entry is a time-stamped database, where a database is a collection of tables.
@@ -105,20 +215,11 @@ public class LogEntryExtractor implements Iterator<LogEntry> {
         return new LogEntry(time, eventList);
     }
 
-    @Override
-    public boolean hasNext() {
-        return scan.useDelimiter(RegHelper.Delim4FindingTimeStamp).hasNext();
-    }
-
-    @Override
-    public LogEntry next() {
-        return this.getLogEntry();
-    }
 
     /**
      * Just test whether the efficiency can be improved.
      */
-    public void start() {
+    public void start_regex() {
         long numOfLogEntries = 0;
 
         while (this.scan.hasNext()) {

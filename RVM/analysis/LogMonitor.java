@@ -109,7 +109,7 @@ public class LogMonitor {
         }
 
         long startT = System.currentTimeMillis();
-        lee.start();
+        lee.startLineByLine();
 
         long totalT = System.currentTimeMillis() - startT;
 

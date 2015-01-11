@@ -41,7 +41,8 @@ public class RegHelper {
     }
 
     public static final String addToGroup(String str) {
-        return "(" + str + ")";
+//        return "(" + str + ")";
+        return str;
     }
 
     public static final String addSpace(String str) {
