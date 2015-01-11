@@ -43,8 +43,13 @@ public class LogEntryExtractor {
         //Read the first line
         String line = null;
         if (scan.hasNextLine()) {
-            line = scan.nextLine();
-            numOfLogEntries++;
+            line = scan.nextLine().trim();
+            if (line.charAt(0) == '@')
+                numOfLogEntries++;
+            else {
+                System.out.println("Log file not well formed, time stamp expected");
+                System.exit(0);
+            }
         } else {
             System.out.println("Empty file");
             System.exit(0);
@@ -54,7 +59,8 @@ public class LogEntryExtractor {
 //        if (tsAndFirstEvent[0].charAt(0) != '@'){
 //            throw new Exception("Not well formed log entry");
 //        }
-        EventName = tsAndFirstEvent[1];
+        if (tsAndFirstEvent.length >= 2)
+            EventName = tsAndFirstEvent[1];
         for (int i = 2; i < tsAndFirstEvent.length; i++) {
             eventList.add(this.getEvent(tsAndFirstEvent[i]));
         }
@@ -75,7 +81,9 @@ public class LogEntryExtractor {
                     //process the new log entry
                     eventList = new ArrayList<>();
                     tsAndFirstEvent = line.split("\\s+");
-                    EventName = tsAndFirstEvent[1];
+
+                    if (tsAndFirstEvent.length >= 2)
+                        EventName = tsAndFirstEvent[1];
 
                     for (int i = 2; i < tsAndFirstEvent.length; i++) {
                         eventList.add(this.getEvent(tsAndFirstEvent[i]));
@@ -95,7 +103,7 @@ public class LogEntryExtractor {
 
             LogEntry logEntry = new LogEntry(tsAndFirstEvent[0], eventList);
 
-//            System.out.println("No."+(numOfLogEntries-1)+" event is ");
+//            System.out.println("No." + (numOfLogEntries - 1) + " event is ");
 //            System.out.println(logEntry.toString());
 
         }
