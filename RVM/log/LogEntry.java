@@ -18,8 +18,8 @@ public class LogEntry {
         return time;
     }
 
-    public String toString(){
-        String output=this.time + "\n";
+    public String toString() {
+        String output = this.time + "\n";
 
         for (int i = 0; i < db.size(); i++) {
             output += db.get(i).toString() + "\n";
@@ -48,7 +48,7 @@ public class LogEntry {
 
         public String toString() {
 
-            String output=this.name + "(";
+            String output = this.name + "(";
             for (int i = 0; i < fields.length - 1; i++) {
                 output += fields[i] + ", ";
             }

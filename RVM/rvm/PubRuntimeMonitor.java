@@ -233,10 +233,12 @@ public final class PubRuntimeMonitor implements com.runtimeverification.rvmonito
     static final Condition Pub_RVMLock_cond = Pub_RVMLock.newCondition();
     private static final MapOfMonitor<PubMonitor> Pub_report_Map = new MapOfMonitor<PubMonitor>(0);
     private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager PubMapManager;
+
     static {
         PubMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
         PubMapManager.start();
     }
+
     private static boolean Pub_activated = false;
     // Declarations for Indexing Trees
     private static Object Pub_report_Map_cachekey_report;

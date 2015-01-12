@@ -2,11 +2,14 @@ package log;
 
 import reg.RegHelper;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * Serves as lexer and parser for log file.
@@ -14,20 +17,17 @@ import java.util.*;
 public class LogEntryExtractor {
 
     /**
+     * Use methods in nio.
+     */
+
+    private static String EventName;
+    /**
      * Given a table name, return the list of types that represent the types for each column (table schema).
      */
     private HashMap<String, Integer[]> TableCol;
-//    private List<String> lines;
+    //    private List<String> lines;
 //    private Scanner scan;
     private BufferedReader bufferedReader;
-
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
-        this.TableCol = tableCol;
-//        FileInputStream fis = new FileInputStream(logFile.getPath());
-        this.bufferedReader= Files.newBufferedReader(logFile, Charset.forName("ISO-8859-1"));
-//        scan = new Scanner(br);
-//        this.lines= Files.readAllLines(logFile, Charset.forName("ISO-8859-1"));
-    }
 
 //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
 //        this.TableCol = tableCol;
@@ -35,23 +35,25 @@ public class LogEntryExtractor {
 //        scan = new Scanner(new BufferedReader(isReader));
 //    }
 
-    /**
-     * Use methods in nio.
-     */
-
-    private static String EventName;
+    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
+        this.TableCol = tableCol;
+//        FileInputStream fis = new FileInputStream(logFile.getPath());
+        this.bufferedReader = Files.newBufferedReader(logFile, Charset.forName("ISO-8859-1"));
+//        scan = new Scanner(br);
+//        this.lines= Files.readAllLines(logFile, Charset.forName("ISO-8859-1"));
+    }
 
     /**
      * Read file line by line.
      */
     public void startLineByLine() throws IOException {
         long numOfLogEntries = 0;
-        int lineNum=0;
+        int lineNum = 0;
 //        scan.skip("\\s*");
         //Read the first line
         String line = null;
         if (this.bufferedReader.ready()) {
-            line = this.bufferedReader.readLine().trim();
+            line = this.bufferedReader.readLine();
             if (line.charAt(0) == '@')
                 numOfLogEntries++;
             else {
@@ -67,8 +69,8 @@ public class LogEntryExtractor {
 //        if (tsAndFirstEvent[0].charAt(0) != '@'){
 //            throw new Exception("Not well formed log entry");
 //        }
-        if (tsAndFirstEvent.length >= 2)
-            EventName = tsAndFirstEvent[1];
+
+        EventName = tsAndFirstEvent[1];
         for (int i = 2; i < tsAndFirstEvent.length; i++) {
             eventList.add(this.getEvent(tsAndFirstEvent[i]));
         }
@@ -77,13 +79,13 @@ public class LogEntryExtractor {
         String[] eventLine = null;
         try {
             while (true) {
-                try {
-                    while((line = this.bufferedReader.readLine()).matches("\\s*"))
-                    {}
-                } catch (Exception excep2){
-                    throw new NoSuchElementException();
-                }
-
+//                try {
+//                    while((line = this.bufferedReader.readLine()).matches("\\s*"))
+//                    {}
+//                } catch (Exception excep2){
+//                    throw new NoSuchElementException();
+//                }
+                line = this.bufferedReader.readLine();
                 if (line.charAt(0) == '@') {
                     numOfLogEntries++;
                     //encounter new log entry, so we can construct the old one now
@@ -96,8 +98,7 @@ public class LogEntryExtractor {
                     eventList = new ArrayList<>();
                     tsAndFirstEvent = line.split("\\s+");
 
-                    if (tsAndFirstEvent.length >= 2)
-                        EventName = tsAndFirstEvent[1];
+                    EventName = tsAndFirstEvent[1];
 
                     for (int i = 2; i < tsAndFirstEvent.length; i++) {
                         eventList.add(this.getEvent(tsAndFirstEvent[i]));
@@ -111,7 +112,7 @@ public class LogEntryExtractor {
                     }
                 }
             }
-        } catch (NoSuchElementException e) {
+        } catch (Exception e) {
 //            System.out.println("End of file");
             System.out.println("There are " + numOfLogEntries + " log entries in the log file!~!");
 
@@ -121,7 +122,6 @@ public class LogEntryExtractor {
 //            System.out.println(logEntry.toString());
 
         }
-
     }
 
     private LogEntry.Event getEvent(String tuple) {

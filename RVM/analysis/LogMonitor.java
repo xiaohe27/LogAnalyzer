@@ -4,7 +4,6 @@ import log.LogEntryExtractor;
 import reg.RegHelper;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
