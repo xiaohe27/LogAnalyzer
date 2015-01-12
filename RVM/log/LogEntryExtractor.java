@@ -17,15 +17,16 @@ public class LogEntryExtractor {
      * Given a table name, return the list of types that represent the types for each column (table schema).
      */
     private HashMap<String, Integer[]> TableCol;
-    private List<String> lines;
+//    private List<String> lines;
 //    private Scanner scan;
+    private BufferedReader bufferedReader;
 
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
         this.TableCol = tableCol;
 //        FileInputStream fis = new FileInputStream(logFile.getPath());
-//        BufferedReader br= Files.newBufferedReader(logFile, Charset.forName("ISO-8859-1"));
+        this.bufferedReader= Files.newBufferedReader(logFile, Charset.forName("ISO-8859-1"));
 //        scan = new Scanner(br);
-        this.lines= Files.readAllLines(logFile, Charset.forName("ISO-8859-1"));
+//        this.lines= Files.readAllLines(logFile, Charset.forName("ISO-8859-1"));
     }
 
 //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
@@ -43,14 +44,14 @@ public class LogEntryExtractor {
     /**
      * Read file line by line.
      */
-    public void startLineByLine() {
+    public void startLineByLine() throws IOException {
         long numOfLogEntries = 0;
         int lineNum=0;
 //        scan.skip("\\s*");
         //Read the first line
         String line = null;
-        if (lines.size() > 0) {
-            line = lines.get(lineNum++).trim();
+        if (this.bufferedReader.ready()) {
+            line = this.bufferedReader.readLine().trim();
             if (line.charAt(0) == '@')
                 numOfLogEntries++;
             else {
@@ -77,9 +78,9 @@ public class LogEntryExtractor {
         try {
             while (true) {
                 try {
-                    while((line = lines.get(lineNum++)).matches("\\s*"))
+                    while((line = this.bufferedReader.readLine()).matches("\\s*"))
                     {}
-                } catch (IndexOutOfBoundsException ioutBoundException){
+                } catch (Exception excep2){
                     throw new NoSuchElementException();
                 }
 

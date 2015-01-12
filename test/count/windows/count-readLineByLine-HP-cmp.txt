@@ -10,3 +10,7 @@ It took my log analyzer 21693 ms to count all the log entries in the log file.
 Read All lines:
 There are 93149 log entries in the log file!~!
 It took my log analyzer 14321 ms to count all the log entries in the log file.
+
+Read line by line (with BufferedReader, no regex)
+There are 93149 log entries in the log file!~!
+It took my log analyzer 12399 ms to count all the log entries in the log file.
