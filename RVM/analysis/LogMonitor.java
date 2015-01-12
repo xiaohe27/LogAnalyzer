@@ -95,17 +95,17 @@ public class LogMonitor {
      *
      * @param path2LogFile
      */
-    public void monitor(Path path2LogFile) throws FileNotFoundException {
+    public void monitor(Path path2LogFile) throws IOException {
         LogEntryExtractor lee = null;
 
         if (path2LogFile != null) {
             //the path to the log file should be obtained from outside as an argument of 'main'
             File logFile = path2LogFile.toFile();
 
-            lee = new LogEntryExtractor(this.TableCol, logFile);
+            lee = new LogEntryExtractor(this.TableCol, path2LogFile);
 
         } else { //path to log file is null: indicating the scanner will read log entries from System.in
-            lee = new LogEntryExtractor(this.TableCol);
+//            lee = new LogEntryExtractor(this.TableCol);
         }
 
         long startT = System.currentTimeMillis();
