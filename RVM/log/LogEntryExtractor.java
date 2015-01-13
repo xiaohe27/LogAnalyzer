@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.regex.Matcher;
 
 /**
  * Serves as lexer and parser for log file.
@@ -29,6 +30,8 @@ public class LogEntryExtractor {
 //    private Scanner scan;
     private BufferedReader bufferedReader;
 
+    private RegHelper regHelper;
+
 //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
 //        this.TableCol = tableCol;
 //        InputStreamReader isReader = new InputStreamReader(System.in);
@@ -39,7 +42,7 @@ public class LogEntryExtractor {
         this.TableCol = tableCol;
 //        FileInputStream fis = new FileInputStream(logFile.getPath());
         this.bufferedReader = Files.newBufferedReader(logFile, Charset.forName("ISO-8859-1"));
-//        scan = new Scanner(br);
+        this.regHelper = new RegHelper(tableCol);
 //        this.lines= Files.readAllLines(logFile, Charset.forName("ISO-8859-1"));
     }
 
@@ -74,6 +77,8 @@ public class LogEntryExtractor {
         for (int i = 2; i < tsAndFirstEvent.length; i++) {
             eventList.add(this.getEvent(tsAndFirstEvent[i]));
         }
+//        eventList.add(this.getOneEvent(line));
+//        eventList.addAll(this.getEventList(line));
 
         //read the remaining lines
         String[] eventLine = null;
@@ -103,6 +108,7 @@ public class LogEntryExtractor {
                     for (int i = 2; i < tsAndFirstEvent.length; i++) {
                         eventList.add(this.getEvent(tsAndFirstEvent[i]));
                     }
+
                 } else {
                     eventLine = line.split("\\s+");
                     EventName = eventLine[0];
@@ -111,6 +117,8 @@ public class LogEntryExtractor {
                         eventList.add(this.getEvent(eventLine[i]));
                     }
                 }
+//                eventList.add(this.getOneEvent(line));
+//                eventList.addAll(this.getEventList(line));
             }
         } catch (Exception e) {
 //            System.out.println("End of file");
@@ -123,6 +131,82 @@ public class LogEntryExtractor {
 
         }
     }
+
+    private List<LogEntry.Event> getEventList(String tuples) {
+        List<LogEntry.Event> eventList = new ArrayList<>();
+//        System.out.println("Event is <"+EventName+">");
+//        this.regHelper.showEventTupleRegEx();
+
+        Matcher matcher = this.regHelper.eventTupleRegEx.get(EventName).matcher(tuples);
+
+//        System.out.println("The event " + EventName + "'s tuple's pattern is " +
+//                this.regHelper.eventTupleRegEx.get(EventName));
+
+        Integer[] argTypes = TableCol.get(EventName);
+        Object[] argsInTuple = new Object[argTypes.length];
+
+        while (matcher.find()) {     //continuously find the tuples of the table
+//            System.out.println("We found the tuple " + matcher.group(0));
+
+            for (int i = 0; i < argsInTuple.length; i++) {
+                String dataI = matcher.group(i + 1);
+
+                switch (argTypes[i]) {
+                    case RegHelper.INT_TYPE:
+                        argsInTuple[i] = Integer.parseInt(dataI);
+                        break;
+
+
+                    case RegHelper.FLOAT_TYPE:
+                        argsInTuple[i] = Float.parseFloat(dataI);
+                        break;
+
+
+                    case RegHelper.STRING_TYPE:
+                        argsInTuple[i] = dataI;
+                        break;
+                }
+            }
+
+            eventList.add(new LogEntry.Event
+                    (EventName, argsInTuple));
+        }
+        return eventList;
+    }
+
+    private LogEntry.Event getOneEvent(String tuple) {
+
+        Matcher matcher = this.regHelper.eventTupleRegEx.get(EventName).matcher(tuple);
+
+        Integer[] argTypes = TableCol.get(EventName);
+        Object[] argsInTuple = new Object[argTypes.length];
+
+        if (matcher.find()) {     //continuously find the tuples of the table
+//            System.out.println("We found the tuple " + matcher.group(0));
+
+            for (int i = 0; i < argsInTuple.length; i++) {
+                String dataI = matcher.group(i + 1);
+
+                switch (argTypes[i]) {
+                    case RegHelper.INT_TYPE:
+                        argsInTuple[i] = Integer.parseInt(dataI);
+                        break;
+
+
+                    case RegHelper.FLOAT_TYPE:
+                        argsInTuple[i] = Float.parseFloat(dataI);
+                        break;
+
+
+                    case RegHelper.STRING_TYPE:
+                        argsInTuple[i] = dataI;
+                        break;
+                }
+            }
+        }
+        return new LogEntry.Event(EventName, argsInTuple);
+    }
+
 
     private LogEntry.Event getEvent(String tuple) {
         Object[] argsInTuple = new Object[TableCol.get(EventName).length];
@@ -138,16 +222,8 @@ public class LogEntryExtractor {
                     argsInTuple[i] = Integer.parseInt(dataI);
                     break;
 
-                case RegHelper.LONG_TYPE:
-                    argsInTuple[i] = Long.parseLong(dataI);
-                    break;
-
                 case RegHelper.FLOAT_TYPE:
                     argsInTuple[i] = Float.parseFloat(dataI);
-                    break;
-
-                case RegHelper.DOUBLE_TYPE:
-                    argsInTuple[i] = Double.parseDouble(dataI);
                     break;
 
                 case RegHelper.STRING_TYPE:

@@ -38,16 +38,8 @@ public class LogMonitor {
                         argTyList4CurMeth[i] = Integer.class;
                         break;
 
-                    case RegHelper.LONG_TYPE:
-                        argTyList4CurMeth[i] = Long.class;
-                        break;
-
                     case RegHelper.FLOAT_TYPE:
                         argTyList4CurMeth[i] = Float.class;
-                        break;
-
-                    case RegHelper.DOUBLE_TYPE:
-                        argTyList4CurMeth[i] = Double.class;
                         break;
 
                     case RegHelper.STRING_TYPE:
