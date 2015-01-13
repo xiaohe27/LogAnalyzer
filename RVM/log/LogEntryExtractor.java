@@ -8,7 +8,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.regex.Matcher;
 
 /**
@@ -75,21 +74,21 @@ public class LogEntryExtractor {
                     TimeStamp = tsAndFirstEvent[0];
                     EventName = tsAndFirstEvent[1];
 
-                    for (int i = 2; i < tsAndFirstEvent.length; i++) {
-                        this.triggerEvent(tsAndFirstEvent[i]);
-                    }
+//                    for (int i = 2; i < tsAndFirstEvent.length; i++) {
+//                        this.triggerEvent(tsAndFirstEvent[i]);
+//                    }
 
                 } else {
                     String eventLine[] = line.split("\\s+");
                     EventName = eventLine[0];
 
-                    for (int i = 1; i < eventLine.length; i++) {
-                        this.triggerEvent(eventLine[i]);
-                    }
+//                    for (int i = 1; i < eventLine.length; i++) {
+//                        this.triggerEvent(eventLine[i]);
+//                    }
                 }
 
                 //use matcher to find args in the tuple and trigger event...
-//                this.getOneEventViaRegEx(line);
+                this.triggerEventsViaRegEx(line);
             }
         } catch (Exception e) {
 //            System.out.println("End of file");
@@ -100,14 +99,14 @@ public class LogEntryExtractor {
     }
 
 
-    private void getOneEventViaRegEx(String tuple) {
+    private void triggerEventsViaRegEx(String line) {
 
-        Matcher matcher = this.regHelper.eventTupleRegEx.get(EventName).matcher(tuple);
+        Matcher matcher = this.regHelper.eventTupleRegEx.get(EventName).matcher(line);
 
         Integer[] argTypes = TableCol.get(EventName);
         Object[] argsInTuple = this.TableData.get(this.EventName);
 
-        if (matcher.find()) {     //continuously find the tuples of the table
+        while (matcher.find()) {     //continuously find the tuples of the table
 //            System.out.println("We found the tuple " + matcher.group(0));
 
             for (int i = 0; i < argsInTuple.length; i++) {
@@ -129,6 +128,8 @@ public class LogEntryExtractor {
                         break;
                 }
             }
+            //trigger event using the info gathered so far
+//            this.printEvent();
         }
 
     }
