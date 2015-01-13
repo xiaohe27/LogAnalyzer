@@ -74,10 +74,10 @@ public class LogEntryExtractor {
 //        }
 
         EventName = tsAndFirstEvent[1];
-        for (int i = 2; i < tsAndFirstEvent.length; i++) {
-            eventList.add(this.getEvent(tsAndFirstEvent[i]));
-        }
-//        eventList.add(this.getOneEvent(line));
+//        for (int i = 2; i < tsAndFirstEvent.length; i++) {
+//            eventList.add(this.getEvent(tsAndFirstEvent[i]));
+//        }
+        eventList.add(this.getOneEvent(line));
 //        eventList.addAll(this.getEventList(line));
 
         //read the remaining lines
@@ -105,19 +105,19 @@ public class LogEntryExtractor {
 
                     EventName = tsAndFirstEvent[1];
 
-                    for (int i = 2; i < tsAndFirstEvent.length; i++) {
-                        eventList.add(this.getEvent(tsAndFirstEvent[i]));
-                    }
+//                    for (int i = 2; i < tsAndFirstEvent.length; i++) {
+//                        eventList.add(this.getEvent(tsAndFirstEvent[i]));
+//                    }
 
                 } else {
                     eventLine = line.split("\\s+");
                     EventName = eventLine[0];
 
-                    for (int i = 1; i < eventLine.length; i++) {
-                        eventList.add(this.getEvent(eventLine[i]));
-                    }
+//                    for (int i = 1; i < eventLine.length; i++) {
+//                        eventList.add(this.getEvent(eventLine[i]));
+//                    }
                 }
-//                eventList.add(this.getOneEvent(line));
+                eventList.add(this.getOneEvent(line));
 //                eventList.addAll(this.getEventList(line));
             }
         } catch (Exception e) {
