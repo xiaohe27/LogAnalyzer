@@ -15,20 +15,10 @@ public class RegHelper {
     // '_' | '[' | ']' | '/' | ':' | '-' | '.' | '!')* | '"'[^'"']*'"'
 
     public static final String IntReg = "(\\d+)";
-
     public static final String FloatReg = "(\\d*.\\d+)";
-
     public static final String DoubleQuotesRegEx = "\"[^\"]+\"";
-
     public static final String StringRegEx = "(" + "[\\w\\[\\]\\/\\:\\-\\.\\!]+|" + DoubleQuotesRegEx + ")";
-
     public static final String TimeStamp = "(@\\d+)";
-
-
-    public static final Pattern IntPat = Pattern.compile(IntReg);
-    public static final Pattern FloatPat = Pattern.compile(FloatReg);
-    public static final Pattern StringPat = Pattern.compile("\\s*" + StringRegEx);
-    public static final Pattern TimeStampPat = Pattern.compile("\\s*" + TimeStamp);
 
 
     public final HashMap<String, Pattern> eventTupleRegEx;
@@ -37,65 +27,6 @@ public class RegHelper {
     public RegHelper(HashMap<String, Integer[]> tableCol) {
         this.eventTupleRegEx = this.init(tableCol);
     }
-
-    private HashMap<String, Pattern> init(HashMap<String, Integer[]> tableCol) {
-        HashMap<String, Pattern> eventNameAndTupleRegexMap = new HashMap<>();
-
-        for (String eventName : tableCol.keySet()) {
-            Integer[] types = tableCol.get(eventName);
-
-            String regex = "";
-
-            if (types.length == 0) {
-                regex = "\\s*\\(\\s*\\s)";
-            } else {
-                switch (types[0]) {
-                    case INT_TYPE : regex = IntReg;
-                        break;
-
-                    case FLOAT_TYPE : regex = FloatReg;
-                        break;
-
-                    case STRING_TYPE : regex = StringRegEx;
-                        break;
-                }
-
-                regex = "\\s*" + regex; //the first field
-
-                for (int i = 1; i < types.length; i++) {
-                    String tmp = "";
-
-                    switch (types[i]) {
-                        case INT_TYPE : tmp = IntReg;
-                            break;
-
-                        case FLOAT_TYPE : tmp = FloatReg;
-                            break;
-
-                        case STRING_TYPE : tmp = StringRegEx;
-                            break;
-                    }
-
-                    regex += "\\s*,\\s*" + tmp;
-                }
-                regex = "\\s*\\(" + regex + "\\s*\\)";
-            }
-
-            //gen the event name and corresponding tuple's reg ex.
-            eventNameAndTupleRegexMap.put(eventName, Pattern.compile(regex));
-
-        }
-
-        return eventNameAndTupleRegexMap;
-    }
-
-
-    public void showEventTupleRegEx(){
-        for (String eventName : this.eventTupleRegEx.keySet()) {
-            System.out.println(eventName+"'s tuple's reg ex is: "+ this.eventTupleRegEx.get(eventName));
-        }
-    }
-
 
     public static void main(String[] args) {
 
@@ -114,5 +45,68 @@ public class RegHelper {
 //        Integer[] arr=new Integer[0];
 //        System.out.println("arr's len is "+arr.length);
 
+    }
+
+    private HashMap<String, Pattern> init(HashMap<String, Integer[]> tableCol) {
+        HashMap<String, Pattern> eventNameAndTupleRegexMap = new HashMap<>();
+
+        for (String eventName : tableCol.keySet()) {
+            Integer[] types = tableCol.get(eventName);
+
+            String regex = "";
+
+            if (types.length == 0) {
+                regex = "\\s*\\(\\s*\\s)";
+            } else {
+                switch (types[0]) {
+                    case INT_TYPE:
+                        regex = IntReg;
+                        break;
+
+                    case FLOAT_TYPE:
+                        regex = FloatReg;
+                        break;
+
+                    case STRING_TYPE:
+                        regex = StringRegEx;
+                        break;
+                }
+
+                regex = "\\s*" + regex; //the first field
+
+                for (int i = 1; i < types.length; i++) {
+                    String tmp = "";
+
+                    switch (types[i]) {
+                        case INT_TYPE:
+                            tmp = IntReg;
+                            break;
+
+                        case FLOAT_TYPE:
+                            tmp = FloatReg;
+                            break;
+
+                        case STRING_TYPE:
+                            tmp = StringRegEx;
+                            break;
+                    }
+
+                    regex += "\\s*,\\s*" + tmp;
+                }
+                regex = "\\s*\\(" + regex + "\\s*\\)";
+            }
+
+            //gen the event name and corresponding tuple's reg ex.
+            eventNameAndTupleRegexMap.put(eventName, Pattern.compile(regex));
+
+        }
+
+        return eventNameAndTupleRegexMap;
+    }
+
+    public void showEventTupleRegEx() {
+        for (String eventName : this.eventTupleRegEx.keySet()) {
+            System.out.println(eventName + "'s tuple's reg ex is: " + this.eventTupleRegEx.get(eventName));
+        }
     }
 }

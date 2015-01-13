@@ -18,21 +18,21 @@ public class TestLogMonitor {
 
     }
 
-    @Test
+//    @Test
     public void testMain1() throws Exception {
         String[] args = new String[]{"./test/insert-smallLog/insert.sig", "./test/insert-smallLog/insert.fl",
                 "./test/insert-smallLog/insert.log"};
         Main.main(args);
     }
 
-//        @Test
+    //        @Test
     public void test9MLog_HP() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly"};
         Main.main(args);
     }
 
-    //    @Test
+        @Test
     public void test9MLog_IdeaPad() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "/home/xiaohe/UIUC-WorkSpace/DATA/ldcc4Monpoly"};

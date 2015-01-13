@@ -1,7 +1,7 @@
-Start time : 1421122127
+Start time : 1421157832
 There are 93149 log entries in the log file!~!
-It took my log analyzer 31427 ms to count all the log entries in the log file.
+It took my log analyzer 16915 ms to count all the log entries in the log file.
 
-Finish time : 1421122159
+Finish time : 1421157849
 
-It took my log analyzer 32 seconds to count all the events in the 9M log ldcc4Monpoly at Idea-Pad using reading line by line approach
+It took my log analyzer 17 seconds to count all the events in the 9M log ldcc4Monpoly at Idea-Pad using reading line by line approach
