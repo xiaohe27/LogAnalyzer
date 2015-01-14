@@ -89,10 +89,12 @@ public final class insertRuntimeMonitor implements com.runtimeverification.rvmon
     // Declarations for Indexing Trees
     private static final InsertRawMonitor Insert__Map = new InsertRawMonitor();
     private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager insertMapManager;
+
     static {
         insertMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
         insertMapManager.start();
     }
+
     private static boolean Insert_activated = false;
 
     public static int cleanUp() {

@@ -1,9 +1,10 @@
-@1277201624 insert (script,db2,5,49887299)
+@1277201624
+insert (script,db2,5,49887299) (he,myDB,s,49887299)
 insert (script,db2,5,49887389)
 insert (script1,db2,5,49887438)
 insert (script,db2,5,49887479)
 insert (script,db2,5,49888034)
-commit (abc,5) (abcd,52)
+commit (abc,5)
 insert (script,db2,5,4.9888075)
 commit (abc,5)
 @1277201625 insert (script2,db2,5,4987299)
@@ -14,3 +15,4 @@ commit (abc,5)
 @1277728782 script_svn (string,string,string,2,57)
 @1277728783 script_md5 (string,string)
 @1277232759 script_end (script1)
+

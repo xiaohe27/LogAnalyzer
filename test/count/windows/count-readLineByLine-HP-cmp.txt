@@ -1,0 +1,41 @@
+Read line by line:
+There are 93149 log entries in the log file!~!
+It took my log analyzer 18044 ms to count all the log entries in the log file.
+
+
+Read regex by regex:
+There are 93149 log entries!
+It took my log analyzer 21693 ms to count all the log entries in the log file.
+
+Read All lines:
+There are 93149 log entries in the log file!~!
+It took my log analyzer 14321 ms to count all the log entries in the log file.
+
+Read line by line (with BufferedReader, no regex)
+There are 93149 log entries in the log file!~!
+It took my log analyzer 12399 ms to count all the log entries in the log file.
+
+========
+After removing some security check:
+1) There are 93149 log entries in the log file!~!
+It took my log analyzer 10404 ms to count all the log entries in the log file.
+
+2) There are 93149 log entries in the log file!~!
+It took my log analyzer 9727 ms to count all the log entries in the log file
+
+
+====================
+adding regex to extract data from tuples:
+
+There are 93149 log entries in the log file!~!
+It took my log analyzer 18572 ms to count all the log entries in the log file.
+
+There are 93149 log entries in the log file!~!
+It took my log analyzer 17126 ms to count all the log entries in the log file.
+
++++++++++++++++++++++++++
+Iterating the bytes:
+There are 93149 log entries in the log file!!!
+It took my log analyzer 3347 ms to count all the log entries in the log file.
+
+

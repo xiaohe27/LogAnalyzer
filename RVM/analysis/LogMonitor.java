@@ -4,12 +4,10 @@ import log.LogEntryExtractor;
 import reg.RegHelper;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Scanner;
 
 /**
  * Created by xiaohe on 11/24/14.
@@ -39,16 +37,8 @@ public class LogMonitor {
                         argTyList4CurMeth[i] = Integer.class;
                         break;
 
-                    case RegHelper.LONG_TYPE:
-                        argTyList4CurMeth[i] = Long.class;
-                        break;
-
                     case RegHelper.FLOAT_TYPE:
                         argTyList4CurMeth[i] = Float.class;
-                        break;
-
-                    case RegHelper.DOUBLE_TYPE:
-                        argTyList4CurMeth[i] = Double.class;
                         break;
 
                     case RegHelper.STRING_TYPE:
@@ -74,42 +64,24 @@ public class LogMonitor {
     /**
      * A method only for testing purpose.
      *
-     * @param path
-     */
-
-    public void monitor3(Path path) throws IOException {
-        int num = 0;
-        Scanner scan = new Scanner(path);
-        while (scan.hasNextLine()) {
-            if (scan.nextLine().contains("@")) {
-//                System.out.println("log entry found");
-                num++;
-            }
-        }
-
-        System.out.println("There are totally " + num + " log entries in the log file!");
-    }
-
-    /**
-     * A method only for testing purpose.
-     *
      * @param path2LogFile
      */
-    public void monitor(Path path2LogFile) throws FileNotFoundException {
+    public void monitor(Path path2LogFile) throws IOException {
         LogEntryExtractor lee = null;
 
         if (path2LogFile != null) {
             //the path to the log file should be obtained from outside as an argument of 'main'
             File logFile = path2LogFile.toFile();
 
-            lee = new LogEntryExtractor(this.TableCol, logFile);
+            lee = new LogEntryExtractor(this.TableCol, path2LogFile);
 
         } else { //path to log file is null: indicating the scanner will read log entries from System.in
-            lee = new LogEntryExtractor(this.TableCol);
+//            lee = new LogEntryExtractor(this.TableCol);
         }
 
         long startT = System.currentTimeMillis();
-        lee.start();
+//        lee.startLineByLine();
+        lee.startReadingEventsByteByByte();
 
         long totalT = System.currentTimeMillis() - startT;
 

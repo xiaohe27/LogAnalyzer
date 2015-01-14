@@ -5,5 +5,11 @@ then invoke the event methods!
 Just save (maybe no need to save at all, each time a event is parsed,
 we can discard it or use its data to call the monitoring method) to a list.
 
+Idea:
+Provide two modes:
+1) fast but unchecked mode (no regex is used)
+2) checked mode (use regex to read data)
+
+
 ***********************
 Monpoly allows optional white spaces in between event names and event args (tuples)
