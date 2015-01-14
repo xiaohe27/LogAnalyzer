@@ -33,4 +33,9 @@ It took my log analyzer 18572 ms to count all the log entries in the log file.
 There are 93149 log entries in the log file!~!
 It took my log analyzer 17126 ms to count all the log entries in the log file.
 
++++++++++++++++++++++++++
+Iterating the bytes:
+There are 93149 log entries in the log file!!!
+It took my log analyzer 3347 ms to count all the log entries in the log file.
+
 

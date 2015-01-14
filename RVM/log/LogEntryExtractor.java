@@ -11,6 +11,7 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.regex.Matcher;
 
 /**
@@ -22,7 +23,7 @@ public class LogEntryExtractor {
      * Use methods in nio.
      */
 
-    private double TimeStamp; //we can add the @ symbol when it is ready to be printed
+    private String TimeStamp; //we can add the @ symbol when it is ready to be printed
 
     private String EventName;
 
@@ -54,6 +55,7 @@ public class LogEntryExtractor {
     static final byte underscore = (byte) '_';
     static final byte rightBracket = (byte) ']';
     static final byte exclamation = (byte) '!';
+    static final byte dot = (byte) '.';
 
 
     static final int ts_mode = 0;
@@ -107,13 +109,18 @@ public class LogEntryExtractor {
     private ByteBuffer buffer;
     private FileChannel inChannel;
 
-    private String getStringFromBuf() throws IOException {
+    /**
+     * Get a string from byte buffer (not check thoroughly, assume white spaces).
+     * @return
+     * @throws IOException
+     */
+    private String getStringFromBuf_uncheck() throws IOException {
         StringBuffer sb=new StringBuffer();
         while (true) {
             while (buffer.hasRemaining()){
                 byte b=buffer.get();
                 if (isStringChar(b))
-                    sb.append(b);
+                    sb.append((char)b);
 
                 else {
                      return sb.toString();
@@ -130,22 +137,78 @@ public class LogEntryExtractor {
 
         
     }
+    /**
+     * Get a float number from byte buffer (not check thoroughly, assume white spaces).
+     * @return
+     * @throws IOException
+     */
+    private double getFloatingNumFromBuf_uncheck() throws IOException {
+        StringBuffer sb=new StringBuffer();
+        while (true) {
+            while (buffer.hasRemaining()){
+                byte b=buffer.get();
+                if (Character.isDigit(b) || b == dot)
+                    sb.append((char)b);
+
+                else {
+                    return Double.parseDouble(sb.toString());
+                }
+            }
+
+            this.buffer.clear();
+            if (this.inChannel.read(this.buffer) == -1){
+                throw new IOException("Unexpected end of file, unfinished string.");
+            } else {
+                this.buffer.flip();
+            }
+        }
+
+
+    }
+
+    /**
+     * Get an int number from byte buffer (not check thoroughly, assume white spaces).
+     * @return
+     * @throws IOException
+     */
+    private int getIntFromBuf_uncheck() throws IOException {
+        StringBuffer sb=new StringBuffer();
+        while (true) {
+            while (buffer.hasRemaining()){
+                byte b=buffer.get();
+//                System.out.println("byte is "+b);
+//                System.out.println("digit char is "+ (char)b);
+                if (Character.isDigit(b))
+                    sb.append((char)b);
+
+                else {
+                    return Integer.parseInt(sb.toString());
+                }
+            }
+
+            this.buffer.clear();
+            if (this.inChannel.read(this.buffer) == -1){
+                throw new IOException("Unexpected end of file, unfinished string.");
+            } else {
+                this.buffer.flip();
+            }
+        }
+
+
+    }
 
     public void startReadingEventsByteByByte() throws IOException {
         long numOfLogEntries = 0;
-        int numOfLines = 0;
-        int numOfBytes = 0;
-
-
-        int index = 0;
+//        int numOfLines = 0;
+//        int numOfBytes = 0;
+//
+//        int index = 0;
 
         RandomAccessFile aFile = new RandomAccessFile
                 (this.logFilePath, "r");
         inChannel = aFile.getChannel();
 
         this.buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
-
-        int curMode = ts_mode;
 
         while (inChannel.read(this.buffer) > 0) {
             this.buffer.flip();
@@ -155,27 +218,20 @@ public class LogEntryExtractor {
                 if (isWhiteSpace(b))
                     continue;
 
-                switch (curMode) {
-                    case ts_mode :
-                        if (b != '@') {
-                            throw new IOException("A time stamp is expected at " + this.buffer.position());
-                        } else {
-                            TimeStamp = this.buffer.getDouble();
-                        }
-                        break;
-
-                    case eventName_mode :
-                        EventName = this.getStringFromBuf();
-                        curMode = tuple_mode;
-                        break;
-
-                    case tuple_mode :
-
-                        break;
+                //change the order of different branches, cmp whether we can gain perf benefits by
+                //considering the probabilities.
+                if (b == at) {
+                    TimeStamp = String.valueOf(this.getIntFromBuf_uncheck());
+                    numOfLogEntries++;
                 }
 
+                else if (isStringChar(b)) {
+                    EventName = (char)b + this.getStringFromBuf_uncheck();
+                }
 
-
+                else if (b == lpa) {
+                     this.triggerEvent_byteVer();
+                }
 
             }
             this.buffer.clear(); // do something with the data and clear/compact it.
@@ -183,8 +239,36 @@ public class LogEntryExtractor {
         inChannel.close();
         aFile.close();
 
-        System.out.println("There are " + numOfLines + " lines");
-        System.out.println("There are " + numOfBytes + " lines");
+        System.out.println("There are " +
+                numOfLogEntries + " log entries in the log file!!!");
+//        System.out.println("There are " + numOfLines + " lines");
+//        System.out.println("There are " + numOfBytes + " lines");
+    }
+
+    private void triggerEvent_byteVer() throws IOException {
+        Integer[] typesInTuple = TableCol.get(EventName);
+        Object[] argsInTuple = TableData.get(EventName);
+        for (int i = 0; i < typesInTuple.length; i++) {
+            String dataI = this.getStringFromBuf_uncheck();
+
+//         System.out.println("No."+i+" field type of table "+
+//  eventName+" is "+RegHelper.getTypeName(TableCol.get(eventName)[i]));
+
+            switch (typesInTuple[i]) {
+                case RegHelper.INT_TYPE:
+                    argsInTuple[i] = Integer.parseInt(dataI);
+                    break;
+
+                case RegHelper.FLOAT_TYPE:
+                    argsInTuple[i] = Float.parseFloat(dataI);
+                    break;
+
+                case RegHelper.STRING_TYPE:
+                    argsInTuple[i] = dataI;
+                    break;
+            }
+        }
+//        this.printEvent();
     }
 
 
