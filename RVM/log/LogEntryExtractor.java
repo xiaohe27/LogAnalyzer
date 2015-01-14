@@ -39,7 +39,9 @@ public class LogEntryExtractor {
 
     private String logFilePath;
 
-    private static final int BufSize = 1024;
+// indirect optimal 8kb
+//    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
+    private static final int BufSize = 64 * 1024;
 
     //some tokens
     static final byte newLine = (byte) '\n';
@@ -199,17 +201,13 @@ public class LogEntryExtractor {
 
     public void startReadingEventsByteByByte() throws IOException {
         long numOfLogEntries = 0;
-//        int numOfLines = 0;
-//        int numOfBytes = 0;
-//
-//        int index = 0;
 
         RandomAccessFile aFile = new RandomAccessFile
                 (this.logFilePath, "r");
         inChannel = aFile.getChannel();
 
-        this.buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
-
+//        this.buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
+        this.buffer = ByteBuffer.allocate(BufSize);
         while (inChannel.read(this.buffer) > 0) {
             this.buffer.flip();
 
