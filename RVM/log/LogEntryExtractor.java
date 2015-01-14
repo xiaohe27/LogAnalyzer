@@ -11,7 +11,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.regex.Matcher;
 
 /**
  * Serves as lexer and parser for log file.
@@ -237,13 +236,13 @@ public class LogEntryExtractor {
 
                 //change the order of different branches, cmp whether we can gain perf benefits by
                 //considering the probabilities.
-                if (b == at) {
-                    TimeStamp = String.valueOf(this.getIntFromBuf_uncheck());
-                    numOfLogEntries++;
+                if (b == lpa) {
+                    this.triggerEvent_byteVer();
                 } else if (isStringChar(b)) {
                     EventName = (char) b + this.getStringFromBuf_uncheck();
-                } else if (b == lpa) {
-                    this.triggerEvent_byteVer();
+                } else if (b == at) {
+                    TimeStamp = String.valueOf(this.getIntFromBuf_uncheck());
+                    numOfLogEntries++;
                 }
 
             }
@@ -254,8 +253,7 @@ public class LogEntryExtractor {
 
 //        System.out.println("There are " +
 //                numOfLogEntries + " log entries in the log file!!!");
-//        System.out.println("There are " + numOfLines + " lines");
-//        System.out.println("There are " + numOfBytes + " lines");
+
     }
 
     private void triggerEvent_byteVer() throws IOException {
@@ -263,9 +261,6 @@ public class LogEntryExtractor {
         Object[] argsInTuple = TableData.get(EventName);
         for (int i = 0; i < typesInTuple.length; i++) {
             String dataI = this.getStringFromBuf_uncheck();
-
-//         System.out.println("No."+i+" field type of table "+
-//  eventName+" is "+RegHelper.getTypeName(TableCol.get(eventName)[i]));
 
             switch (typesInTuple[i]) {
                 case RegHelper.INT_TYPE:
@@ -282,112 +277,6 @@ public class LogEntryExtractor {
             }
         }
 //        this.printEvent();
-    }
-
-
-    public void startLineByLine() throws IOException {
-        long numOfLogEntries = 0;
-
-        String line = null;
-
-        try {
-            while (true) {
-                line = this.bufferedReader.readLine();
-                if (line.charAt(0) == '@') {
-                    numOfLogEntries++;
-
-                    String[] tsAndFirstEvent = line.split("\\s+");
-                    TimeStamp = tsAndFirstEvent[0];
-                    EventName = tsAndFirstEvent[1];
-
-//                    for (int i = 2; i < tsAndFirstEvent.length; i++) {
-//                        this.triggerEvent(tsAndFirstEvent[i]);
-//                    }
-
-                } else {
-                    String eventLine[] = line.split("\\s+");
-                    EventName = eventLine[0];
-
-//                    for (int i = 1; i < eventLine.length; i++) {
-//                        this.triggerEvent(eventLine[i]);
-//                    }
-                }
-
-                //use matcher to find args in the tuple and trigger event...
-                this.triggerEventsViaRegEx(line);
-            }
-        } catch (Exception e) {
-//            System.out.println("End of file");
-            System.out.println("There are " +
-                    numOfLogEntries + " log entries in the log file!~!");
-
-        }
-    }
-
-
-    private void triggerEventsViaRegEx(String line) {
-
-        Matcher matcher = this.regHelper.eventTupleRegEx.get(EventName).matcher(line);
-
-        Integer[] argTypes = TableCol.get(EventName);
-        Object[] argsInTuple = this.TableData.get(this.EventName);
-
-        while (matcher.find()) {     //continuously find the tuples of the table
-//            System.out.println("We found the tuple " + matcher.group(0));
-
-            for (int i = 0; i < argsInTuple.length; i++) {
-                String dataI = matcher.group(i + 1);
-
-                switch (argTypes[i]) {
-                    case RegHelper.INT_TYPE:
-                        argsInTuple[i] = Integer.parseInt(dataI);
-                        break;
-
-
-                    case RegHelper.FLOAT_TYPE:
-                        argsInTuple[i] = Float.parseFloat(dataI);
-                        break;
-
-
-                    case RegHelper.STRING_TYPE:
-                        argsInTuple[i] = dataI;
-                        break;
-                }
-            }
-            //trigger event using the info gathered so far
-//            this.printEvent();
-        }
-
-    }
-
-
-    private void triggerEvent(String tuple) {
-        Object[] argsInTuple = this.TableData.get(this.EventName);
-        String[] fieldsData = tuple.substring(1, tuple.length() - 1).split(",");
-        for (int i = 0; i < TableCol.get(EventName).length; i++) {
-            String dataI = fieldsData[i];
-
-//         System.out.println("No."+i+" field type of table "+
-//  eventName+" is "+RegHelper.getTypeName(TableCol.get(eventName)[i]));
-
-            switch (TableCol.get(EventName)[i]) {
-                case RegHelper.INT_TYPE:
-                    argsInTuple[i] = Integer.parseInt(dataI);
-                    break;
-
-                case RegHelper.FLOAT_TYPE:
-                    argsInTuple[i] = Float.parseFloat(dataI);
-                    break;
-
-                case RegHelper.STRING_TYPE:
-                    argsInTuple[i] = dataI;
-                    break;
-            }
-        }
-
-        //trigger event using the info gathered so far
-//        this.printEvent();
-
     }
 
     private void printEvent() {

@@ -45,19 +45,21 @@ public class TestLogMonitor {
 
     @Test
     public void test9MLog_Siebel_BuffSize() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        int numOfLines=10;
-        int numOfCols=10;
+        int numOfLines = 1;
+        int numOfCols = 20;
+
+        int offset = 2;
 
         long[][] timeArr = new long[numOfLines][numOfCols];
         long[] avgTimeArr = new long[numOfLines];
 
-        Path logFile=Paths.get("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
+        Path logFile = Paths.get("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
 
         //each i represents a test with a specific buffer size
         //run multiple times to get the avg time
         for (int i = 0; i < timeArr.length; i++) {
 
-            int multiple= (int) Math.pow(2, i);
+            int multiple = (int) Math.pow(2, i + offset);
 
             LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFile, multiple);
 
@@ -75,21 +77,20 @@ public class TestLogMonitor {
             }
 
             avgTimeArr[i] = computeAvg(timeArr[i]);
-            System.out.println("In the test with buf size "+multiple+" KB, the avg time used is "+avgTimeArr[i]);
+            System.out.println("In the test with buf size " + multiple + " KB, the avg time used is " + avgTimeArr[i]);
 
         }
-
 
 
     }
 
     private long computeAvg(long[] longs) {
-        long sum=0;
+        long sum = 0;
         for (int i = 0; i < longs.length; i++) {
-            sum+=longs[i];
+            sum += longs[i];
         }
 
-        return sum/longs.length;
+        return sum / longs.length;
     }
 
     //    @Test
