@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Scanner;
 
 /**
  * Created by xiaohe on 11/24/14.
@@ -62,24 +61,7 @@ public class LogMonitor {
     }
 
 
-    /**
-     * A method only for testing purpose.
-     *
-     * @param path
-     */
 
-    public void monitor3(Path path) throws IOException {
-        int num = 0;
-        Scanner scan = new Scanner(path);
-        while (scan.hasNextLine()) {
-            if (scan.nextLine().contains("@")) {
-//                System.out.println("log entry found");
-                num++;
-            }
-        }
-
-        System.out.println("There are totally " + num + " log entries in the log file!");
-    }
 
     /**
      * A method only for testing purpose.
@@ -100,7 +82,8 @@ public class LogMonitor {
         }
 
         long startT = System.currentTimeMillis();
-        lee.startLineByLine();
+//        lee.startLineByLine();
+        lee.startReadingEventsByteByByte();
 
         long totalT = System.currentTimeMillis() - startT;
 

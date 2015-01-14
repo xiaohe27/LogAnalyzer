@@ -4,6 +4,9 @@ import reg.RegHelper;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -19,7 +22,7 @@ public class LogEntryExtractor {
      * Use methods in nio.
      */
 
-    private String TimeStamp;
+    private double TimeStamp; //we can add the @ symbol when it is ready to be printed
 
     private String EventName;
 
@@ -28,11 +31,24 @@ public class LogEntryExtractor {
      * Given a table name, return the list of types that represent the types for each column (table schema).
      */
     private HashMap<String, Integer[]> TableCol;
-    //    private List<String> lines;
-//    private Scanner scan;
+
     private BufferedReader bufferedReader;
 
     private RegHelper regHelper;
+
+    private String logFilePath;
+
+    private static final int BufSize = 1024;
+
+    static final byte newLine = (byte) '\n';
+    static final byte space = (byte) ' ';
+    static final byte tab = (byte) '\t';
+    static final byte nl2 = (byte) '\r';
+
+    static final int ts_mode = 0;
+    static final int eventName_mode = 1;
+    static final int tuple_mode = 2;
+
 
 //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
 //        this.TableCol = tableCol;
@@ -41,24 +57,97 @@ public class LogEntryExtractor {
 //    }
 
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile)
-    throws IOException {
+            throws IOException {
         this.TableCol = tableCol;
         this.bufferedReader = Files.newBufferedReader(logFile, Charset.forName("ISO-8859-1"));
         this.regHelper = new RegHelper(tableCol);
+        this.logFilePath = logFile.toString();
         init();
     }
 
-    private void init() {
+    private void init() throws IOException {
         this.TableData = new HashMap<>();
         for (String eventName : this.TableCol.keySet()) {
             Object[] fields = new Object[this.TableCol.get(eventName).length];
             this.TableData.put(eventName, fields);
         }
+
     }
 
-    /**
-     * Read file line by line.
-     */
+
+    private boolean isWhiteSpace(byte b) {
+        return b == newLine || b == space || b == tab || b == nl2;
+    }
+
+
+    private ByteBuffer buffer;
+
+    private String getStringFromBuf() {
+        StringBuffer sb=new StringBuffer();
+        while (buffer.hasRemaining()){
+            byte b=buffer.get();
+            if (isWhiteSpace(b))
+                return sb.toString();
+
+            else
+                sb.append(b);
+        }
+
+        
+    }
+
+    public void startReadingEventsByteByByte() throws IOException {
+        long numOfLogEntries = 0;
+        int numOfLines = 0;
+        int numOfBytes = 0;
+
+
+        int index = 0;
+
+        RandomAccessFile aFile = new RandomAccessFile
+                (this.logFilePath, "r");
+        FileChannel inChannel = aFile.getChannel();
+
+        buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
+
+        int curMode = ts_mode;
+
+        while (inChannel.read(buffer) > 0) {
+            buffer.flip();
+
+            while (buffer.hasRemaining()) {
+                byte b = buffer.get();
+                if (isWhiteSpace(b))
+                    continue;
+
+                switch (curMode) {
+                    case ts_mode :
+                        if (b != '@') {
+                            throw new IOException("A time stamp is expected at " + buffer.position());
+                        } else {
+                            TimeStamp = buffer.getDouble();
+                        }
+                        break;
+
+                    case eventName_mode :
+
+                        break;
+                }
+
+
+
+
+            }
+            buffer.clear(); // do something with the data and clear/compact it.
+        }
+        inChannel.close();
+        aFile.close();
+
+        System.out.println("There are " + numOfLines + " lines");
+        System.out.println("There are " + numOfBytes + " lines");
+    }
+
+
     public void startLineByLine() throws IOException {
         long numOfLogEntries = 0;
 
@@ -164,15 +253,15 @@ public class LogEntryExtractor {
 
     }
 
-    private void printEvent(){
+    private void printEvent() {
         System.out.print("\n" + this.TimeStamp + " " + this.EventName + "(");
-        Object[] data=this.TableData.get(this.EventName);
+        Object[] data = this.TableData.get(this.EventName);
         for (int i = 0; i < data.length - 1; i++) {
-            System.out.print(data[i]+",");
+            System.out.print(data[i] + ",");
         }
 
-        if (data.length>0){
-            System.out.print(data[data.length-1]);
+        if (data.length > 0) {
+            System.out.print(data[data.length - 1]);
         }
 
         System.out.print(")\n");
