@@ -61,8 +61,6 @@ public class LogMonitor {
     }
 
 
-
-
     /**
      * A method only for testing purpose.
      *

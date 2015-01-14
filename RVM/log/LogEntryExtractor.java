@@ -11,7 +11,6 @@ import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Objects;
 import java.util.regex.Matcher;
 
 /**
@@ -39,9 +38,9 @@ public class LogEntryExtractor {
 
     private String logFilePath;
 
-// indirect optimal 8kb
+    //    indirect optimal 8kb
 //    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
-    private static final int BufSize = 64 * 1024;
+    private int BufSize;
 
     //some tokens
     static final byte newLine = (byte) '\n';
@@ -72,13 +71,27 @@ public class LogEntryExtractor {
 //        scan = new Scanner(new BufferedReader(isReader));
 //    }
 
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile)
+    /**
+     * Create an obj for log entry extractor.
+     *
+     * @param tableCol
+     * @param logFile
+     * @param multipleOf1K Multiple of 1024.
+     * @throws IOException
+     */
+    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int multipleOf1K)
             throws IOException {
         this.TableCol = tableCol;
         this.bufferedReader = Files.newBufferedReader(logFile, Charset.forName("ISO-8859-1"));
         this.regHelper = new RegHelper(tableCol);
         this.logFilePath = logFile.toString();
+
+        this.BufSize = multipleOf1K * 1024;
         init();
+    }
+
+    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
+        this(tableCol, logFile, 4);
     }
 
     private void init() throws IOException {
@@ -93,16 +106,17 @@ public class LogEntryExtractor {
     private boolean isWhiteSpace(byte b) {
         return b == newLine || b == space || b == tab || b == nl2;
     }
+
     private boolean isStringChar(byte b) {
-       if (b > 44 && b < 59)
-           return true;
-        if (b > 64 && b < 92 )
+        if (b > 44 && b < 59)
+            return true;
+        if (b > 64 && b < 92)
             return true;
 
         if (b > 96 && b < 123)
             return true;
 
-        if (b == underscore || b == rightBracket || b== exclamation)
+        if (b == underscore || b == rightBracket || b == exclamation)
             return true;
         else return false;
     }
@@ -113,44 +127,47 @@ public class LogEntryExtractor {
 
     /**
      * Get a string from byte buffer (not check thoroughly, assume white spaces).
+     *
      * @return
      * @throws IOException
      */
     private String getStringFromBuf_uncheck() throws IOException {
-        StringBuffer sb=new StringBuffer();
+        StringBuffer sb = new StringBuffer();
         while (true) {
-            while (buffer.hasRemaining()){
-                byte b=buffer.get();
+            while (buffer.hasRemaining()) {
+                byte b = buffer.get();
                 if (isStringChar(b))
-                    sb.append((char)b);
+                    sb.append((char) b);
 
                 else {
-                     return sb.toString();
+                    return sb.toString();
                 }
             }
 
             this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1){
+            if (this.inChannel.read(this.buffer) == -1) {
                 throw new IOException("Unexpected end of file, unfinished string.");
             } else {
                 this.buffer.flip();
             }
         }
 
-        
+
     }
+
     /**
      * Get a float number from byte buffer (not check thoroughly, assume white spaces).
+     *
      * @return
      * @throws IOException
      */
     private double getFloatingNumFromBuf_uncheck() throws IOException {
-        StringBuffer sb=new StringBuffer();
+        StringBuffer sb = new StringBuffer();
         while (true) {
-            while (buffer.hasRemaining()){
-                byte b=buffer.get();
+            while (buffer.hasRemaining()) {
+                byte b = buffer.get();
                 if (Character.isDigit(b) || b == dot)
-                    sb.append((char)b);
+                    sb.append((char) b);
 
                 else {
                     return Double.parseDouble(sb.toString());
@@ -158,7 +175,7 @@ public class LogEntryExtractor {
             }
 
             this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1){
+            if (this.inChannel.read(this.buffer) == -1) {
                 throw new IOException("Unexpected end of file, unfinished string.");
             } else {
                 this.buffer.flip();
@@ -170,18 +187,19 @@ public class LogEntryExtractor {
 
     /**
      * Get an int number from byte buffer (not check thoroughly, assume white spaces).
+     *
      * @return
      * @throws IOException
      */
     private int getIntFromBuf_uncheck() throws IOException {
-        StringBuffer sb=new StringBuffer();
+        StringBuffer sb = new StringBuffer();
         while (true) {
-            while (buffer.hasRemaining()){
-                byte b=buffer.get();
+            while (buffer.hasRemaining()) {
+                byte b = buffer.get();
 //                System.out.println("byte is "+b);
 //                System.out.println("digit char is "+ (char)b);
                 if (Character.isDigit(b))
-                    sb.append((char)b);
+                    sb.append((char) b);
 
                 else {
                     return Integer.parseInt(sb.toString());
@@ -189,7 +207,7 @@ public class LogEntryExtractor {
             }
 
             this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1){
+            if (this.inChannel.read(this.buffer) == -1) {
                 throw new IOException("Unexpected end of file, unfinished string.");
             } else {
                 this.buffer.flip();
@@ -206,8 +224,9 @@ public class LogEntryExtractor {
                 (this.logFilePath, "r");
         inChannel = aFile.getChannel();
 
-//        this.buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
-        this.buffer = ByteBuffer.allocate(BufSize);
+        this.buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
+//        this.buffer = ByteBuffer.allocate(BufSize);
+
         while (inChannel.read(this.buffer) > 0) {
             this.buffer.flip();
 
@@ -221,14 +240,10 @@ public class LogEntryExtractor {
                 if (b == at) {
                     TimeStamp = String.valueOf(this.getIntFromBuf_uncheck());
                     numOfLogEntries++;
-                }
-
-                else if (isStringChar(b)) {
-                    EventName = (char)b + this.getStringFromBuf_uncheck();
-                }
-
-                else if (b == lpa) {
-                     this.triggerEvent_byteVer();
+                } else if (isStringChar(b)) {
+                    EventName = (char) b + this.getStringFromBuf_uncheck();
+                } else if (b == lpa) {
+                    this.triggerEvent_byteVer();
                 }
 
             }
@@ -237,8 +252,8 @@ public class LogEntryExtractor {
         inChannel.close();
         aFile.close();
 
-        System.out.println("There are " +
-                numOfLogEntries + " log entries in the log file!!!");
+//        System.out.println("There are " +
+//                numOfLogEntries + " log entries in the log file!!!");
 //        System.out.println("There are " + numOfLines + " lines");
 //        System.out.println("There are " + numOfBytes + " lines");
     }
