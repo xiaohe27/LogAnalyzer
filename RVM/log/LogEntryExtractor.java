@@ -40,14 +40,26 @@ public class LogEntryExtractor {
 
     private static final int BufSize = 1024;
 
+    //some tokens
     static final byte newLine = (byte) '\n';
     static final byte space = (byte) ' ';
     static final byte tab = (byte) '\t';
     static final byte nl2 = (byte) '\r';
+    static final byte at = (byte) '@';
+    static final byte lpa = (byte) '(';
+    static final byte rpa = (byte) ')';
+    static final byte comma = (byte) ',';
+    static final byte hash = (byte) '#';
+    static final byte doubleQuote = (byte) '\"';
+    static final byte underscore = (byte) '_';
+    static final byte rightBracket = (byte) ']';
+    static final byte exclamation = (byte) '!';
+
 
     static final int ts_mode = 0;
     static final int eventName_mode = 1;
     static final int tuple_mode = 2;
+    static byte nxtExpected; // set this variable accordingly before reading a token
 
 
 //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
@@ -71,26 +83,49 @@ public class LogEntryExtractor {
             Object[] fields = new Object[this.TableCol.get(eventName).length];
             this.TableData.put(eventName, fields);
         }
-
     }
 
 
     private boolean isWhiteSpace(byte b) {
         return b == newLine || b == space || b == tab || b == nl2;
     }
+    private boolean isStringChar(byte b) {
+       if (b > 44 && b < 59)
+           return true;
+        if (b > 64 && b < 92 )
+            return true;
+
+        if (b > 96 && b < 123)
+            return true;
+
+        if (b == underscore || b == rightBracket || b== exclamation)
+            return true;
+        else return false;
+    }
 
 
     private ByteBuffer buffer;
+    private FileChannel inChannel;
 
-    private String getStringFromBuf() {
+    private String getStringFromBuf() throws IOException {
         StringBuffer sb=new StringBuffer();
-        while (buffer.hasRemaining()){
-            byte b=buffer.get();
-            if (isWhiteSpace(b))
-                return sb.toString();
+        while (true) {
+            while (buffer.hasRemaining()){
+                byte b=buffer.get();
+                if (isStringChar(b))
+                    sb.append(b);
 
-            else
-                sb.append(b);
+                else {
+                     return sb.toString();
+                }
+            }
+
+            this.buffer.clear();
+            if (this.inChannel.read(this.buffer) == -1){
+                throw new IOException("Unexpected end of file, unfinished string.");
+            } else {
+                this.buffer.flip();
+            }
         }
 
         
@@ -106,30 +141,35 @@ public class LogEntryExtractor {
 
         RandomAccessFile aFile = new RandomAccessFile
                 (this.logFilePath, "r");
-        FileChannel inChannel = aFile.getChannel();
+        inChannel = aFile.getChannel();
 
-        buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
+        this.buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
 
         int curMode = ts_mode;
 
-        while (inChannel.read(buffer) > 0) {
-            buffer.flip();
+        while (inChannel.read(this.buffer) > 0) {
+            this.buffer.flip();
 
-            while (buffer.hasRemaining()) {
-                byte b = buffer.get();
+            while (this.buffer.hasRemaining()) {
+                byte b = this.buffer.get();
                 if (isWhiteSpace(b))
                     continue;
 
                 switch (curMode) {
                     case ts_mode :
                         if (b != '@') {
-                            throw new IOException("A time stamp is expected at " + buffer.position());
+                            throw new IOException("A time stamp is expected at " + this.buffer.position());
                         } else {
-                            TimeStamp = buffer.getDouble();
+                            TimeStamp = this.buffer.getDouble();
                         }
                         break;
 
                     case eventName_mode :
+                        EventName = this.getStringFromBuf();
+                        curMode = tuple_mode;
+                        break;
+
+                    case tuple_mode :
 
                         break;
                 }
@@ -138,7 +178,7 @@ public class LogEntryExtractor {
 
 
             }
-            buffer.clear(); // do something with the data and clear/compact it.
+            this.buffer.clear(); // do something with the data and clear/compact it.
         }
         inChannel.close();
         aFile.close();
