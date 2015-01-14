@@ -285,7 +285,7 @@ public class LogEntryExtractor {
     }
 
     private void printEvent() {
-        System.out.print("\n" + this.TimeStamp + " " + this.EventName + "(");
+        System.out.print("\n@" + this.TimeStamp + " " + this.EventName + "(");
         Object[] data = this.TableData.get(this.EventName);
         for (int i = 0; i < data.length - 1; i++) {
             System.out.print(data[i] + ",");

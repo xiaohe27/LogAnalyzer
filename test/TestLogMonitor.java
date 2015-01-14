@@ -46,7 +46,7 @@ public class TestLogMonitor {
             @Test
     public void test9MLog_Siebel_SingleRun() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
-                "/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly"};
+                "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy"};
         Main.main(args);
     }
 
