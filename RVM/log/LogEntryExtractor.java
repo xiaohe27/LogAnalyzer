@@ -1,7 +1,6 @@
 package log;
 
 import reg.RegHelper;
-import sig.SigExtractor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,30 +17,6 @@ import java.util.HashMap;
  */
 public class LogEntryExtractor {
 
-    /**
-     * Use methods in nio.
-     */
-
-    private String TimeStamp; //we can add the @ symbol when it is ready to be printed
-
-    private String EventName;
-
-    private HashMap<String, Object[]> TableData;
-    /**
-     * Given a table name, return the list of types that represent the types for each column (table schema).
-     */
-    private HashMap<String, Integer[]> TableCol;
-
-    private BufferedReader bufferedReader;
-
-    private RegHelper regHelper;
-
-    private String logFilePath;
-
-//    indirect optimal 8kb
-//    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
-    private int BufSize;
-
     //some tokens
     static final byte newLine = (byte) '\n';
     static final byte space = (byte) ' ';
@@ -57,13 +32,22 @@ public class LogEntryExtractor {
     static final byte rightBracket = (byte) ']';
     static final byte exclamation = (byte) '!';
     static final byte dot = (byte) '.';
-
-
-    static final int ts_mode = 0;
-    static final int eventName_mode = 1;
-    static final int tuple_mode = 2;
-    static byte nxtExpected; // set this variable accordingly before reading a token
-
+    private String TimeStamp; //we can add the @ symbol when it is ready to be printed
+    private String EventName;
+    private HashMap<String, Object[]> TableData;
+    /**
+     * Given a table name, return the list of types that represent the types for each column (table schema).
+     */
+    private HashMap<String, Integer[]> TableCol;
+    private BufferedReader bufferedReader;
+    private RegHelper regHelper;
+    private String logFilePath;
+    //    indirect optimal 8kb
+//    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
+    private int BufSize;
+    private ByteBuffer buffer;
+    private FileChannel inChannel;
+    private int pos = 0;
 
 //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
 //        this.TableCol = tableCol;
@@ -122,28 +106,23 @@ public class LogEntryExtractor {
     }
 
 
-    private ByteBuffer buffer;
-    private FileChannel inChannel;
-
-    /**
-     * Get a string from byte buffer (not check thoroughly, assume white spaces).
-     *
-     * @return
-     * @throws IOException
-     */
-    private String getStringFromBuf_uncheck() throws IOException {
+    private String getEventName() throws IOException {
         StringBuffer sb = new StringBuffer();
         while (true) {
-            while (buffer.hasRemaining()) {
-                byte b = buffer.get();
+            while (pos < this.buffer.limit()) {
+                byte b = buffer.get(pos++);
                 if (isStringChar(b))
                     sb.append((char) b);
 
                 else {
+                    if (b == lpa) {
+                        pos--;
+                    }
                     return sb.toString();
                 }
             }
 
+            this.pos = 0;
             this.buffer.clear();
             if (this.inChannel.read(this.buffer) == -1) {
                 throw new IOException("Unexpected end of file, unfinished string.");
@@ -151,29 +130,38 @@ public class LogEntryExtractor {
                 this.buffer.flip();
             }
         }
-
-
     }
 
-    /**
-     * Get a float number from byte buffer (not check thoroughly, assume white spaces).
-     *
-     * @return
-     * @throws IOException
-     */
-    private double getFloatingNumFromBuf_uncheck() throws IOException {
-        StringBuffer sb = new StringBuffer();
-        while (true) {
-            while (buffer.hasRemaining()) {
-                byte b = buffer.get();
-                if (Character.isDigit(b) || b == dot)
-                    sb.append((char) b);
 
-                else {
-                    return Double.parseDouble(sb.toString());
+    private String getStringFromBuf(byte delim) throws IOException {
+        StringBuffer sb = new StringBuffer();
+        String returnedStr = null;
+        while (true) {
+            while (pos < this.buffer.limit()) {
+                byte b = buffer.get(pos++);
+                if (isStringChar(b)) {
+                    try {
+                        sb.append((char) b);
+                    } catch (Exception e) {
+                        System.err.println("A string field should not contain white spaces inside");
+                    }
+                } else {
+                    if (!isWhiteSpace(b) && b != delim) {
+                        System.err.println("Expected char " + (char) b);
+                    }
+
+                    if (sb != null) {
+                        returnedStr = sb.toString();
+                        sb = null;
+                    }
+                    if (b != delim) {
+                        continue;
+                    }
+                    return returnedStr;
                 }
             }
 
+            this.pos = 0;
             this.buffer.clear();
             if (this.inChannel.read(this.buffer) == -1) {
                 throw new IOException("Unexpected end of file, unfinished string.");
@@ -181,8 +169,80 @@ public class LogEntryExtractor {
                 this.buffer.flip();
             }
         }
+    }
 
+    private void rmWhiteSpace() {
+        while (pos < this.buffer.limit()){
+            byte b= this.buffer.get(pos++);
+            if (isWhiteSpace(b))
+                continue;
+            else {
+                pos--;
+                break;
+            }
+        }
+    }
+    private long getTSFromBuf() throws IOException {
+        StringBuffer sb = new StringBuffer();
 
+        while (true) {
+            while (pos < this.buffer.limit()) {
+                byte b = buffer.get(pos++);
+                if (Character.isDigit(b) || b == dot) {
+
+                    sb.append((char) b);
+
+                } else {
+                    return Math.round(Double.parseDouble(sb.toString()));
+                }
+            }
+
+            this.pos = 0;
+            this.buffer.clear();
+            if (this.inChannel.read(this.buffer) == -1) {
+                throw new IOException("Unexpected end of file, unfinished string.");
+            } else {
+                this.buffer.flip();
+            }
+        }
+    }
+
+    private double getFloatingNumFromBuf(byte delim) throws IOException {
+        StringBuffer sb = new StringBuffer();
+        String returnedStr = null;
+        while (true) {
+            while (pos < this.buffer.limit()) {
+                byte b = buffer.get(pos++);
+                if (Character.isDigit(b) || b == dot) {
+                    try {
+                        sb.append((char) b);
+                    } catch (Exception e) {
+                        System.err.println("A floating number field should not contain white spaces inside");
+                    }
+                } else {
+                    if (!isWhiteSpace(b) && b != delim) {
+                        System.err.println("Expected char " + (char) b);
+                    }
+
+                    if (sb != null) {
+                        returnedStr = sb.toString();
+                        sb = null;
+                    }
+                    if (b != delim) {
+                        continue;
+                    }
+                    return Double.parseDouble(returnedStr);
+                }
+            }
+
+            this.pos = 0;
+            this.buffer.clear();
+            if (this.inChannel.read(this.buffer) == -1) {
+                throw new IOException("Unexpected end of file, unfinished string.");
+            } else {
+                this.buffer.flip();
+            }
+        }
     }
 
     /**
@@ -191,21 +251,35 @@ public class LogEntryExtractor {
      * @return
      * @throws IOException
      */
-    private int getIntFromBuf_uncheck() throws IOException {
+    private int getIntFromBuf(byte delim) throws IOException {
         StringBuffer sb = new StringBuffer();
+        String returnedStr = null;
         while (true) {
-            while (buffer.hasRemaining()) {
-                byte b = buffer.get();
-//                System.out.println("byte is "+b);
-//                System.out.println("digit char is "+ (char)b);
-                if (Character.isDigit(b))
-                    sb.append((char) b);
+            while (pos < this.buffer.limit()) {
+                byte b = buffer.get(pos++);
+                if (Character.isDigit(b)) {
+                    try {
+                        sb.append((char) b);
+                    } catch (Exception e) {
+                        System.err.println("An int number field should not contain white spaces inside");
+                    }
+                } else {
+                    if (!isWhiteSpace(b) && b != delim) {
+                        System.err.println("Expected char " + (char) b);
+                    }
 
-                else {
-                    return Integer.parseInt(sb.toString());
+                    if (sb != null) {
+                        returnedStr = sb.toString();
+                        sb = null;
+                    }
+                    if (b != delim) {
+                        continue;
+                    }
+                    return Integer.parseInt(returnedStr);
                 }
             }
 
+            this.pos = 0;
             this.buffer.clear();
             if (this.inChannel.read(this.buffer) == -1) {
                 throw new IOException("Unexpected end of file, unfinished string.");
@@ -230,22 +304,27 @@ public class LogEntryExtractor {
         while (inChannel.read(this.buffer) > 0) {
             this.buffer.flip();
 
-            while (this.buffer.hasRemaining()) {
-                byte b = this.buffer.get();
+            while (pos < this.buffer.limit()) {
+                byte b = this.buffer.get(pos++);
                 if (isWhiteSpace(b))
                     continue;
 
                 //change the order of different branches, cmp whether we can gain perf benefits by
                 //considering the probabilities.
                 if (b == lpa) {
+                    this.rmWhiteSpace();
                     this.triggerEvent();
                 } else if (isStringChar(b)) {
-                    EventName = (char) b + this.getStringFromBuf_uncheck();
+                    EventName = (char) b + this.getEventName();
                 } else if (b == at) {
-                    TimeStamp = String.valueOf(this.getIntFromBuf_uncheck());
+                    this.rmWhiteSpace();
+                    TimeStamp = String.valueOf(this.getTSFromBuf());
                     numOfLogEntries++;
+                } else {
+                    System.err.println("Unexpected char " + (char) b);
                 }
             }
+            this.pos = 0;
             this.buffer.clear(); // do something with the data and clear/compact it.
         }
         inChannel.close();
@@ -256,23 +335,42 @@ public class LogEntryExtractor {
 
     }
 
+
     private void triggerEvent() throws IOException {
         Integer[] typesInTuple = TableCol.get(EventName);
         Object[] argsInTuple = TableData.get(EventName);
-        for (int i = 0; i < typesInTuple.length; i++) {
-            String dataI = this.getStringFromBuf_uncheck();
+        for (int i = 0; i < typesInTuple.length - 1; i++) {
 
             switch (typesInTuple[i]) {
                 case RegHelper.INT_TYPE:
-                    argsInTuple[i] = Integer.parseInt(dataI);
+                    argsInTuple[i] = this.getIntFromBuf(comma);
                     break;
 
                 case RegHelper.FLOAT_TYPE:
-                    argsInTuple[i] = Float.parseFloat(dataI);
+                    argsInTuple[i] = this.getFloatingNumFromBuf(comma);
                     break;
 
                 case RegHelper.STRING_TYPE:
-                    argsInTuple[i] = dataI;
+                    argsInTuple[i] = this.getStringFromBuf(comma);
+                    break;
+            }
+            this.rmWhiteSpace();
+        }
+
+        if (typesInTuple.length > 0) {
+            //the last field should be followed by a right parenthesis
+            int lastIndex = typesInTuple.length - 1;
+            switch (typesInTuple[lastIndex]) {
+                case RegHelper.INT_TYPE:
+                    argsInTuple[lastIndex] = this.getIntFromBuf(rpa);
+                    break;
+
+                case RegHelper.FLOAT_TYPE:
+                    argsInTuple[lastIndex] = this.getFloatingNumFromBuf(rpa);
+                    break;
+
+                case RegHelper.STRING_TYPE:
+                    argsInTuple[lastIndex] = this.getStringFromBuf(rpa);
                     break;
             }
         }

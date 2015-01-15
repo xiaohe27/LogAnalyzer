@@ -164,15 +164,15 @@ public class ReadLogLineByLine {
 
     }
 
-    private void printEvent(){
+    private void printEvent() {
         System.out.print("\n" + this.TimeStamp + " " + this.EventName + "(");
-        Object[] data=this.TableData.get(this.EventName);
+        Object[] data = this.TableData.get(this.EventName);
         for (int i = 0; i < data.length - 1; i++) {
-            System.out.print(data[i]+",");
+            System.out.print(data[i] + ",");
         }
 
-        if (data.length>0){
-            System.out.print(data[data.length-1]);
+        if (data.length > 0) {
+            System.out.print(data[data.length - 1]);
         }
 
         System.out.print(")\n");
