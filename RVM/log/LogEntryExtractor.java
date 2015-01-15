@@ -1,15 +1,10 @@
 package log;
 
 import reg.RegHelper;
-import sig.SigExtractor;
 
-import java.io.BufferedReader;
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 
@@ -23,6 +18,8 @@ public class LogEntryExtractor {
     static final byte space = (byte) ' ';
     static final byte tab = (byte) '\t';
     static final byte nl2 = (byte) '\r';
+    static final byte space0B = 0x0B;
+    static final byte spaceF = (byte) '\f';
     static final byte at = (byte) '@';
     static final byte lpa = (byte) '(';
     static final byte rpa = (byte) ')';
@@ -45,9 +42,11 @@ public class LogEntryExtractor {
     //    indirect optimal 8kb
 //    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
     private int BufSize;
-    private ByteBuffer buffer;
-    private FileChannel inChannel;
-//    private int pos = 0;
+    //    private ByteBuffer buffer;
+//    private FileChannel inChannel;
+    private byte[] buffer;
+    private BufferedInputStream bis;
+    private int pos = 0;
 
 //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
 //        this.TableCol = tableCol;
@@ -69,6 +68,7 @@ public class LogEntryExtractor {
         this.logFilePath = logFile.toString();
 
         this.BufSize = multipleOf1K * 1024;
+        this.buffer = new byte[this.BufSize];
         init();
     }
 
@@ -86,7 +86,7 @@ public class LogEntryExtractor {
 
 
     private boolean isWhiteSpace(byte b) {
-        return b == newLine || b == space || b == tab || b == nl2;
+        return b == newLine || b == space || b == tab || b == nl2 || b == space0B || b == spaceF;
     }
 
     private boolean isStringChar(byte b) {
@@ -107,35 +107,36 @@ public class LogEntryExtractor {
     private String getEventName() throws IOException {
         StringBuffer sb = new StringBuffer();
         while (true) {
-            while (this.buffer.hasRemaining()) {
-                byte b = buffer.get();
+            while (this.pos < this.BufSize) {
+                byte b = buffer[this.pos++];
                 if (isStringChar(b))
                     sb.append((char) b);
 
                 else {
                     if (b == lpa) {
-                        this.buffer.position(this.buffer.position() - 1);
+                        this.pos--;
                     }
                     return sb.toString();
                 }
             }
 
-            this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1) {
+            this.pos=0;
+            if (this.bis.read(this.buffer) == -1) {
                 throw new IOException("Unexpected end of file, unfinished string.");
-            } else {
-                this.buffer.flip();
-            }
+        }else{
+//            this.buffer.flip();
         }
     }
+
+}
 
 
     private String getStringFromBuf(byte delim) throws IOException {
         StringBuffer sb = new StringBuffer();
         String returnedStr = null;
         while (true) {
-            while (this.buffer.hasRemaining()) {
-                byte b = buffer.get();
+            while (this.pos < this.BufSize) {
+                byte b = buffer[this.pos++];
                 if (isStringChar(b)) {
                     try {
                         sb.append((char) b);
@@ -144,7 +145,7 @@ public class LogEntryExtractor {
                     }
                 } else {
                     if (!isWhiteSpace(b) && b != delim) {
-                        System.err.println("Expected char " + (char) b);
+                        System.err.println("UnExpected char\'" + (char) b +"\'");
                     }
 
                     if (sb != null) {
@@ -158,22 +159,22 @@ public class LogEntryExtractor {
                 }
             }
 
-            this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1) {
+            this.pos=0;
+                if (this.bis.read(this.buffer) == -1) {
                 throw new IOException("Unexpected end of file, unfinished string.");
             } else {
-                this.buffer.flip();
+//                this.buffer.flip();
             }
         }
     }
 
     private void rmWhiteSpace() {
-        while (this.buffer.hasRemaining()) {
-            byte b = this.buffer.get();
+        while (this.pos < this.BufSize) {
+            byte b = buffer[this.pos++];
             if (isWhiteSpace(b))
                 continue;
             else {
-                this.buffer.position(this.buffer.position() - 1);
+                this.pos--;
                 break;
             }
         }
@@ -183,8 +184,8 @@ public class LogEntryExtractor {
         StringBuffer sb = new StringBuffer();
 
         while (true) {
-            while (this.buffer.hasRemaining()) {
-                byte b = buffer.get();
+            while (this.pos < this.BufSize) {
+                byte b = buffer[this.pos++];
                 if (Character.isDigit(b) || b == dot) {
 
                     sb.append((char) b);
@@ -194,11 +195,11 @@ public class LogEntryExtractor {
                 }
             }
 
-            this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1) {
+            this.pos=0;
+            if (this.bis.read(this.buffer) == -1) {
                 throw new IOException("Unexpected end of file, unfinished string.");
             } else {
-                this.buffer.flip();
+//                this.buffer.flip();
             }
         }
     }
@@ -207,8 +208,8 @@ public class LogEntryExtractor {
         StringBuffer sb = new StringBuffer();
         String returnedStr = null;
         while (true) {
-            while (this.buffer.hasRemaining()) {
-                byte b = buffer.get();
+            while (this.pos < this.BufSize) {
+                byte b = buffer[this.pos++];
                 if (Character.isDigit(b) || b == dot) {
                     try {
                         sb.append((char) b);
@@ -217,7 +218,7 @@ public class LogEntryExtractor {
                     }
                 } else {
                     if (!isWhiteSpace(b) && b != delim) {
-                        System.err.println("Expected char " + (char) b);
+                        System.err.println("UnExpected char\'" + (char) b +"\'");
                     }
 
                     if (sb != null) {
@@ -231,11 +232,11 @@ public class LogEntryExtractor {
                 }
             }
 
-            this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1) {
+          this.pos=0;
+            if (this.bis.read(this.buffer) == -1) {
                 throw new IOException("Unexpected end of file, unfinished string.");
             } else {
-                this.buffer.flip();
+//                this.buffer.flip();
             }
         }
     }
@@ -250,8 +251,8 @@ public class LogEntryExtractor {
         StringBuffer sb = new StringBuffer();
         String returnedStr = null;
         while (true) {
-            while (this.buffer.hasRemaining()) {
-                byte b = buffer.get();
+            while (this.pos < this.BufSize) {
+                byte b = buffer[this.pos++];
                 if (Character.isDigit(b)) {
                     try {
                         sb.append((char) b);
@@ -260,7 +261,7 @@ public class LogEntryExtractor {
                     }
                 } else {
                     if (!isWhiteSpace(b) && b != delim) {
-                        System.err.println("Expected char " + (char) b);
+                        System.err.println("UnExpected char\'" + (char) b +"\'");
                     }
 
                     if (sb != null) {
@@ -274,11 +275,11 @@ public class LogEntryExtractor {
                 }
             }
 
-            this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1) {
+            this.pos=0;
+            if (this.bis.read(this.buffer) == -1) {
                 throw new IOException("Unexpected end of file, unfinished string.");
             } else {
-                this.buffer.flip();
+//                this.buffer.flip();
             }
         }
 
@@ -288,18 +289,24 @@ public class LogEntryExtractor {
     public void startReadingEventsByteByByte() throws IOException {
         long numOfLogEntries = 0;
 
-        RandomAccessFile aFile = new RandomAccessFile
-                (this.logFilePath, "r");
-        inChannel = aFile.getChannel();
+//        RandomAccessFile aFile = new RandomAccessFile
+//                (this.logFilePath, "r");
+        FileInputStream aFile = new FileInputStream(this.logFilePath);
+        this.bis = new BufferedInputStream(aFile);
 
-        this.buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
+//        inChannel = aFile.getChannel();
+
+//        this.buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
 //        this.buffer = ByteBuffer.allocate(BufSize);
+//        this.buffer = new byte[BufSize];
+        this.pos = 0;
 
-        while (inChannel.read(this.buffer) > 0) {
-            this.buffer.flip();
+//        while (inChannel.read(this.buffer) > 0) {
+        while (this.bis.read(this.buffer) > 0) {
+//            this.buffer.flip();
 
-            while (this.buffer.hasRemaining()) {
-                byte b = this.buffer.get();
+            while (this.pos < this.BufSize) {
+                byte b = this.buffer[pos++];
                 if (isWhiteSpace(b))
                     continue;
 
@@ -314,14 +321,18 @@ public class LogEntryExtractor {
                     this.rmWhiteSpace();
                     TimeStamp = String.valueOf(this.getTSFromBuf());
                     numOfLogEntries++;
-                } else {
-                    System.err.println("Unexpected char " + (char) b);
+                } else if (b == 0) {
+                    break;
+                }
+                else {
+                    System.err.println("Unexpected char'" + (char) b+"'");
                 }
             }
-
-            this.buffer.clear(); // do something with the data and clear/compact it.
+            this.pos = 0;
+//            this.buffer.clear(); // do something with the data and clear/compact it.
         }
-        inChannel.close();
+//        inChannel.close();
+        this.bis.close();
         aFile.close();
 
 //        System.out.println("There are " +

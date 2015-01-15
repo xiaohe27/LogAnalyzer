@@ -13,7 +13,7 @@ import java.nio.file.Paths;
  */
 public class TestLogMonitor {
 
-    //    @Test
+//        @Test
     public void testMain1() throws Exception {
         String[] args = new String[]{"./test/insert-smallLog/insert.sig", "./test/insert-smallLog/insert.fl",
                 "./test/insert-smallLog/insert.log"};
@@ -38,7 +38,9 @@ public class TestLogMonitor {
         }
 
         long avgTime = computeAvg(timeArr);
-        System.out.println("It takes my log analyzer " + avgTime + " ms to count all the events in the log file");
+        System.out.println("It takes my log analyzer " + avgTime +
+                " ms to count all the events in the log file after running " +
+                num + " tests");
     }
 
 
