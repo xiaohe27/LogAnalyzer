@@ -1,12 +1,13 @@
 time in milliseconds
 Direct: 
-1kb 3946
-2kb 3849
-4kb 3374 3130
-8kb 3296 2966 3324 2976
-64kb 2762 3220 3013 2913
-128kb 3140
-256kb 3164
+In the test with buf size 1 KB, the avg time used is 4470
+In the test with buf size 2 KB, the avg time used is 3053
+In the test with buf size 4 KB, the avg time used is 2986
+In the test with buf size 8 KB, the avg time used is 2837
+In the test with buf size 16 KB, the avg time used is 2788
+In the test with buf size 32 KB, the avg time used is 2765
+In the test with buf size 64 KB, the avg time used is 2738
+
 
 Indirect:
 1kb 3571 3502

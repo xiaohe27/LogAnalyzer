@@ -1,6 +1,7 @@
 package log;
 
 import reg.RegHelper;
+import sig.SigExtractor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -37,7 +38,7 @@ public class LogEntryExtractor {
 
     private String logFilePath;
 
-    //    indirect optimal 8kb
+//    indirect optimal 8kb
 //    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
     private int BufSize;
 
@@ -237,14 +238,13 @@ public class LogEntryExtractor {
                 //change the order of different branches, cmp whether we can gain perf benefits by
                 //considering the probabilities.
                 if (b == lpa) {
-                    this.triggerEvent_byteVer();
+                    this.triggerEvent();
                 } else if (isStringChar(b)) {
                     EventName = (char) b + this.getStringFromBuf_uncheck();
                 } else if (b == at) {
                     TimeStamp = String.valueOf(this.getIntFromBuf_uncheck());
                     numOfLogEntries++;
                 }
-
             }
             this.buffer.clear(); // do something with the data and clear/compact it.
         }
@@ -256,7 +256,7 @@ public class LogEntryExtractor {
 
     }
 
-    private void triggerEvent_byteVer() throws IOException {
+    private void triggerEvent() throws IOException {
         Integer[] typesInTuple = TableCol.get(EventName);
         Object[] argsInTuple = TableData.get(EventName);
         for (int i = 0; i < typesInTuple.length; i++) {
@@ -277,10 +277,14 @@ public class LogEntryExtractor {
             }
         }
 //        this.printEvent();
+//        if (EventName.equals(SigExtractor.INSERT)){
+//            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
+//                this.printEvent();
+//        }
     }
 
     private void printEvent() {
-        System.out.print("\n" + this.TimeStamp + " " + this.EventName + "(");
+        System.out.print("\n@" + this.TimeStamp + " " + this.EventName + "(");
         Object[] data = this.TableData.get(this.EventName);
         for (int i = 0; i < data.length - 1; i++) {
             System.out.print(data[i] + ",");
