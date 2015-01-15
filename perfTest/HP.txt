@@ -1,7 +1,0 @@
-default 4kb direct alloc
-
-Random access file
-It takes my log analyzer 3382 ms to count all the events in the log file
-
-FileInputStream
-It takes my log analyzer 3317 ms to count all the events in the log file after running 5 tests

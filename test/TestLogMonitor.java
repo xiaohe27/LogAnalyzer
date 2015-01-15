@@ -20,10 +20,10 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-    @Test
+//    @Test
     public void test9MLog_HP() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         Path logFile = Paths.get("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
-        int num = 5;
+        int num = 15;
         long[] timeArr = new long[num];
         for (int i = 0; i < num; i++) {
             LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFile);
@@ -75,7 +75,7 @@ public class TestLogMonitor {
         this.test9MLogBuffSize("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
     }
 
-    //            @Test
+                @Test
     public void test9MLogBuffSize_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLogBuffSize("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
     }
