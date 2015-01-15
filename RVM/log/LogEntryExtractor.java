@@ -7,6 +7,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -45,8 +46,9 @@ public class LogEntryExtractor {
     //    indirect optimal 8kb
 //    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
     private int BufSize;
-    private ByteBuffer buffer;
-    private FileChannel inChannel;
+//    private ByteBuffer buffer;
+    private MappedByteBuffer mbb;
+//    private FileChannel inChannel;
 //    private int pos = 0;
 
 //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
@@ -106,36 +108,30 @@ public class LogEntryExtractor {
 
     private String getEventName() throws IOException {
         StringBuffer sb = new StringBuffer();
-        while (true) {
-            while (this.buffer.hasRemaining()) {
-                byte b = buffer.get();
+
+            while (this.mbb.hasRemaining()) {
+                byte b = mbb.get();
                 if (isStringChar(b))
                     sb.append((char) b);
 
                 else {
                     if (b == lpa) {
-                        this.buffer.position(this.buffer.position() - 1);
+                        this.mbb.position(this.mbb.position() - 1);
                     }
                     return sb.toString();
                 }
             }
 
-            this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1) {
-                throw new IOException("Unexpected end of file, unfinished string.");
-            } else {
-                this.buffer.flip();
-            }
-        }
+            throw new IOException("Unexpected end of file, unfinished string.");
     }
 
 
     private String getStringFromBuf(byte delim) throws IOException {
         StringBuffer sb = new StringBuffer();
         String returnedStr = null;
-        while (true) {
-            while (this.buffer.hasRemaining()) {
-                byte b = buffer.get();
+
+            while (this.mbb.hasRemaining()) {
+                byte b = mbb.get();
                 if (isStringChar(b)) {
                     try {
                         sb.append((char) b);
@@ -158,22 +154,16 @@ public class LogEntryExtractor {
                 }
             }
 
-            this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1) {
-                throw new IOException("Unexpected end of file, unfinished string.");
-            } else {
-                this.buffer.flip();
-            }
-        }
+            throw new IOException("Unexpected end of file, unfinished string.");
     }
 
     private void rmWhiteSpace() {
-        while (this.buffer.hasRemaining()) {
-            byte b = this.buffer.get();
+        while (this.mbb.hasRemaining()) {
+            byte b = this.mbb.get();
             if (isWhiteSpace(b))
                 continue;
             else {
-                this.buffer.position(this.buffer.position() - 1);
+                this.mbb.position(this.mbb.position() - 1);
                 break;
             }
         }
@@ -182,9 +172,8 @@ public class LogEntryExtractor {
     private long getTSFromBuf() throws IOException {
         StringBuffer sb = new StringBuffer();
 
-        while (true) {
-            while (this.buffer.hasRemaining()) {
-                byte b = buffer.get();
+            while (this.mbb.hasRemaining()) {
+                byte b = mbb.get();
                 if (Character.isDigit(b) || b == dot) {
 
                     sb.append((char) b);
@@ -194,21 +183,15 @@ public class LogEntryExtractor {
                 }
             }
 
-            this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1) {
-                throw new IOException("Unexpected end of file, unfinished string.");
-            } else {
-                this.buffer.flip();
-            }
-        }
+            throw new IOException("Unexpected end of file, unfinished string.");
     }
 
     private double getFloatingNumFromBuf(byte delim) throws IOException {
         StringBuffer sb = new StringBuffer();
         String returnedStr = null;
-        while (true) {
-            while (this.buffer.hasRemaining()) {
-                byte b = buffer.get();
+
+            while (this.mbb.hasRemaining()) {
+                byte b = mbb.get();
                 if (Character.isDigit(b) || b == dot) {
                     try {
                         sb.append((char) b);
@@ -230,14 +213,7 @@ public class LogEntryExtractor {
                     return Double.parseDouble(returnedStr);
                 }
             }
-
-            this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1) {
-                throw new IOException("Unexpected end of file, unfinished string.");
-            } else {
-                this.buffer.flip();
-            }
-        }
+           throw new IOException("UnExpected end of file");
     }
 
     /**
@@ -249,9 +225,9 @@ public class LogEntryExtractor {
     private int getIntFromBuf(byte delim) throws IOException {
         StringBuffer sb = new StringBuffer();
         String returnedStr = null;
-        while (true) {
-            while (this.buffer.hasRemaining()) {
-                byte b = buffer.get();
+
+            while (this.mbb.hasRemaining()) {
+                byte b = mbb.get();
                 if (Character.isDigit(b)) {
                     try {
                         sb.append((char) b);
@@ -274,14 +250,8 @@ public class LogEntryExtractor {
                 }
             }
 
-            this.buffer.clear();
-            if (this.inChannel.read(this.buffer) == -1) {
-                throw new IOException("Unexpected end of file, unfinished string.");
-            } else {
-                this.buffer.flip();
-            }
-        }
 
+        throw new IOException("Unexpected end of file, unfinished int.");
 
     }
 
@@ -290,16 +260,13 @@ public class LogEntryExtractor {
 
         RandomAccessFile aFile = new RandomAccessFile
                 (this.logFilePath, "r");
-        inChannel = aFile.getChannel();
+        FileChannel inChannel = aFile.getChannel();
+        this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY, 0, inChannel.size());
 
-        this.buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
+//        this.buffer = ByteBuffer.allocateDirect(BufSize); //direct or indirect?
 //        this.buffer = ByteBuffer.allocate(BufSize);
-
-        while (inChannel.read(this.buffer) > 0) {
-            this.buffer.flip();
-
-            while (this.buffer.hasRemaining()) {
-                byte b = this.buffer.get();
+        while (this.mbb.hasRemaining()) {
+                byte b = this.mbb.get();
                 if (isWhiteSpace(b))
                     continue;
 
@@ -317,9 +284,6 @@ public class LogEntryExtractor {
                 } else {
                     System.err.println("Unexpected char " + (char) b);
                 }
-            }
-
-            this.buffer.clear(); // do something with the data and clear/compact it.
         }
         inChannel.close();
         aFile.close();

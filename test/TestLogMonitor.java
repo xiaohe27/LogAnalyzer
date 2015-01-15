@@ -13,7 +13,7 @@ import java.nio.file.Paths;
  */
 public class TestLogMonitor {
 
-    //    @Test
+//        @Test
     public void testMain1() throws Exception {
         String[] args = new String[]{"./test/insert-smallLog/insert.sig", "./test/insert-smallLog/insert.fl",
                 "./test/insert-smallLog/insert.log"};
