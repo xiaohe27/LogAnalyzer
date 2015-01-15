@@ -38,7 +38,7 @@ public class LogEntryExtractor {
 
     private String logFilePath;
 
-    //    indirect optimal 8kb
+//    indirect optimal 8kb
 //    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
     private int BufSize;
 
@@ -245,7 +245,6 @@ public class LogEntryExtractor {
                     TimeStamp = String.valueOf(this.getIntFromBuf_uncheck());
                     numOfLogEntries++;
                 }
-
             }
             this.buffer.clear(); // do something with the data and clear/compact it.
         }
@@ -278,10 +277,10 @@ public class LogEntryExtractor {
             }
         }
 //        this.printEvent();
-        if (EventName.equals(SigExtractor.INSERT)){
-            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
-                this.printEvent();
-        }
+//        if (EventName.equals(SigExtractor.INSERT)){
+//            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
+//                this.printEvent();
+//        }
     }
 
     private void printEvent() {

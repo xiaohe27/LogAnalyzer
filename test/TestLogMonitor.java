@@ -12,15 +12,6 @@ import java.nio.file.Paths;
  * Created by xiaohe on 14-11-24.
  */
 public class TestLogMonitor {
-    //    @Test
-    public void testMain0() throws Exception {
-        String[] args = new String[]{"./test/pub/pub.sig", "./test/pub/pub.fl", "./test/pub/Pub.log"};
-        Main.main(args);
-
-        //after refactoring, assert whether the log file has been fully read
-        //by testing whether hasNext() returns false;
-
-    }
 
 //        @Test
     public void testMain1() throws Exception {
@@ -43,24 +34,33 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-            @Test
+//            @Test
     public void test9MLog_Siebel_SingleRun() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy"};
         Main.main(args);
     }
 
-//    @Test
-    public void test9MLog_Siebel_BuffSize() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        int numOfLines = 1;
-        int numOfCols = 20;
+    //    @Test
+    public void test9MLogBuffSize_Siebel() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
+        this.test9MLogBuffSize("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
+    }
 
-        int offset = 2;
+        @Test
+    public void test9MLogBuffSize_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
+        this.test9MLogBuffSize("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
+    }
+
+    public void test9MLogBuffSize(String logFilePath) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+        int numOfLines = 5;
+        int numOfCols = 12;
+
+        int offset = 0;
 
         long[][] timeArr = new long[numOfLines][numOfCols];
         long[] avgTimeArr = new long[numOfLines];
 
-        Path logFile = Paths.get("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
+        Path logFile = Paths.get(logFilePath);
 
         //each i represents a test with a specific buffer size
         //run multiple times to get the avg time
@@ -87,8 +87,6 @@ public class TestLogMonitor {
             System.out.println("In the test with buf size " + multiple + " KB, the avg time used is " + avgTimeArr[i]);
 
         }
-
-
     }
 
     private long computeAvg(long[] longs) {
