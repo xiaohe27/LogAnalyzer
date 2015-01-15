@@ -52,7 +52,7 @@ public class TestLogMonitor {
     }
 
     public void test9MLogBuffSize(String logFilePath) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        int numOfLines = 10;
+        int numOfLines = 9;
         int numOfCols = 12;
 
         int offset = 0;
