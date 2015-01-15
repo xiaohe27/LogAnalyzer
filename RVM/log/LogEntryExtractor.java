@@ -1,6 +1,7 @@
 package log;
 
 import reg.RegHelper;
+import sig.SigExtractor;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -39,8 +40,7 @@ public class LogEntryExtractor {
      * Given a table name, return the list of types that represent the types for each column (table schema).
      */
     private HashMap<String, Integer[]> TableCol;
-    private BufferedReader bufferedReader;
-    private RegHelper regHelper;
+
     private String logFilePath;
     //    indirect optimal 8kb
 //    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
@@ -66,8 +66,6 @@ public class LogEntryExtractor {
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int multipleOf1K)
             throws IOException {
         this.TableCol = tableCol;
-        this.bufferedReader = Files.newBufferedReader(logFile, Charset.forName("ISO-8859-1"));
-        this.regHelper = new RegHelper(tableCol);
         this.logFilePath = logFile.toString();
 
         this.BufSize = multipleOf1K * 1024;
@@ -170,8 +168,8 @@ public class LogEntryExtractor {
     }
 
     private void rmWhiteSpace() {
-        while (this.buffer.hasRemaining()){
-            byte b= this.buffer.get();
+        while (this.buffer.hasRemaining()) {
+            byte b = this.buffer.get();
             if (isWhiteSpace(b))
                 continue;
             else {
@@ -180,6 +178,7 @@ public class LogEntryExtractor {
             }
         }
     }
+
     private long getTSFromBuf() throws IOException {
         StringBuffer sb = new StringBuffer();
 
@@ -370,10 +369,10 @@ public class LogEntryExtractor {
             }
         }
 //        this.printEvent();
-//        if (EventName.equals(SigExtractor.INSERT)){
-//            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
-//                this.printEvent();
-//        }
+        if (EventName.equals(SigExtractor.INSERT)) {
+            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
+                this.printEvent();
+        }
     }
 
     private void printEvent() {
