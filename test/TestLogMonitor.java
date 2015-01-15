@@ -13,28 +13,43 @@ import java.nio.file.Paths;
  */
 public class TestLogMonitor {
 
-//    @Test
+    //    @Test
     public void testMain1() throws Exception {
         String[] args = new String[]{"./test/insert-smallLog/insert.sig", "./test/insert-smallLog/insert.fl",
                 "./test/insert-smallLog/insert.log"};
         Main.main(args);
     }
 
-//        @Test
+    @Test
     public void test9MLog_HP() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
-                "A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly"};
-        Main.main(args);
+        Path logFile = Paths.get("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
+        int num = 5;
+        long[] timeArr = new long[num];
+        for (int i = 0; i < num; i++) {
+            LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFile);
+
+            long startT = System.currentTimeMillis();
+
+            lee.startReadingEventsByteByByte();
+
+            long totalT = System.currentTimeMillis() - startT;
+
+            timeArr[i] = totalT;
+        }
+
+        long avgTime = computeAvg(timeArr);
+        System.out.println("It takes my log analyzer " + avgTime + " ms to count all the events in the log file");
     }
 
-//            @Test
+
+    //            @Test
     public void test9MLog_IdeaPad() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "/home/xiaohe/UIUC-WorkSpace/DATA/ldcc4Monpoly"};
         Main.main(args);
     }
 
-                @Test
+    //                @Test
     public void test9MLog_singleViolation_IdeaPad() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "/DATA/ldcc4Monpoly_BaseExecTime"};
@@ -48,7 +63,7 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-//        @Test
+    //        @Test
     public void test9MLogBuffSize_IdeaPad() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLogBuffSize("/home/xiaohe/UIUC-WorkSpace/DATA/ldcc4Monpoly");
     }
@@ -58,7 +73,7 @@ public class TestLogMonitor {
         this.test9MLogBuffSize("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
     }
 
-//            @Test
+    //            @Test
     public void test9MLogBuffSize_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLogBuffSize("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
     }
@@ -97,7 +112,6 @@ public class TestLogMonitor {
 
             avgTimeArr[i] = computeAvg(timeArr[i]);
             System.out.println("In the test with buf size " + multiple + " KB, the avg time used is " + avgTimeArr[i]);
-
         }
     }
 
