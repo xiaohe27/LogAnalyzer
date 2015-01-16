@@ -1,5 +1,6 @@
 import fsl.uiuc.Main;
 import log.LogEntryExtractor;
+import log.LogEntryExtractor_ByteBuffer_AllocateDirect;
 import org.junit.Test;
 import sig.SigExtractor;
 
@@ -33,7 +34,7 @@ public class TestLogMonitor {
 
     public void test9MLog_multiTimes(String path) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         Path logFile = Paths.get(path);
-        int num = 1;
+        int num = 20;
         long[] timeArr = new long[num];
         for (int i = 0; i < num; i++) {
             LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFile);
@@ -69,7 +70,7 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-    @Test
+//    @Test
     public void test9MLog_Siebel_SingleRun() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
 //        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
 //                "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy"};
@@ -90,7 +91,7 @@ public class TestLogMonitor {
         this.test9MLogBuffSize("/home/hexiao2/DATA/ldcc4Monpoly");
     }
 
-    //    @Test
+        @Test
     public void test9MLogBuffSize_Siebel() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLogBuffSize("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
     }
@@ -103,7 +104,7 @@ public class TestLogMonitor {
 
     public void test9MLogBuffSize(String logFilePath) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         int numOfLines = 10;
-        int numOfCols = 10;
+        int numOfCols = 20;
 
         int offset = 0;
 
@@ -118,7 +119,9 @@ public class TestLogMonitor {
 
             int multiple = (int) Math.pow(2, i + offset);
 
-            LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFile, multiple);
+
+//            LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFile, multiple);
+            LogEntryExtractor_ByteBuffer_AllocateDirect lee = new LogEntryExtractor_ByteBuffer_AllocateDirect(SigExtractor.TableCol, logFile, multiple);
 
             for (int j = 0; j < timeArr[0].length; j++) {
                 long startT = System.currentTimeMillis();

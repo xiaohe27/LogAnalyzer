@@ -51,6 +51,9 @@ public class Main {
         MonitorGenerator mg = new MonitorGenerator(path2SigFile, path2FormulaFile);
 
         LogMonitor lm = new LogMonitor(mg.getMethoArgsMappingFromSigFile(), mg.getMonitorClassPath());
-        lm.monitor(path2Log);
+
+//        lm.monitor(path2Log); //default mapped byte buffer
+        lm.monitor_bytebuffer_allocateDirect(path2Log);
+
     }
 }

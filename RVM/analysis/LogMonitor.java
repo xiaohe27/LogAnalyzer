@@ -1,6 +1,7 @@
 package analysis;
 
 import log.LogEntryExtractor;
+import log.LogEntryExtractor_ByteBuffer_AllocateDirect;
 import reg.RegHelper;
 
 import java.io.File;
@@ -80,7 +81,30 @@ public class LogMonitor {
         }
 
         long startT = System.currentTimeMillis();
-//        lee.startLineByLine();
+
+        lee.startReadingEventsByteByByte();
+
+        long totalT = System.currentTimeMillis() - startT;
+
+        System.out.println("It took my log analyzer " + totalT + " ms to " +
+                "count all the log entries in the log file.");
+    }
+
+    public void monitor_bytebuffer_allocateDirect(Path path2LogFile) throws IOException {
+        LogEntryExtractor_ByteBuffer_AllocateDirect lee = null;
+
+        if (path2LogFile != null) {
+            //the path to the log file should be obtained from outside as an argument of 'main'
+            File logFile = path2LogFile.toFile();
+
+            lee = new LogEntryExtractor_ByteBuffer_AllocateDirect(this.TableCol, path2LogFile);
+
+        } else { //path to log file is null: indicating the scanner will read log entries from System.in
+//            lee = new LogEntryExtractor(this.TableCol);
+        }
+
+        long startT = System.currentTimeMillis();
+
         lee.startReadingEventsByteByByte();
 
         long totalT = System.currentTimeMillis() - startT;
