@@ -34,7 +34,7 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-                @Test
+//                @Test
     public void test9MLog_singleViolation_IdeaPad() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "/DATA/ldcc4Monpoly_BaseExecTime"};
@@ -53,6 +53,11 @@ public class TestLogMonitor {
         this.test9MLogBuffSize("/home/xiaohe/UIUC-WorkSpace/DATA/ldcc4Monpoly");
     }
 
+            @Test
+    public void test9MLogBuffSize_UIUC() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
+        this.test9MLogBuffSize("/home/hexiao2/DATA/ldcc4Monpoly");
+    }
+
     //    @Test
     public void test9MLogBuffSize_Siebel() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLogBuffSize("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
@@ -65,7 +70,7 @@ public class TestLogMonitor {
 
     public void test9MLogBuffSize(String logFilePath) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         int numOfLines = 10;
-        int numOfCols = 20;
+        int numOfCols = 10;
 
         int offset = 0;
 
