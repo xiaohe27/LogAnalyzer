@@ -20,9 +20,19 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
+    //@Test
+    public void test9M_Single_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
+        this.test9MLog_multiTimes("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
+    }
+
 //    @Test
-    public void test9MLog_HP() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        Path logFile = Paths.get("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
+    public void test9M_Single_UIUC() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
+        this.test9MLog_multiTimes("/home/hexiao2/DATA/ldcc4Monpoly");
+    }
+
+
+    public void test9MLog_multiTimes(String path) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+        Path logFile = Paths.get(path);
         int num = 15;
         long[] timeArr = new long[num];
         for (int i = 0; i < num; i++) {
@@ -75,7 +85,12 @@ public class TestLogMonitor {
         this.test9MLogBuffSize("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
     }
 
-                @Test
+    @Test
+    public void test9MLogBuffSize_UIUC() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
+        this.test9MLogBuffSize("/home/hexiao2/DATA/ldcc4Monpoly");
+    }
+
+//                @Test
     public void test9MLogBuffSize_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLogBuffSize("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
     }
