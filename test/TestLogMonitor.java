@@ -20,7 +20,7 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-    //@Test
+    @Test
     public void test9M_Single_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLog_multiTimes("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
     }
@@ -82,7 +82,7 @@ public class TestLogMonitor {
         this.test9MLogBuffSize("/home/xiaohe/UIUC-WorkSpace/DATA/ldcc4Monpoly");
     }
 
-            @Test
+//            @Test
     public void test9MLogBuffSize_UIUC() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLogBuffSize("/home/hexiao2/DATA/ldcc4Monpoly");
     }
@@ -92,10 +92,6 @@ public class TestLogMonitor {
         this.test9MLogBuffSize("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
     }
 
-    @Test
-    public void test9MLogBuffSize_UIUC() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-        this.test9MLogBuffSize("/home/hexiao2/DATA/ldcc4Monpoly");
-    }
 
 //                @Test
     public void test9MLogBuffSize_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
