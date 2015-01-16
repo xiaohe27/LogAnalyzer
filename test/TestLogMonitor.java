@@ -13,19 +13,19 @@ import java.nio.file.Paths;
  */
 public class TestLogMonitor {
 
-//        @Test
+    //        @Test
     public void testMain1() throws Exception {
         String[] args = new String[]{"./test/insert-smallLog/insert.sig", "./test/insert-smallLog/insert.fl",
                 "./test/insert-smallLog/insert.log"};
         Main.main(args);
     }
 
-    @Test
+    //    @Test
     public void test9M_Single_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLog_multiTimes("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
     }
 
-//    @Test
+    //    @Test
     public void test9M_Single_UIUC() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLog_multiTimes("/home/hexiao2/DATA/ldcc4Monpoly");
     }
@@ -33,7 +33,7 @@ public class TestLogMonitor {
 
     public void test9MLog_multiTimes(String path) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         Path logFile = Paths.get(path);
-        int num = 15;
+        int num = 1;
         long[] timeArr = new long[num];
         for (int i = 0; i < num; i++) {
             LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFile);
@@ -62,19 +62,22 @@ public class TestLogMonitor {
     }
 
 
-
-//                @Test
+    //                @Test
     public void test9MLog_singleViolation_IdeaPad() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "/DATA/ldcc4Monpoly_BaseExecTime"};
         Main.main(args);
     }
 
-    //            @Test
+    @Test
     public void test9MLog_Siebel_SingleRun() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
-                "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy"};
-        Main.main(args);
+//        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
+//                "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy"};
+
+        String logPath_base = "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy";
+        String logPath = "/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly";
+
+        this.test9MLog_multiTimes(logPath);
     }
 
     //        @Test
@@ -82,7 +85,7 @@ public class TestLogMonitor {
         this.test9MLogBuffSize("/home/xiaohe/UIUC-WorkSpace/DATA/ldcc4Monpoly");
     }
 
-//            @Test
+    //            @Test
     public void test9MLogBuffSize_UIUC() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLogBuffSize("/home/hexiao2/DATA/ldcc4Monpoly");
     }
@@ -93,7 +96,7 @@ public class TestLogMonitor {
     }
 
 
-//                @Test
+    //                @Test
     public void test9MLogBuffSize_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLogBuffSize("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
     }
