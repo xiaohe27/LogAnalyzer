@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Scanner;
 
 /**
  * Created by xiaohe on 11/24/14.
@@ -80,6 +81,11 @@ public class LogMonitor {
 //            lee = new LogEntryExtractor(this.TableCol);
         }
 
+        System.out.println("Please get ready to profile the app, input a line with `enter` please.");
+        Scanner scan=new Scanner(System.in);
+        String res=scan.nextLine();
+        System.out.println("response is "+res);
+
         long startT = System.currentTimeMillis();
 
         lee.startReadingEventsByteByByte();
@@ -102,6 +108,7 @@ public class LogMonitor {
         } else { //path to log file is null: indicating the scanner will read log entries from System.in
 //            lee = new LogEntryExtractor(this.TableCol);
         }
+
 
         long startT = System.currentTimeMillis();
 
