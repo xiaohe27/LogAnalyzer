@@ -3,6 +3,7 @@ package util;
 import fsl.uiuc.Main;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -40,12 +41,19 @@ public class Utils {
 
     private BufferedWriter init(StandardOpenOption option) {
         Path output = Paths.get(Main.outputPath);
-
+        File outFile = output.toFile();
         try {
-            if (output.toFile().exists())
-                output.toFile().delete();
+            if (outFile.exists()) {
+                outFile.delete();
+                outFile.createNewFile();
+            }
 
-            output.toFile().createNewFile();
+            else {
+                if (!output.getParent().toFile().exists())
+                    output.getParent().toFile().mkdirs();
+
+                output.toFile().createNewFile();
+            }
 
             return newBufferedWriter(output, charset, option, StandardOpenOption.WRITE);
         } catch (IOException e) {

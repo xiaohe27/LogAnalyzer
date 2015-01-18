@@ -55,7 +55,7 @@ public class TestLogMonitor {
     }
 
 
-    //            @Test
+                @Test
     public void test9MLog_IdeaPad() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "/home/xiaohe/UIUC-WorkSpace/DATA/ldcc4Monpoly"};
@@ -91,7 +91,7 @@ public class TestLogMonitor {
         this.test9MLogBuffSize("/home/hexiao2/DATA/ldcc4Monpoly");
     }
 
-        @Test
+//        @Test
     public void test9MLogBuffSize_Siebel() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         this.test9MLogBuffSize("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
     }
