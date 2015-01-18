@@ -23,18 +23,23 @@ public class TestLogMonitor {
 
     //    @Test
     public void test9M_Single_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-        this.test9MLog_multiTimes("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
+        this.test9MLog_multiTimes("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly", 10);
+    }
+
+//    @Test
+    public void test9M_Single_Siebel() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
+        this.test9MLog_multiTimes("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly", 1);
     }
 
     //    @Test
     public void test9M_Single_UIUC() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-        this.test9MLog_multiTimes("/home/hexiao2/DATA/ldcc4Monpoly");
+        this.test9MLog_multiTimes("/home/hexiao2/DATA/ldcc4Monpoly", 10);
     }
 
 
-    public void test9MLog_multiTimes(String path) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+    public void test9MLog_multiTimes(String path, int num) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         Path logFile = Paths.get(path);
-        int num = 20;
+
         long[] timeArr = new long[num];
         for (int i = 0; i < num; i++) {
             LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFile);
@@ -55,7 +60,7 @@ public class TestLogMonitor {
     }
 
 
-                @Test
+//                @Test
     public void test9MLog_IdeaPad() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "/home/xiaohe/UIUC-WorkSpace/DATA/ldcc4Monpoly"};
@@ -70,15 +75,15 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-//    @Test
+    @Test
     public void test9MLog_Siebel_SingleRun() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
 //        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
 //                "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy"};
 
         String logPath_base = "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy";
         String logPath = "/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly";
+        this.test9MLog_multiTimes(logPath_base, 1);
 
-        this.test9MLog_multiTimes(logPath);
     }
 
     //        @Test
@@ -103,10 +108,10 @@ public class TestLogMonitor {
     }
 
     public void test9MLogBuffSize(String logFilePath) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        int numOfLines = 10;
-        int numOfCols = 20;
+        int numOfLines = 2;
+        int numOfCols = 3;
 
-        int offset = 0;
+        int offset = 6;
 
         long[][] timeArr = new long[numOfLines][numOfCols];
         long[] avgTimeArr = new long[numOfLines];
@@ -132,8 +137,8 @@ public class TestLogMonitor {
 
                 timeArr[i][j] = totalT;
 
-//                System.out.println("Using buffer of size "+multiple+" KB, it took my log analyzer " + totalT + " ms to " +
-//                        "count all the log entries in the log file via reading events byte by byte!~!");
+                System.out.println("Using buffer of size "+multiple+" KB, it took my log analyzer " + totalT + " ms to " +
+                        "count all the log entries in the log file via reading events byte by byte!~!");
             }
 
             avgTimeArr[i] = computeAvg(timeArr[i]);
