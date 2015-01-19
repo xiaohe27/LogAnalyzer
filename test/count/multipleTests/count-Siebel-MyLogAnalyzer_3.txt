@@ -1,8 +1,0 @@
-Start time : 1421605088
-
-@1277857421 insert(ARealUserInTheDB,MYDB,104,73414889)
-It took my log analyzer 2832 ms to count all the log entries in the log file.
-
-Finish time : 1421605091
-
-It took my log analyzer 3 seconds to find the single violation among the events in the 9M log ldcc4Monpoly buggy at Siebel using reading byte by byte approach

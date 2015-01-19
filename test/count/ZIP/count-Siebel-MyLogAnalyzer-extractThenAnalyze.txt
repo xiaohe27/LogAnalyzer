@@ -1,0 +1,6 @@
+Start time : 1421688034639
+It took my log analyzer 2638 ms to count all the log entries in the log file in the format of plain txt
+
+Finish time : 1421688038455
+
+It took my log analyzer totally 3816 seconds to first extract the 9M log file from .tar.gz and then find the single violation among the events at Siebel using reading byte by byte approach

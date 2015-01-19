@@ -1,20 +1,19 @@
 package log;
 
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import reg.RegHelper;
 import sig.SigExtractor;
+import util.UnZipFile;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.BufferUnderflowException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Path;
 import java.util.HashMap;
 
 /**
  * Serves as lexer and parser for log file.
  */
-public class LogEntryExtractor implements LogExtractor {
+public class LogEntryExtractor_FromArchive implements LogExtractor {
 
     //some tokens
     static final byte newLine = (byte) '\n';
@@ -41,18 +40,15 @@ public class LogEntryExtractor implements LogExtractor {
      */
     private HashMap<String, Integer[]> TableCol;
 
-    private String logFilePath;
+    private String logFile_compressed;
     //    indirect optimal 8kb
 //    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
     private int BufSize;
-    //    private ByteBuffer byteArr;
-//    private FileChannel inChannel;
     private byte[] byteArr;
-    private MappedByteBuffer mbb;
-    private long fileSize;
-    private long posInFile; //pos in the file
     private int posInArr;
+    private TarArchiveInputStream tarIn;
 
+    private int[] seqOfCompressMethod;//for future extension
 
 //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
 //        this.TableCol = tableCol;
@@ -66,19 +62,19 @@ public class LogEntryExtractor implements LogExtractor {
      * @param tableCol
      * @param logFile
      * @param multipleOf1K Multiple of 1024.
-     * @throws IOException
+     * @throws java.io.IOException
      */
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int multipleOf1K)
+    public LogEntryExtractor_FromArchive(HashMap<String, Integer[]> tableCol, Path logFile, int multipleOf1K)
             throws IOException {
         this.TableCol = tableCol;
-        this.logFilePath = logFile.toString();
+        this.logFile_compressed = logFile.toString();
 
         this.BufSize = multipleOf1K * 1024;
         this.byteArr = new byte[this.BufSize];
         init();
     }
 
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
+    public LogEntryExtractor_FromArchive(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
         this(tableCol, logFile, 4);
     }
 
@@ -126,18 +122,10 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
+            int count = -1;
             this.posInArr = 0;
-            try {
-                this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing an event name");
+            if ((BufSize = tarIn.read(this.byteArr, 0, BufSize)) == -1) {
+                throw new IOException("Unexpected end of file while parsing an int");
             }
         }
 
@@ -173,17 +161,8 @@ public class LogEntryExtractor implements LogExtractor {
             }
 
             this.posInArr = 0;
-            try {
-                this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing a string");
+            if ((BufSize = tarIn.read(this.byteArr, 0, BufSize)) == -1) {
+                throw new IOException("Unexpected end of file while parsing an int");
             }
         }
     }
@@ -216,17 +195,8 @@ public class LogEntryExtractor implements LogExtractor {
             }
 
             this.posInArr = 0;
-            try {
-                this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing a time stamp");
+            if ((BufSize = tarIn.read(this.byteArr, 0, BufSize)) == -1) {
+                throw new IOException("Unexpected end of file while parsing an int");
             }
         }
     }
@@ -260,17 +230,8 @@ public class LogEntryExtractor implements LogExtractor {
             }
 
             this.posInArr = 0;
-            try {
-                this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing a floating number");
+            if ((BufSize = tarIn.read(this.byteArr, 0, BufSize)) == -1) {
+                throw new IOException("Unexpected end of file while parsing an int");
             }
         }
     }
@@ -279,7 +240,7 @@ public class LogEntryExtractor implements LogExtractor {
      * Get an int number from byte byteArr (not check thoroughly, assume white spaces).
      *
      * @return
-     * @throws IOException
+     * @throws java.io.IOException
      */
     private int getIntFromBuf(byte delim) throws IOException {
         StringBuffer sb = new StringBuffer();
@@ -310,89 +271,71 @@ public class LogEntryExtractor implements LogExtractor {
             }
 
             this.posInArr = 0;
-            try {
-                this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing an integer");
+            if ((BufSize = tarIn.read(this.byteArr, 0, BufSize)) == -1) {
+                throw new IOException("Unexpected end of file while parsing an int");
             }
         }
-
-
     }
 
     public void startReadingEventsByteByByte() throws IOException {
         long numOfLogEntries = 0;
 
-        RandomAccessFile aFile = new RandomAccessFile
-                (this.logFilePath, "r");
+        this.tarIn = UnZipFile.getTarInputStream(this.logFile_compressed);
 
-        FileChannel inChannel = aFile.getChannel();
-        this.fileSize = inChannel.size();
+        TarArchiveEntry entry = null;
 
-//        System.out.println("There are totally "+this.fileSize+" bytes in the file");
+        /** Read the tar entries using the getNextEntry method **/
+        while ((entry = (TarArchiveEntry) tarIn.getNextEntry()) != null) {
 
-        this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY, 0, this.fileSize);
+//            System.out.println("Encountering: " + entry.getName());
+            /** If the entry is a directory, create the directory. **/
 
-//        System.out.println("Log is loaded? "+this.mbb.isLoaded());
-//        System.out.println("MBB is direct? "+this.mbb.isDirect());
-        this.mbb.load();
-//        System.out.println("Again, Log is loaded? "+this.mbb.isLoaded());
-
-        this.byteArr = new byte[this.BufSize];
-        this.posInFile = 0;
-        this.mbb.position(0);
-        while (this.posInFile < this.fileSize) {
-            try {
-                this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing, cur pos in file is " +
-                            this.posInFile + ", and the file size is " + this.fileSize);
+            if (entry.isDirectory()) {
+                System.out.println("Find the directory " + entry.getName());
             }
+            /**
+             * If the entry is a file, analyze its content as log file.
+             **/
+            else {
+//                System.out.println("Find file " + entry.getName());
+                int count;
+                while ((count = tarIn.read(this.byteArr, 0, BufSize)) != -1) {
+                    this.posInArr = 0;
+                    while (this.posInArr < this.BufSize) {
+                        byte b = this.byteArr[this.posInArr++];
+                        if (isWhiteSpace(b))
+                            continue;
 
-            this.posInArr = 0;
-            while (this.posInArr < this.BufSize) {
-                byte b = this.byteArr[this.posInArr++];
-                if (isWhiteSpace(b))
-                    continue;
-
-                //change the order of different branches, cmp whether we can gain perf benefits by
-                //considering the probabilities.
-                if (b == lpa) {
-                    this.rmWhiteSpace();
-                    this.triggerEvent();
-                } else if (isStringChar(b)) {
-                    EventName = (char) b + this.getEventName();
-                } else if (b == at) {
-                    this.rmWhiteSpace();
-                    TimeStamp = String.valueOf(this.getTSFromBuf());
-                    numOfLogEntries++;
-                } else if (b == 0) {
-                    break;
-                } else {
-                    throw new IOException("Unexpected char'" + (char) b + "'");
+                        //change the order of different branches, cmp whether we can gain perf benefits by
+                        //considering the probabilities.
+                        if (b == lpa) {
+                            this.rmWhiteSpace();
+                            this.triggerEvent();
+                        } else if (isStringChar(b)) {
+                            EventName = (char) b + this.getEventName();
+                        } else if (b == at) {
+                            this.rmWhiteSpace();
+                            TimeStamp = String.valueOf(this.getTSFromBuf());
+                            numOfLogEntries++;
+                        } else if (b == 0) {
+                            break;
+                        } else {
+                            System.out.println("No. " + numOfLogEntries + " entry, event name is " + EventName);
+                            System.err.println("Unexpected char'" + (char) b + "'");
+                            break;
+                        }
+                    }
                 }
+
             }
         }
-        inChannel.close();
 
-        aFile.close();
+        /** Close the input stream **/
 
-//        System.out.println("There are " +
-//                numOfLogEntries + " log entries in the log file!!!");
+        tarIn.close();
+
+        System.out.println("There are " +
+                numOfLogEntries + " log entries in the .tar.gz log file!!!");
 
     }
 

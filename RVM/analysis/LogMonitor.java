@@ -2,6 +2,8 @@ package analysis;
 
 import log.LogEntryExtractor;
 import log.LogEntryExtractor_ByteBuffer_AllocateDirect;
+import log.LogEntryExtractor_FromArchive;
+import log.LogExtractor;
 import reg.RegHelper;
 
 import java.io.File;
@@ -68,23 +70,24 @@ public class LogMonitor {
      *
      * @param path2LogFile
      */
-    public void monitor(Path path2LogFile) throws IOException {
-        LogEntryExtractor lee = null;
+    public void monitorWithProfiling(Path path2LogFile, boolean isTarGz) throws IOException {
+        LogExtractor lee = null;
 
         if (path2LogFile != null) {
             //the path to the log file should be obtained from outside as an argument of 'main'
-            File logFile = path2LogFile.toFile();
-
-            lee = new LogEntryExtractor(this.TableCol, path2LogFile);
-
+            if (isTarGz) {
+                lee = new LogEntryExtractor_FromArchive(this.TableCol, path2LogFile);
+            } else {
+                lee = new LogEntryExtractor(this.TableCol, path2LogFile);
+            }
         } else { //path to log file is null: indicating the scanner will read log entries from System.in
 //            lee = new LogEntryExtractor(this.TableCol);
         }
 
         System.out.println("Please get ready to profile the app, input a line with `enter` please.");
-        Scanner scan=new Scanner(System.in);
-        String res=scan.nextLine();
-        System.out.println("response is "+res);
+        Scanner scan = new Scanner(System.in);
+        String res = scan.nextLine();
+        System.out.println("response is " + res);
 
         long startT = System.currentTimeMillis();
 
@@ -93,7 +96,37 @@ public class LogMonitor {
         long totalT = System.currentTimeMillis() - startT;
 
         System.out.println("It took my log analyzer " + totalT + " ms to " +
-                "count all the log entries in the log file.");
+                "count all the log entries in the log file in the format of " + (isTarGz ? "tar.gz" : "plain txt"));
+    }
+
+    /**
+     * A method only for testing purpose.
+     *
+     * @param path2LogFile
+     */
+    public void monitor(Path path2LogFile, boolean isTarGz) throws IOException {
+        LogExtractor lee = null;
+
+        if (path2LogFile != null) {
+            //the path to the log file should be obtained from outside as an argument of 'main'
+            if (isTarGz) {
+                lee = new LogEntryExtractor_FromArchive(this.TableCol, path2LogFile, 8);
+            } else {
+                lee = new LogEntryExtractor(this.TableCol, path2LogFile);
+            }
+
+        } else { //path to log file is null: indicating the scanner will read log entries from System.in
+//            lee = new LogEntryExtractor(this.TableCol);
+        }
+
+        long startT = System.currentTimeMillis();
+
+        lee.startReadingEventsByteByByte();
+
+        long totalT = System.currentTimeMillis() - startT;
+
+        System.out.println("It took my log analyzer " + totalT + " ms to " +
+                "count all the log entries in the log file in the format of " + (isTarGz ? "tar.gz" : "plain txt"));
     }
 
     public void monitor_bytebuffer_allocateDirect(Path path2LogFile) throws IOException {
