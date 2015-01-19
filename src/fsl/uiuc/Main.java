@@ -2,7 +2,6 @@ package fsl.uiuc;
 
 import analysis.LogMonitor;
 import gen.MonitorGenerator;
-
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
@@ -54,6 +53,5 @@ public class Main {
 
         lm.monitor(path2Log); //default mapped byte buffer
 //        lm.monitor_bytebuffer_allocateDirect(path2Log);
-
     }
 }
