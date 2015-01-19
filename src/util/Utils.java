@@ -20,8 +20,15 @@ public class Utils {
     public static final Utils MY_Utils = new Utils();
 
     private Charset charset = Charset.forName("US-ASCII");
-    private BufferedWriter writerTruncate = init(StandardOpenOption.TRUNCATE_EXISTING);
-    private BufferedWriter writerAppend = init(StandardOpenOption.APPEND);
+    private BufferedWriter bufferedWriter = init();
+
+    public void writeToDefaultOutputFile(String contents) throws IOException {
+        this.bufferedWriter.write(contents);
+    }
+
+    public void flushOutput() throws IOException {
+        this.bufferedWriter.flush();
+    }
 
     public static void writeToFile(String contents, String fileName) {
         Path p = Paths.get(fileName);
@@ -39,21 +46,20 @@ public class Utils {
         }
     }
 
-    private BufferedWriter init(StandardOpenOption option) {
+    private BufferedWriter init() {
         Path output = Paths.get(Main.outputPath);
         File outFile = output.toFile();
+        boolean outFileExist = outFile.exists();
         try {
-            if (outFile.exists()) {
-                outFile.delete();
-                outFile.createNewFile();
-            }
-
-            else {
+            if (!outFileExist) {
                 if (!output.getParent().toFile().exists())
                     output.getParent().toFile().mkdirs();
 
                 output.toFile().createNewFile();
             }
+
+            StandardOpenOption option = outFileExist ? StandardOpenOption.TRUNCATE_EXISTING :
+                    StandardOpenOption.APPEND;
 
             return newBufferedWriter(output, charset, option, StandardOpenOption.WRITE);
         } catch (IOException e) {
@@ -62,17 +68,5 @@ public class Utils {
             System.exit(0);
         }
         return null;
-    }
-
-    public void write_truncate(String string) throws IOException {
-        writerTruncate.write(string);
-    }
-
-    public void write_append(String string) throws IOException {
-        writerAppend.write(string);
-    }
-
-    public void flush() throws IOException {
-        this.writerAppend.flush();
     }
 }

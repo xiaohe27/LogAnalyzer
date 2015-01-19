@@ -14,7 +14,7 @@ import java.util.HashMap;
 /**
  * Serves as lexer and parser for log file.
  */
-public class LogEntryExtractor {
+public class LogEntryExtractor implements LogExtractor {
 
     //some tokens
     static final byte newLine = (byte) '\n';

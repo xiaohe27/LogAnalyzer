@@ -1,5 +1,3 @@
-package rvm;
-
 import log.LogEntryExtractor;
 import sig.SigExtractor;
 
@@ -64,7 +62,7 @@ public class Common {
 
                 timeArr[i][j] = totalT;
 
-                System.out.println("Using buffer of size "+multiple+" KB, it took my log analyzer " + totalT + " ms to " +
+                System.out.println("Using buffer of size " + multiple + " KB, it took my log analyzer " + totalT + " ms to " +
                         "count all the log entries in the log file via reading events byte by byte!~!");
             }
 

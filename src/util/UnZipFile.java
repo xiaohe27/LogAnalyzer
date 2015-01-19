@@ -1,10 +1,10 @@
 package util;
 
-import java.io.*;
-
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
+
+import java.io.*;
 
 public class UnZipFile {
     final static int BUFFER = 2048;
@@ -20,7 +20,7 @@ public class UnZipFile {
      * Command line arguments :
      * argv[0]-----> Source tar.gz file.
      * argv[1]-----> DestarInation directory.
-     **/
+     */
     public static void main(String[] args) throws IOException {
 
         /** create a TarArchiveInputStream object. **/
