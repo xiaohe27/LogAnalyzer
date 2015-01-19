@@ -1,7 +1,8 @@
-Start time : 1421159546
-There are 93149 log entries in the log file!~!
-It took my log analyzer 29208 ms to count all the log entries in the log file.
+Start time : 1421617697
+Please get ready to profile the app, input a line with `enter` please.
+response is g
+It took my log analyzer 6170 ms to count all the log entries in the log file.
 
-Finish time : 1421159575
+Finish time : 1421617746
 
-It took my log analyzer 29 seconds to count all the events in the 9M log ldcc4Monpoly at Idea-Pad using reading line by line approach
+It took my log analyzer 49 seconds to count all the events in the 9M log ldcc4Monpoly at Idea-Pad using reading byte by byte approach

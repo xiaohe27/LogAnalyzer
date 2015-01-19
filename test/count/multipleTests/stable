@@ -1,0 +1,6 @@
+after some previous reading of the 300M log file by different apps:
+countByteByByte-Siebel-buggyLog.sh use 2840 ms to read events and find the single violation
+
+clear the disk cache
+@1277857421 insert(ARealUserInTheDB,MYDB,104,73414889)
+It took my log analyzer 3074 ms to count all the log entries in the log file.

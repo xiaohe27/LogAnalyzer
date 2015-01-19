@@ -1,6 +1,7 @@
 package log;
 
 import reg.RegHelper;
+import sig.SigExtractor;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -435,10 +436,10 @@ public class LogEntryExtractor {
             }
         }
 //        this.printEvent();
-//        if (EventName.equals(SigExtractor.INSERT)) {
-//            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
-//                this.printEvent();
-//        }
+        if (EventName.equals(SigExtractor.INSERT)) {
+            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
+                this.printEvent();
+        }
     }
 
     private void printEvent() {
