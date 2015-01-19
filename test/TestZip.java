@@ -14,14 +14,14 @@ public class TestZip {
 
     String Siebel_9M_Zip_Path = "/home/xiaohe/SW/offline-log-analysis/LOG-DATA/ldcc4Monpoly.tar.gz";
 
-//    @Test
+    //    @Test
     public void test9M_Zip_HP() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 HP_9M_Zip_Path};
         Main.main(args);
     }
 
-//        @Test
+    //        @Test
     public void testSmallZip() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 smallZip_Path};
