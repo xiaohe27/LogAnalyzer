@@ -320,7 +320,7 @@ public class LogEntryExtractor_FromArchive implements LogExtractor {
                         } else if (b == 0) {
                             break;
                         } else {
-                            System.out.println("No. "+numOfLogEntries+" entry, event name is "+EventName);
+                            System.out.println("No. " + numOfLogEntries + " entry, event name is " + EventName);
                             System.err.println("Unexpected char'" + (char) b + "'");
                             break;
                         }
@@ -379,10 +379,10 @@ public class LogEntryExtractor_FromArchive implements LogExtractor {
             }
         }
 //        this.printEvent();
-//        if (EventName.equals(SigExtractor.INSERT)) {
-//            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
-//                this.printEvent();
-//        }
+        if (EventName.equals(SigExtractor.INSERT)) {
+            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
+                this.printEvent();
+        }
     }
 
     private void printEvent() {

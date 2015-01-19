@@ -22,14 +22,6 @@ public class Utils {
     private Charset charset = Charset.forName("US-ASCII");
     private BufferedWriter bufferedWriter = init();
 
-    public void writeToDefaultOutputFile(String contents) throws IOException {
-        this.bufferedWriter.write(contents);
-    }
-
-    public void flushOutput() throws IOException {
-        this.bufferedWriter.flush();
-    }
-
     public static void writeToFile(String contents, String fileName) {
         Path p = Paths.get(fileName);
         byte[] bytes = contents.getBytes();
@@ -44,6 +36,14 @@ public class Utils {
                 e1.printStackTrace();
             }
         }
+    }
+
+    public void writeToDefaultOutputFile(String contents) throws IOException {
+        this.bufferedWriter.write(contents);
+    }
+
+    public void flushOutput() throws IOException {
+        this.bufferedWriter.flush();
     }
 
     private BufferedWriter init() {

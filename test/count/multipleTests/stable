@@ -1,6 +1,10 @@
-after some previous reading of the 300M log file by different apps:
-countByteByByte-Siebel-buggyLog.sh use 2840 ms to read events and find the single violation
+settings: mappedbytebuffer, default buf size, 300M log
 
+===========================
 clear the disk cache
+First time:
 @1277857421 insert(ARealUserInTheDB,MYDB,104,73414889)
-It took my log analyzer 3074 ms to count all the log entries in the log file.
+It took my log analyzer 4227 ms to count all the log entries in the log file in the format of plain txt
+
+After that:
+2627 2602 2569...
