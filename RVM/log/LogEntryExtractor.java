@@ -33,8 +33,8 @@ public class LogEntryExtractor implements LogExtractor {
     static final byte rightBracket = (byte) ']';
     static final byte exclamation = (byte) '!';
     static final byte dot = (byte) '.';
-    private String TimeStamp; //we can add the @ symbol when it is ready to be printed
-    private String EventName;
+    //    private String TimeStamp; //we can add the @ symbol when it is ready to be printed
+//    private String EventName;
     private HashMap<String, Object[]> TableData;
     /**
      * Given a table name, return the list of types that represent the types for each column (table schema).
@@ -53,6 +53,14 @@ public class LogEntryExtractor implements LogExtractor {
     private long posInFile; //pos in the file
     private int posInArr;
 
+    private byte[] oldByteArr;
+    private long TimeStampStartIndex;  //starting: [
+    private long TimeStampEndIndex;    //ending )
+    private long EventNameStartIndex;
+    private long EventNameEndIndex;
+    private long[] paramStartPosArr = new long[SigExtractor.maxNumOfParams];
+    private long[] paramEndPosArr = new long[SigExtractor.maxNumOfParams];
+    private int curParamIndex; // the current index of param in the event
 
 //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
 //        this.TableCol = tableCol;
@@ -110,31 +118,31 @@ public class LogEntryExtractor implements LogExtractor {
     }
 
 
-    private String getEventName() throws IOException {
-        StringBuffer sb = new StringBuffer();
+    private void getEventNameEndIndex() throws IOException {
+//        StringBuffer sb = new StringBuffer();
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
                 if (isStringChar(b))
-                    sb.append((char) b);
+                {}
 
                 else {
+                    this.EventNameEndIndex = this.posInArr - 1 + this.posInFile;
+
                     if (b == lpa) {
                         this.posInArr--;
                     }
-                    return sb.toString();
                 }
             }
 
+            this.posInFile += this.BufSize;
             this.posInArr = 0;
             try {
                 this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
             } catch (BufferUnderflowException e) {
                 int remaining = this.mbb.remaining();
                 if (remaining > 0) {
                     this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
                     this.BufSize = remaining;
                 } else
                     throw new IOException("Unexpected end of file while parsing an event name");
@@ -144,43 +152,30 @@ public class LogEntryExtractor implements LogExtractor {
     }
 
 
-    private String getStringFromBuf(byte delim) throws IOException {
-        StringBuffer sb = new StringBuffer();
-        String returnedStr = null;
+    private void getStringEndIndexFromBuf(byte delim) throws IOException {
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
                 if (isStringChar(b)) {
-                    try {
-                        sb.append((char) b);
-                    } catch (Exception e) {
-                        throw new IOException("A string field should not contain white spaces inside");
-                    }
                 } else {
+                    this.paramEndPosArr[this.curParamIndex]= this.posInArr - 1 + this.posInFile;
                     if (!isWhiteSpace(b) && b != delim) {
                         throw new IOException("UnExpected char\'" + (char) b + "\'");
-                    }
-
-                    if (sb != null) {
-                        returnedStr = sb.toString();
-                        sb = null;
                     }
                     if (b != delim) {
                         continue;
                     }
-                    return returnedStr;
                 }
             }
 
+            this.posInFile += this.BufSize;
             this.posInArr = 0;
             try {
                 this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
             } catch (BufferUnderflowException e) {
                 int remaining = this.mbb.remaining();
                 if (remaining > 0) {
                     this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
                     this.BufSize = remaining;
                 } else
                     throw new IOException("Unexpected end of file while parsing a string");
@@ -188,42 +183,51 @@ public class LogEntryExtractor implements LogExtractor {
         }
     }
 
-    private void rmWhiteSpace() {
-        while (this.posInArr < this.BufSize) {
-            byte b = byteArr[this.posInArr++];
-            if (isWhiteSpace(b))
-                continue;
-            else {
-                this.posInArr--;
-                break;
-            }
-        }
-    }
-
-    private long getTSFromBuf() throws IOException {
-        StringBuffer sb = new StringBuffer();
-
-        while (true) {
+    private void rmWhiteSpace() throws IOException {
+        out:while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
-                if (Character.isDigit(b) || b == dot) {
-
-                    sb.append((char) b);
-
-                } else {
-                    return Math.round(Double.parseDouble(sb.toString()));
+                if (isWhiteSpace(b))
+                    continue;
+                else {
+                    this.posInArr--;
+                    break out;
                 }
             }
 
+            this.posInFile += this.BufSize;
             this.posInArr = 0;
             try {
                 this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
             } catch (BufferUnderflowException e) {
                 int remaining = this.mbb.remaining();
                 if (remaining > 0) {
                     this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
+                    this.BufSize = remaining;
+                } else
+                    throw new IOException("Unexpected end of file while removing white spaces");
+            }
+        }
+    }
+
+    private void getTSEndIndexFromBuf() throws IOException {
+        while (true) {
+            while (this.posInArr < this.BufSize) {
+                byte b = byteArr[this.posInArr++];
+                if (Character.isDigit(b) || b == dot) {
+                } else {
+                    this.TimeStampEndIndex = this.posInArr - 1 + this.posInFile;
+                }
+            }
+
+            this.posInFile += this.BufSize;
+            this.posInArr = 0;
+            try {
+                this.mbb.get(this.byteArr);
+            } catch (BufferUnderflowException e) {
+                int remaining = this.mbb.remaining();
+                if (remaining > 0) {
+                    this.mbb.get(this.byteArr, 0, remaining);
                     this.BufSize = remaining;
                 } else
                     throw new IOException("Unexpected end of file while parsing a time stamp");
@@ -231,43 +235,30 @@ public class LogEntryExtractor implements LogExtractor {
         }
     }
 
-    private double getFloatingNumFromBuf(byte delim) throws IOException {
-        StringBuffer sb = new StringBuffer();
-        String returnedStr = null;
+    private void getFloatingNumEndIndexFromBuf(byte delim) throws IOException {
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
                 if (Character.isDigit(b) || b == dot) {
-                    try {
-                        sb.append((char) b);
-                    } catch (Exception e) {
-                        throw new IOException("A floating number field should not contain white spaces inside");
-                    }
                 } else {
+                    this.paramEndPosArr[this.curParamIndex]= this.posInArr - 1 + this.posInFile;
                     if (!isWhiteSpace(b) && b != delim) {
                         throw new IOException("UnExpected char\'" + (char) b + "\'");
-                    }
-
-                    if (sb != null) {
-                        returnedStr = sb.toString();
-                        sb = null;
                     }
                     if (b != delim) {
                         continue;
                     }
-                    return Double.parseDouble(returnedStr);
                 }
             }
 
+            this.posInFile += this.BufSize;
             this.posInArr = 0;
             try {
                 this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
             } catch (BufferUnderflowException e) {
                 int remaining = this.mbb.remaining();
                 if (remaining > 0) {
                     this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
                     this.BufSize = remaining;
                 } else
                     throw new IOException("Unexpected end of file while parsing a floating number");
@@ -282,42 +273,30 @@ public class LogEntryExtractor implements LogExtractor {
      * @throws IOException
      */
     private int getIntFromBuf(byte delim) throws IOException {
-        StringBuffer sb = new StringBuffer();
-        String returnedStr = null;
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
                 if (Character.isDigit(b)) {
-                    try {
-                        sb.append((char) b);
-                    } catch (Exception e) {
-                        throw new IOException("An int number field should not contain white spaces inside");
-                    }
                 } else {
+                    this.paramEndPosArr[this.curParamIndex]= this.posInArr - 1 + this.posInFile;
                     if (!isWhiteSpace(b) && b != delim) {
                         throw new IOException("UnExpected char\'" + (char) b + "\'");
                     }
 
-                    if (sb != null) {
-                        returnedStr = sb.toString();
-                        sb = null;
-                    }
                     if (b != delim) {
                         continue;
                     }
-                    return Integer.parseInt(returnedStr);
                 }
             }
 
+            this.posInFile += this.BufSize;
             this.posInArr = 0;
             try {
                 this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
             } catch (BufferUnderflowException e) {
                 int remaining = this.mbb.remaining();
                 if (remaining > 0) {
                     this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
                     this.BufSize = remaining;
                 } else
                     throw new IOException("Unexpected end of file while parsing an integer");
@@ -346,23 +325,21 @@ public class LogEntryExtractor implements LogExtractor {
 //        System.out.println("Again, Log is loaded? "+this.mbb.isLoaded());
 
         this.byteArr = new byte[this.BufSize];
-        this.posInFile = 0;
+        this.posInFile = 0;   //pos in file is the absolute pos in file where the current byte array starts
         this.mbb.position(0);
-        while (this.posInFile < this.fileSize) {
+        while (this.posInFile + this.posInArr < this.fileSize) {
             try {
                 this.mbb.get(this.byteArr);
-                this.posInFile += this.BufSize;
             } catch (BufferUnderflowException e) {
                 int remaining = this.mbb.remaining();
                 if (remaining > 0) {
                     this.mbb.get(this.byteArr, 0, remaining);
-                    this.posInFile = this.fileSize;
+//                    this.posInFile = this.fileSize;
                     this.BufSize = remaining;
                 } else
                     throw new IOException("Unexpected end of file while parsing, cur pos in file is " +
                             this.posInFile + ", and the file size is " + this.fileSize);
             }
-
             this.posInArr = 0;
             while (this.posInArr < this.BufSize) {
                 byte b = this.byteArr[this.posInArr++];
@@ -375,10 +352,12 @@ public class LogEntryExtractor implements LogExtractor {
                     this.rmWhiteSpace();
                     this.triggerEvent();
                 } else if (isStringChar(b)) {
-                    EventName = (char) b + this.getEventName();
+                    this.EventNameStartIndex = this.posInArr - 1 + this.posInFile;
+                    this.getEventNameEndIndex();
                 } else if (b == at) {
                     this.rmWhiteSpace();
-                    TimeStamp = String.valueOf(this.getTSFromBuf());
+                    this.TimeStampStartIndex = this.posInArr + this.posInFile;
+                    this.getTSEndIndexFromBuf();
                     numOfLogEntries++;
                 } else if (b == 0) {
                     break;
@@ -386,6 +365,8 @@ public class LogEntryExtractor implements LogExtractor {
                     throw new IOException("Unexpected char'" + (char) b + "'");
                 }
             }
+
+            this.posInFile += this.BufSize;
         }
         inChannel.close();
 
