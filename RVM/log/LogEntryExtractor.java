@@ -234,7 +234,7 @@ public class LogEntryExtractor implements LogExtractor {
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
-                if (Character.isDigit(b) || b == dot) {
+                if (b > 47 && b < 58 || b == dot) {
                     TimeStampLen++;
                 } else {
                     String out = "";
@@ -276,12 +276,13 @@ public class LogEntryExtractor implements LogExtractor {
         }
     }
 
+    //b > 47 && b < 58 then b is a digit char
     private void getFloatingNumLenFromBuf(byte delim) throws IOException {
         int len = 0;
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
-                if (Character.isDigit(b) || b == dot) {
+                if (b > 47 && b < 58 || b == dot) {
                     len++;
                 } else {
                     this.paramLenArr[this.curParamIndex] = len;
@@ -327,7 +328,7 @@ public class LogEntryExtractor implements LogExtractor {
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
-                if (Character.isDigit(b)) {
+                if (b > 47 && b < 58) {
                     len++;
                 } else {
                     this.paramLenArr[this.curParamIndex] = len;
@@ -412,7 +413,26 @@ public class LogEntryExtractor implements LogExtractor {
                     this.EventNameStartIndex = this.posInArr - 1;
                     this.getEventNameLen();
 
-                    this.EventName = this.getStringFromBytes(this.EventNameStartIndex, this.EventNameLen);
+                    String output = "";
+
+                    if (this.posInArr > this.EventNameStartIndex) {
+                        output = new String(this.byteArr, this.EventNameStartIndex,
+                                this.EventNameLen, this.asciiCharSet);
+                    } else if (this.posInArr == this.EventNameStartIndex) {
+                        throw new IOException("Empty String!");
+                    } else {//start index is a pos in the old byte array.
+                        int remainingSizInOldBuf = this.oldByteArr.length - this.EventNameStartIndex;
+                        //            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
+                        //            +start+"\nlen is "+len);
+                        if (remainingSizInOldBuf >= this.EventNameLen)
+                            output = new String(this.oldByteArr, this.EventNameStartIndex, this.EventNameLen, this.asciiCharSet);
+                        else
+                            output = new String(this.oldByteArr, this.EventNameStartIndex,
+                                    remainingSizInOldBuf, this.asciiCharSet) +
+                                    new String(this.byteArr, 0, this.EventNameLen - remainingSizInOldBuf, this.asciiCharSet);
+                    }
+
+                    this.EventName = output;
                 } else if (b == at) {
                     this.rmWhiteSpace();
                     this.getTSFromBuf();
@@ -489,8 +509,6 @@ public class LogEntryExtractor implements LogExtractor {
         }
 
 
-//        this.printEvent(this.parseEventArgs());
-
         if (EventName.equals(SigExtractor.INSERT)) {
             Object[] argsInTuple = this.parseEventArgs();
 
@@ -516,10 +534,30 @@ public class LogEntryExtractor implements LogExtractor {
         Integer[] typesInTuple = TableCol.get(EventName);
         Object[] data = new Object[typesInTuple.length];
 
+        String dataI = null;
+
+
         for (this.curParamIndex = 0; this.curParamIndex < typesInTuple.length - 1; this.curParamIndex++) {
             int startIndex = this.paramStartPosArr[this.curParamIndex];
             int len = this.paramLenArr[this.curParamIndex];
-            String dataI = this.getStringFromBytes(startIndex, len);
+
+            if (this.posInArr > startIndex) {
+                dataI = new String(this.byteArr, startIndex,
+                        len, this.asciiCharSet);
+            } else if (this.posInArr == this.EventNameStartIndex) {
+                throw new IOException("Empty String!");
+            } else {//start index is a pos in the old byte array.
+                int remainingSizInOldBuf = this.oldByteArr.length - startIndex;
+                //            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
+                //            +start+"\nlen is "+len);
+                if (remainingSizInOldBuf >= len)
+                    dataI = new String(this.oldByteArr, startIndex, len, this.asciiCharSet);
+                else
+                    dataI = new String(this.oldByteArr, startIndex,
+                            remainingSizInOldBuf, this.asciiCharSet) +
+                            new String(this.byteArr, 0, len - remainingSizInOldBuf, this.asciiCharSet);
+            }
+
 
             switch (typesInTuple[this.curParamIndex]) {
                 case RegHelper.INT_TYPE:
@@ -542,7 +580,25 @@ public class LogEntryExtractor implements LogExtractor {
 
             int startIndex = this.paramStartPosArr[this.curParamIndex];
             int len = this.paramLenArr[this.curParamIndex];
-            String dataI = this.getStringFromBytes(startIndex, len);
+
+            if (this.posInArr > startIndex) {
+                dataI = new String(this.byteArr, startIndex,
+                        len, this.asciiCharSet);
+            } else if (this.posInArr == this.EventNameStartIndex) {
+                throw new IOException("Empty String!");
+            } else {//start index is a pos in the old byte array.
+                int remainingSizInOldBuf = this.oldByteArr.length - startIndex;
+                //            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
+                //            +start+"\nlen is "+len);
+                if (remainingSizInOldBuf >= len)
+                    dataI = new String(this.oldByteArr, startIndex, len, this.asciiCharSet);
+                else
+                    dataI = new String(this.oldByteArr, startIndex,
+                            remainingSizInOldBuf, this.asciiCharSet) +
+                            new String(this.byteArr, 0, len - remainingSizInOldBuf, this.asciiCharSet);
+            }
+
+//            String dataI = output;
 
             switch (typesInTuple[this.curParamIndex]) {
                 case RegHelper.INT_TYPE:
@@ -564,19 +620,21 @@ public class LogEntryExtractor implements LogExtractor {
     }
 
     private void printEvent(Object[] data) throws IOException {
+        StringBuilder sb = new StringBuilder();
 
-
-        System.out.print("\n@" + TimeStamp + " " + this.EventName + "(");
+        sb.append("\n@" + TimeStamp + " " + this.EventName + "(");
 
         for (int i = 0; i < data.length - 1; i++) {
-            System.out.print(data[i] + ",");
+            sb.append(data[i] + ",");
         }
 
         if (data.length > 0) {
-            System.out.print(data[data.length - 1]);
+            sb.append(data[data.length - 1]);
         }
 
-        System.out.print(")\n");
+        sb.append(")\n");
+
+        System.out.println(sb.toString());
     }
 
 
