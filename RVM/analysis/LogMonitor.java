@@ -1,9 +1,6 @@
 package analysis;
 
-import log.LogEntryExtractor;
-import log.LogEntryExtractor_ByteBuffer_AllocateDirect;
-import log.LogEntryExtractor_FromArchive;
-import log.LogExtractor;
+import log.*;
 import reg.RegHelper;
 
 import java.io.File;
@@ -99,12 +96,21 @@ public class LogMonitor {
                 "count all the log entries in the log file in the format of " + (isTarGz ? "tar.gz" : "plain txt"));
     }
 
+
+    public void monitor(Path path2LogFile, boolean isTarGz) throws IOException {
+        this.monitor(path2LogFile, isTarGz, false);
+    }
+
+    public void monitor(Path path2LogFile) throws IOException {
+        this.monitor(path2LogFile, false, false);
+    }
+
     /**
      * A method only for testing purpose.
      *
      * @param path2LogFile
      */
-    public void monitor(Path path2LogFile, boolean isTarGz) throws IOException {
+    public void monitor(Path path2LogFile, boolean isTarGz, boolean eagerEval) throws IOException {
         LogExtractor lee = null;
 
         if (path2LogFile != null) {
@@ -112,7 +118,11 @@ public class LogMonitor {
             if (isTarGz) {
                 lee = new LogEntryExtractor_FromArchive(this.TableCol, path2LogFile, 8);
             } else {
-                lee = new LogEntryExtractor(this.TableCol, path2LogFile);
+                if (eagerEval)
+                    lee = new LogEntryExtractor_Eager(this.TableCol, path2LogFile);
+
+                else
+                    lee = new LogEntryExtractor(this.TableCol, path2LogFile); //use lazy eval strategy.
             }
 
         } else { //path to log file is null: indicating the scanner will read log entries from System.in
