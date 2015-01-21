@@ -1,4 +1,6 @@
 import log.LogEntryExtractor;
+import log.LogEntryExtractor_Eager;
+import log.LogExtractor;
 import sig.SigExtractor;
 
 import java.io.IOException;
@@ -10,12 +12,16 @@ import java.nio.file.Paths;
  * Created by xiaohe on 15-1-18.
  */
 public class Common {
-    public static void test9MLog_multiTimes(String path, int num) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+    public static void test9MLog_multiTimes(String path, int num) throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
+        test9MLog_multiTimes(path, num, false); //by default, use lazy eval
+    }
+
+    public static void test9MLog_multiTimes(String path, int num, boolean eager) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         Path logFile = Paths.get(path);
 
         long[] timeArr = new long[num];
         for (int i = 0; i < num; i++) {
-            LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFile);
+            LogExtractor lee = (eager ? new LogEntryExtractor_Eager(SigExtractor.TableCol, logFile) : new LogEntryExtractor(SigExtractor.TableCol, logFile));
 
             long startT = System.currentTimeMillis();
 

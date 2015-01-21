@@ -34,14 +34,13 @@ public class LogEntryExtractor implements LogExtractor {
     static final byte rightBracket = (byte) ']';
     static final byte exclamation = (byte) '!';
     static final byte dot = (byte) '.';
-
+    private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
     private long TimeStamp; //we can add the @ symbol when it is ready to be printed
     private String EventName;
     /**
      * Given a table name, return the list of types that represent the types for each column (table schema).
      */
     private HashMap<String, Integer[]> TableCol;
-
     private String logFilePath;
     //    indirect optimal 8kb
 //    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
@@ -53,7 +52,6 @@ public class LogEntryExtractor implements LogExtractor {
     private long fileSize;
     private long posInFile; //pos in the file
     private int posInArr;
-
     private byte[] oldByteArr;
     //if the ending index is less than the starting one, then the starting index comes from the old byte array
 //    private int TimeStampStartIndex;  //starting: [
@@ -64,8 +62,6 @@ public class LogEntryExtractor implements LogExtractor {
     //    private long[] paramEndPosArr = new long[SigExtractor.maxNumOfParams];
     private int[] paramLenArr = new int[SigExtractor.maxNumOfParams];
     private int curParamIndex; // the current index of param in the event
-
-    private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
 //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
 //        this.TableCol = tableCol;
 //        InputStreamReader isReader = new InputStreamReader(System.in);
@@ -494,20 +490,21 @@ public class LogEntryExtractor implements LogExtractor {
 
 
 //        this.printEvent(this.parseEventArgs());
-//        if (EventName.equals(SigExtractor.INSERT)) {
-//            Object[] argsInTuple = this.parseEventArgs();
-//
-//            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
-//                this.printEvent(argsInTuple);
-//        }
 
-        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
-            //script_md5 (MY_Script,myMD5)
+        if (EventName.equals(SigExtractor.INSERT)) {
             Object[] argsInTuple = this.parseEventArgs();
 
-            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
+            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
                 this.printEvent(argsInTuple);
         }
+
+//        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
+//            //script_md5 (MY_Script,myMD5)
+//            Object[] argsInTuple = this.parseEventArgs();
+//
+//            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
+//                this.printEvent(argsInTuple);
+//        }
     }
 
     /**
