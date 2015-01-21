@@ -20,7 +20,7 @@ public class SigExtractor {
     public static final String COMMIT = "commit";
 
     public static final int longestEventNameSize = 11;
-    public static final int maxNumOfParams = 4;
+    public static final int maxNumOfParams = 5;
 
     public static final byte[] insertByte = INSERT.getBytes();
 
