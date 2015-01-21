@@ -58,9 +58,9 @@ public class TestLogMonitor {
     public void test9MLog_Siebel_SingleRun() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
 
         String logPath_base = "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy";
-        Common.test9MLog_multiTimes(logPath_base, 5, true); //eager eval
+//        Common.test9MLog_multiTimes(logPath_base, 5, true); //eager eval
 
-//        Common.test9MLog_multiTimes(logPath_base, 5, false); //lazy eval
+        Common.test9MLog_multiTimes(logPath_base, 5, false); //lazy eval
 
     }
 

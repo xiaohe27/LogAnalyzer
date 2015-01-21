@@ -206,7 +206,7 @@ public class LogEntryExtractor_Eager implements LogExtractor {
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
-                if (Character.isDigit(b) || b == dot) {
+                if (b > 47 && b < 58 || b == dot) {
 
                     sb.append((char) b);
 
@@ -237,7 +237,7 @@ public class LogEntryExtractor_Eager implements LogExtractor {
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
-                if (Character.isDigit(b) || b == dot) {
+                if (b > 47 && b < 58 || b == dot) {
                     try {
                         sb.append((char) b);
                     } catch (Exception e) {
@@ -287,7 +287,7 @@ public class LogEntryExtractor_Eager implements LogExtractor {
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
-                if (Character.isDigit(b)) {
+                if (b > 47 && b < 58) {
                     try {
                         sb.append((char) b);
                     } catch (Exception e) {
