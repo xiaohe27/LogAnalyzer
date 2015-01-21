@@ -10,3 +10,5 @@ Provide two modes:
 1) read from normal log file
 2) read directly from compressed log file
 
+
+

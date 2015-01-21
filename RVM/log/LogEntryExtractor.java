@@ -494,11 +494,18 @@ public class LogEntryExtractor implements LogExtractor {
 
 
 //        this.printEvent(this.parseEventArgs());
-        if (EventName.equals(SigExtractor.INSERT)) {
+//        if (EventName.equals(SigExtractor.INSERT)) {
+//            Object[] argsInTuple = this.parseEventArgs();
+//
+//            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
+//                this.printEvent(argsInTuple);
+//        }
 
+        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
+            //script_md5 (MY_Script,myMD5)
             Object[] argsInTuple = this.parseEventArgs();
 
-            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
+            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
                 this.printEvent(argsInTuple);
         }
     }
