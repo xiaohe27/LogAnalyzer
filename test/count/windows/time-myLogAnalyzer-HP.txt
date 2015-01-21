@@ -1,2 +1,6 @@
 There are 93149 log entries in the log file!!!
 It took my log analyzer 4124 ms to count all the log entries in the log file.
+
+(intellij)
+There are 93148 log entries in the log file!!!
+It takes my log analyzer 4151 ms to count all the events in the log file after running 1 tests

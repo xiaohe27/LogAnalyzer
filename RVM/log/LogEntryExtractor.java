@@ -175,7 +175,7 @@ public class LogEntryExtractor implements LogExtractor {
                     if (this.byteArr[this.posInArr++] == delim) {
                         return;
                     } else {
-                        throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr-1]);
+                        throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr - 1]);
                     }
                 }
             }
@@ -296,7 +296,7 @@ public class LogEntryExtractor implements LogExtractor {
                     if (this.byteArr[this.posInArr++] == delim) {
                         return;
                     } else {
-                        throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr-1]);
+                        throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr - 1]);
                     }
                 }
             }
@@ -342,7 +342,7 @@ public class LogEntryExtractor implements LogExtractor {
                     if (this.byteArr[this.posInArr++] == delim) {
                         return;
                     } else {
-                        throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr-1]);
+                        throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr - 1]);
                     }
                 }
             }
@@ -416,18 +416,7 @@ public class LogEntryExtractor implements LogExtractor {
                     this.EventNameStartIndex = this.posInArr - 1;
                     this.getEventNameLen();
 
-                    if (this.posInArr > this.EventNameStartIndex) {
-                        this.EventName = new String(this.byteArr, this.EventNameStartIndex,
-                                this.EventNameLen, this.asciiCharSet);
-                    } else if (this.posInArr == this.EventNameStartIndex) {
-                        throw new IOException("Empty event name!");
-                    } else {
-                        int sizInOldBuf = this.BufSize - this.EventNameStartIndex;
-                        this.EventName = new String(this.oldByteArr, this.EventNameStartIndex,
-                                sizInOldBuf, this.asciiCharSet) +
-                                new String(this.byteArr, 0, this.EventNameLen - sizInOldBuf, this.asciiCharSet);
-                    }
-
+                    this.EventName = this.getStringFromBytes(this.EventNameStartIndex, this.EventNameLen);
                 } else if (b == at) {
                     this.rmWhiteSpace();
                     this.getTSFromBuf();
@@ -449,8 +438,8 @@ public class LogEntryExtractor implements LogExtractor {
 
         aFile.close();
 
-        System.out.println("There are " +
-                numOfLogEntries + " log entries in the log file!!!");
+//        System.out.println("There are " +
+//                numOfLogEntries + " log entries in the log file!!!");
 
     }
 
@@ -505,7 +494,6 @@ public class LogEntryExtractor implements LogExtractor {
 
 
 //        this.printEvent(this.parseEventArgs());
-
         if (EventName.equals(SigExtractor.INSERT)) {
 
             Object[] argsInTuple = this.parseEventArgs();
@@ -596,11 +584,16 @@ public class LogEntryExtractor implements LogExtractor {
                     len, this.asciiCharSet);
         } else if (this.posInArr == this.EventNameStartIndex) {
             throw new IOException("Empty String!");
-        } else {
-            int sizInOldBuf = this.BufSize - start;
-            output = new String(this.oldByteArr, start,
-                    sizInOldBuf, this.asciiCharSet) +
-                    new String(this.byteArr, 0, len - sizInOldBuf, this.asciiCharSet);
+        } else {//start index is a pos in the old byte array.
+            int remainingSizInOldBuf = this.oldByteArr.length - start;
+//            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
+//            +start+"\nlen is "+len);
+            if (remainingSizInOldBuf >= len)
+                output = new String(this.oldByteArr, start, len, this.asciiCharSet);
+            else
+                output = new String(this.oldByteArr, start,
+                        remainingSizInOldBuf, this.asciiCharSet) +
+                        new String(this.byteArr, 0, len - remainingSizInOldBuf, this.asciiCharSet);
         }
 
         return output;
