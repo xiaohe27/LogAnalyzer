@@ -55,7 +55,7 @@ public class Main {
 
 //        lm.monitor(path2Log); //default mapped byte buffer
 //        lm.monitor_bytebuffer_allocateDirect(path2Log);
-        eagerEval = true;
+//        eagerEval = true;
 
         if (path2Log.toString().endsWith(".tar.gz")) {
 //            System.out.println("Going to read a .tar.gz log file: " + path2Log.toString());

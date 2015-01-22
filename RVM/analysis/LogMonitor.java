@@ -111,6 +111,7 @@ public class LogMonitor {
      * @param path2LogFile
      */
     public void monitor(Path path2LogFile, boolean isTarGz, boolean eagerEval) throws IOException {
+        System.out.println("Is eager eval? "+eagerEval);
         LogExtractor lee = null;
 
         if (path2LogFile != null) {
@@ -118,11 +119,15 @@ public class LogMonitor {
             if (isTarGz) {
                 lee = new LogEntryExtractor_FromArchive(this.TableCol, path2LogFile, 8);
             } else {
-                if (eagerEval)
+                if (eagerEval) {
+                    System.out.println("use eager eval");
                     lee = new LogEntryExtractor_Eager(this.TableCol, path2LogFile);
+                }
 
-                else
-                    lee = new LogEntryExtractor(this.TableCol, path2LogFile); //use lazy eval strategy.
+                else {
+                    System.out.println("use lazy eval");
+                    lee = new LogEntryExtractor(this.TableCol, path2LogFile, 64); //use lazy eval strategy.
+                }
             }
 
         } else { //path to log file is null: indicating the scanner will read log entries from System.in
