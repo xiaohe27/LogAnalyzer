@@ -9,7 +9,7 @@ import java.lang.reflect.InvocationTargetException;
  */
 public class TestLogMonitor {
 
-    //  @Test
+//      @Test
     public void testMain1() throws Exception {
         String[] args = new String[]{"./test/insert-smallLog/insert.sig", "./test/insert-smallLog/insert.fl",
                 "./test/insert-smallLog/insert.log"};
@@ -18,17 +18,17 @@ public class TestLogMonitor {
 
     //        @Test
     public void test9M_Single_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-        Common.test9MLog_multiTimes("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly", 1);
+        Common.testLog_multiTimes("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly", 1);
     }
 
-    //    @Test
+        @Test
     public void test9M_Single_Siebel() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-        Common.test9MLog_multiTimes("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly", 1);
+        Common.testLog_multiTimes("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly", 1);
     }
 
     //    @Test
     public void test9M_Single_UIUC() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-        Common.test9MLog_multiTimes("/home/hexiao2/DATA/ldcc4Monpoly", 10);
+        Common.testLog_multiTimes("/home/hexiao2/DATA/ldcc4Monpoly", 10);
     }
 
 
@@ -47,42 +47,42 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-    //    @Test
+//        @Test
     public void test9MLog_singleViolation_HP() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly_BaseExecTime"};
         Main.main(args);
     }
 
-    @Test
+//    @Test
     public void test9MLog_Siebel_SingleRun() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
 
         String logPath_base = "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy";
-//        Common.test9MLog_multiTimes(logPath_base, 5, true); //eager eval
+//        Common.testLog_multiTimes(logPath_base, 5, true); //eager eval
 
-        Common.test9MLog_multiTimes(logPath_base, 5, false); //lazy eval
+        Common.testLog_multiTimes(logPath_base, 5, false); //lazy eval
 
     }
 
     //    @Test
     public void test9MLogBuffSize_IdeaPad() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-        Common.test9MLogBuffSize("/home/xiaohe/UIUC-WorkSpace/DATA/ldcc4Monpoly");
+        Common.testLogBuffSize("/home/xiaohe/UIUC-WorkSpace/DATA/ldcc4Monpoly");
     }
 
     //            @Test
     public void test9MLogBuffSize_UIUC() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-        Common.test9MLogBuffSize("/home/hexiao2/DATA/ldcc4Monpoly");
+        Common.testLogBuffSize("/home/hexiao2/DATA/ldcc4Monpoly");
     }
 
     //        @Test
     public void test9MLogBuffSize_Siebel() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-        Common.test9MLogBuffSize("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
+        Common.testLogBuffSize("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly");
     }
 
 
     //                    @Test
     public void test9MLogBuffSize_HP() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-        Common.test9MLogBuffSize("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
+        Common.testLogBuffSize("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
     }
 
 

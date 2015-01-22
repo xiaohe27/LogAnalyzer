@@ -118,11 +118,13 @@ public class LogMonitor {
             if (isTarGz) {
                 lee = new LogEntryExtractor_FromArchive(this.TableCol, path2LogFile, 8);
             } else {
-                if (eagerEval)
+                if (eagerEval) {
                     lee = new LogEntryExtractor_Eager(this.TableCol, path2LogFile);
+                }
 
-                else
-                    lee = new LogEntryExtractor(this.TableCol, path2LogFile); //use lazy eval strategy.
+                else {
+                    lee = new LogEntryExtractor(this.TableCol, path2LogFile, 6); //use lazy eval strategy.
+                }
             }
 
         } else { //path to log file is null: indicating the scanner will read log entries from System.in

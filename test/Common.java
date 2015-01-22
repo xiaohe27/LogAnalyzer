@@ -12,11 +12,11 @@ import java.nio.file.Paths;
  * Created by xiaohe on 15-1-18.
  */
 public class Common {
-    public static void test9MLog_multiTimes(String path, int num) throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
-        test9MLog_multiTimes(path, num, false); //by default, use lazy eval
+    public static void testLog_multiTimes(String path, int num) throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
+        testLog_multiTimes(path, num, false); //by default, use lazy eval
     }
 
-    public static void test9MLog_multiTimes(String path, int num, boolean eager) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+    public static void testLog_multiTimes(String path, int num, boolean eager) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         Path logFile = Paths.get(path);
 
         long[] timeArr = new long[num];
@@ -38,7 +38,7 @@ public class Common {
                 num + " tests");
     }
 
-    public static void test9MLogBuffSize(String logFilePath) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+    public static void testLogBuffSize(String logFilePath) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         int numOfLines = 2;
         int numOfCols = 3;
 

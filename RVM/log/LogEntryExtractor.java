@@ -16,6 +16,7 @@ import java.util.HashMap;
  * Serves as lexer and parser for log file.
  */
 public class LogEntryExtractor implements LogExtractor {
+    static final int OneReadSize = 0xFFFFFFF + 1; //256MB one time
 
     //some tokens
     static final byte newLine = (byte) '\n';
@@ -34,6 +35,7 @@ public class LogEntryExtractor implements LogExtractor {
     static final byte rightBracket = (byte) ']';
     static final byte exclamation = (byte) '!';
     static final byte dot = (byte) '.';
+    static final byte minus = (byte) '-';
     private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
     private long TimeStamp; //we can add the @ symbol when it is ready to be printed
     private String EventName;
@@ -62,43 +64,37 @@ public class LogEntryExtractor implements LogExtractor {
     //    private long[] paramEndPosArr = new long[SigExtractor.maxNumOfParams];
     private int[] paramLenArr = new int[SigExtractor.maxNumOfParams];
     private int curParamIndex; // the current index of param in the event
-//    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
+    //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
 //        this.TableCol = tableCol;
 //        InputStreamReader isReader = new InputStreamReader(System.in);
 //        scan = new Scanner(new BufferedReader(isReader));
 //    }
+    private long numOfReads;
+    private long lastReadSize;
+    private long curNumOfReads;
+    private FileChannel inChannel;
 
     /**
      * Create an obj for log entry extractor.
      *
      * @param tableCol
      * @param logFile
-     * @param multipleOf1K Multiple of 1024.
+     * @param powOf2TimesKB Multiple of 1024.
      * @throws IOException
      */
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int multipleOf1K)
+    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int powOf2TimesKB)
             throws IOException {
         this.TableCol = tableCol;
         this.logFilePath = logFile.toString();
-
-        this.BufSize = multipleOf1K * 1024;
+        this.BufSize = (int) (Math.pow(2, powOf2TimesKB)) * 1024;
         this.byteArr = new byte[this.BufSize];
         this.oldByteArr = new byte[this.BufSize];
-//        init();
     }
+
 
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
-        this(tableCol, logFile, 4);
+        this(tableCol, logFile, 5);
     }
-
-    private void init() throws IOException {
-//        this.TableData = new HashMap<>();
-//        for (String eventName : this.TableCol.keySet()) {
-//            Object[] fields = new Object[this.TableCol.get(eventName).length];
-//            this.TableData.put(eventName, fields);
-//        }
-    }
-
 
     private boolean isWhiteSpace(byte b) {
         return b == newLine || b == space || b == tab || b == nl2 || b == space0B || b == spaceF;
@@ -117,7 +113,6 @@ public class LogEntryExtractor implements LogExtractor {
             return true;
         else return false;
     }
-
 
     private void getEventNameLen() throws IOException {
         this.EventNameLen = 1;
@@ -140,20 +135,33 @@ public class LogEntryExtractor implements LogExtractor {
 
             this.posInFile += this.BufSize;
             this.posInArr = 0;
-            try {
-                this.mbb.get(this.byteArr);
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing an event name");
+
+            while (true) {
+                try {
+                    this.mbb.get(this.byteArr);
+                    break;
+                } catch (BufferUnderflowException e) {
+                    int remaining = this.mbb.remaining();
+                    if (remaining > 0) {
+                        this.mbb.get(this.byteArr, 0, remaining);
+                        this.BufSize = remaining;
+                        break;
+                    } else {
+                        if (this.curNumOfReads <= this.numOfReads) {
+                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
+                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
+                            this.curNumOfReads++;
+                            this.mbb.position(0);
+                            continue;
+                        } else {
+                            throw new IOException("Unexpected end of file while parsing an event name");
+                        }
+                    }
+                }
             }
         }
 
     }
-
 
     private void getStringLenFromBuf(byte delim) throws IOException {
         int len = 0;
@@ -182,15 +190,29 @@ public class LogEntryExtractor implements LogExtractor {
 
             this.posInFile += this.BufSize;
             this.posInArr = 0;
-            try {
-                this.mbb.get(this.byteArr);
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing a string");
+
+            while (true) {
+                try {
+                    this.mbb.get(this.byteArr);
+                    break;
+                } catch (BufferUnderflowException e) {
+                    int remaining = this.mbb.remaining();
+                    if (remaining > 0) {
+                        this.mbb.get(this.byteArr, 0, remaining);
+                        this.BufSize = remaining;
+                        break;
+                    } else {
+                        if (this.curNumOfReads <= this.numOfReads) {
+                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
+                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
+                            this.curNumOfReads++;
+                            this.mbb.position(0);
+                            continue;
+                        } else {
+                            throw new IOException("Unexpected end of file while parsing a string");
+                        }
+                    }
+                }
             }
         }
     }
@@ -214,15 +236,29 @@ public class LogEntryExtractor implements LogExtractor {
 
             this.posInFile += this.BufSize;
             this.posInArr = 0;
-            try {
-                this.mbb.get(this.byteArr);
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while removing white spaces");
+
+            while (true) {
+                try {
+                    this.mbb.get(this.byteArr);
+                    break;
+                } catch (BufferUnderflowException e) {
+                    int remaining = this.mbb.remaining();
+                    if (remaining > 0) {
+                        this.mbb.get(this.byteArr, 0, remaining);
+                        this.BufSize = remaining;
+                        break;
+                    } else {
+                        if (this.curNumOfReads <= this.numOfReads) {
+                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
+                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
+                            this.curNumOfReads++;
+                            this.mbb.position(0);
+                            continue;
+                        } else {
+                            throw new IOException("Unexpected end of file while removing the white spaces");
+                        }
+                    }
+                }
             }
         }
     }
@@ -263,15 +299,29 @@ public class LogEntryExtractor implements LogExtractor {
 
             this.posInFile += this.BufSize;
             this.posInArr = 0;
-            try {
-                this.mbb.get(this.byteArr);
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing a time stamp");
+
+            while (true) {
+                try {
+                    this.mbb.get(this.byteArr);
+                    break;
+                } catch (BufferUnderflowException e) {
+                    int remaining = this.mbb.remaining();
+                    if (remaining > 0) {
+                        this.mbb.get(this.byteArr, 0, remaining);
+                        this.BufSize = remaining;
+                        break;
+                    } else {
+                        if (this.curNumOfReads <= this.numOfReads) {
+                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
+                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
+                            this.curNumOfReads++;
+                            this.mbb.position(0);
+                            continue;
+                        } else {
+                            throw new IOException("Unexpected end of file while parsing a time stamp");
+                        }
+                    }
+                }
             }
         }
     }
@@ -279,6 +329,11 @@ public class LogEntryExtractor implements LogExtractor {
     //b > 47 && b < 58 then b is a digit char
     private void getFloatingNumLenFromBuf(byte delim) throws IOException {
         int len = 0;
+        if (this.byteArr[this.posInArr] == minus){
+            this.posInArr++;
+            len++;
+        }
+
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
@@ -304,15 +359,29 @@ public class LogEntryExtractor implements LogExtractor {
 
             this.posInFile += this.BufSize;
             this.posInArr = 0;
-            try {
-                this.mbb.get(this.byteArr);
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing a floating number");
+
+            while (true) {
+                try {
+                    this.mbb.get(this.byteArr);
+                    break;
+                } catch (BufferUnderflowException e) {
+                    int remaining = this.mbb.remaining();
+                    if (remaining > 0) {
+                        this.mbb.get(this.byteArr, 0, remaining);
+                        this.BufSize = remaining;
+                        break;
+                    } else {
+                        if (this.curNumOfReads <= this.numOfReads) {
+                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
+                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
+                            this.curNumOfReads++;
+                            this.mbb.position(0);
+                            continue;
+                        } else {
+                            throw new IOException("Unexpected end of file while parsing a floating number");
+                        }
+                    }
+                }
             }
         }
     }
@@ -325,6 +394,11 @@ public class LogEntryExtractor implements LogExtractor {
      */
     private void getIntLenFromBuf(byte delim) throws IOException {
         int len = 0;
+        if (this.byteArr[this.posInArr] == minus){
+            this.posInArr++;
+            len++;
+        }
+
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
@@ -350,112 +424,147 @@ public class LogEntryExtractor implements LogExtractor {
 
             this.posInFile += this.BufSize;
             this.posInArr = 0;
-            try {
-                this.mbb.get(this.byteArr);
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing an integer");
+
+            while (true) {
+                try {
+                    this.mbb.get(this.byteArr);
+                    break;
+                } catch (BufferUnderflowException e) {
+                    int remaining = this.mbb.remaining();
+                    if (remaining > 0) {
+                        this.mbb.get(this.byteArr, 0, remaining);
+                        this.BufSize = remaining;
+                        break;
+                    } else {
+                        if (this.curNumOfReads <= this.numOfReads) {
+                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
+                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
+                            this.curNumOfReads++;
+                            this.mbb.position(0);
+                            continue;
+                        } else {
+                            throw new IOException("Unexpected end of file while parsing an integer");
+                        }
+                    }
+                }
             }
         }
 
 
     }
 
+    private void checkAround(int start, int len) {
+        System.out.println(new String(this.byteArr, start, len, this.asciiCharSet));
+    }
+
     public void startReadingEventsByteByByte() throws IOException {
         long numOfLogEntries = 0;
+        this.posInFile = 0;   //pos in file is the absolute pos in file where the current byte array starts
 
         RandomAccessFile aFile = new RandomAccessFile
                 (this.logFilePath, "r");
 
-        FileChannel inChannel = aFile.getChannel();
+        this.inChannel = aFile.getChannel();
         this.fileSize = inChannel.size();
 
 //        System.out.println("There are totally "+this.fileSize+" bytes in the file");
+        this.numOfReads = this.fileSize / OneReadSize;
+        this.lastReadSize = this.fileSize % OneReadSize;
 
-        this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY, 0, this.fileSize);
-
+        while (this.curNumOfReads <= this.numOfReads) {
+            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
+                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
+            this.curNumOfReads++;
 //        System.out.println("Log is loaded? "+this.mbb.isLoaded());
 //        System.out.println("MBB is direct? "+this.mbb.isDirect());
-        this.mbb.load();
+            this.mbb.load();
 //        System.out.println("Again, Log is loaded? "+this.mbb.isLoaded());
 
-        this.byteArr = new byte[this.BufSize];
-        this.posInFile = 0;   //pos in file is the absolute pos in file where the current byte array starts
-        this.mbb.position(0);
-        while (this.posInFile + this.posInArr < this.fileSize) {
-            try {
-                this.mbb.get(this.byteArr);
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing, cur pos in file is " +
-                            this.posInFile + ", and the file size is " + this.fileSize);
-            }
-            this.posInArr = 0;
-            while (this.posInArr < this.BufSize) {
-                byte b = this.byteArr[this.posInArr++];
-                if (isWhiteSpace(b))
-                    continue;
-
-                //change the order of different branches, cmp whether we can gain perf benefits by
-                //considering the probabilities.
-                if (b == lpa) {
-                    this.rmWhiteSpace();
-                    this.readEvent();
-                } else if (isStringChar(b)) {
-                    this.EventNameStartIndex = this.posInArr - 1;
-                    this.getEventNameLen();
-
-                    String output = "";
-
-                    if (this.posInArr > this.EventNameStartIndex) {
-                        output = new String(this.byteArr, this.EventNameStartIndex,
-                                this.EventNameLen, this.asciiCharSet);
-                    } else if (this.posInArr == this.EventNameStartIndex) {
-                        throw new IOException("Empty String!");
-                    } else {//start index is a pos in the old byte array.
-                        int remainingSizInOldBuf = this.oldByteArr.length - this.EventNameStartIndex;
-                        //            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
-                        //            +start+"\nlen is "+len);
-                        if (remainingSizInOldBuf >= this.EventNameLen)
-                            output = new String(this.oldByteArr, this.EventNameStartIndex, this.EventNameLen, this.asciiCharSet);
-                        else
-                            output = new String(this.oldByteArr, this.EventNameStartIndex,
-                                    remainingSizInOldBuf, this.asciiCharSet) +
-                                    new String(this.byteArr, 0, this.EventNameLen - remainingSizInOldBuf, this.asciiCharSet);
+            this.mbb.position(0);
+            while (this.posInFile + this.posInArr < this.fileSize) {
+                    try {
+                        this.mbb.get(this.byteArr);
+                    } catch (BufferUnderflowException e) {
+                        int remaining = this.mbb.remaining();
+                        if (remaining > 0) {
+                            this.mbb.get(this.byteArr, 0, remaining);
+                            this.BufSize = remaining;
+                        } else {
+                            if (this.curNumOfReads <= this.numOfReads) {
+                                this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
+                                        this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
+                                this.curNumOfReads++;
+                                this.mbb.position(0);
+                                continue;
+                            } else {
+                                throw new IOException("Unexpected end of file while parsing, cur pos in file is " +
+                                        this.posInFile + ", and the file size is " + this.fileSize);
+                            }
+                        }
                     }
 
-                    this.EventName = output;
-                } else if (b == at) {
-                    this.rmWhiteSpace();
-                    this.getTSFromBuf();
-                    numOfLogEntries++;
-                } else if (b == 0) {
-                    break;
-                } else {
-                    throw new IOException("Unexpected char'" + (char) b + "'");
+
+                this.posInArr = 0;
+                while (this.posInArr < this.BufSize) {
+                    byte b = this.byteArr[this.posInArr++];
+                    if (isWhiteSpace(b))
+                        continue;
+
+                    //change the order of different branches, cmp whether we can gain perf benefits by
+                    //considering the probabilities.
+                    if (b == lpa) {
+                        this.rmWhiteSpace();
+                        this.readEvent();
+                    } else if (isStringChar(b)) {
+                        this.EventNameStartIndex = this.posInArr - 1;
+                        this.getEventNameLen();
+
+                        String output = "";
+
+                        if (this.posInArr > this.EventNameStartIndex) {
+                            output = new String(this.byteArr, this.EventNameStartIndex,
+                                    this.EventNameLen, this.asciiCharSet);
+                        } else if (this.posInArr == this.EventNameStartIndex) {
+                            throw new IOException("Empty String!");
+                        } else {//start index is a pos in the old byte array.
+                            int remainingSizInOldBuf = this.oldByteArr.length - this.EventNameStartIndex;
+                            //            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
+                            //            +start+"\nlen is "+len);
+                            if (remainingSizInOldBuf >= this.EventNameLen)
+                                output = new String(this.oldByteArr, this.EventNameStartIndex, this.EventNameLen, this.asciiCharSet);
+                            else
+                                output = new String(this.oldByteArr, this.EventNameStartIndex,
+                                        remainingSizInOldBuf, this.asciiCharSet) +
+                                        new String(this.byteArr, 0, this.EventNameLen - remainingSizInOldBuf, this.asciiCharSet);
+                        }
+
+                        this.EventName = output;
+                    } else if (b == at) {
+                        this.rmWhiteSpace();
+                        this.getTSFromBuf();
+                        numOfLogEntries++;
+                    } else if (b == 0) {
+                        break;
+                    } else {
+                        throw new IOException("Unexpected char'" + (char) b + "'");
+                    }
                 }
+
+                byte[] tmp = this.oldByteArr;
+                this.oldByteArr = this.byteArr;
+                this.byteArr = tmp;
+
+                this.posInFile += this.BufSize;
             }
-
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
         }
+
+
         inChannel.close();
 
         aFile.close();
 
-//        System.out.println("There are " +
-//                numOfLogEntries + " log entries in the log file!!!");
+        System.out.println("There are " +
+                numOfLogEntries + " log entries in the log file!!!");
 
     }
 
@@ -469,6 +578,9 @@ public class LogEntryExtractor implements LogExtractor {
      */
     private void readEvent() throws IOException {
         Integer[] typesInTuple = TableCol.get(EventName);
+        if (typesInTuple == null)
+        System.out.println("Null table col, Event name is "+EventName
+        + ". And number of reads is "+this.numOfReads+", pos in file is "+this.posInFile);
         for (this.curParamIndex = 0; this.curParamIndex < typesInTuple.length - 1; this.curParamIndex++) {
             this.paramStartPosArr[this.curParamIndex] = this.posInArr;
 
@@ -508,13 +620,13 @@ public class LogEntryExtractor implements LogExtractor {
             }
         }
 
-
-        if (EventName.equals(SigExtractor.INSERT)) {
-            Object[] argsInTuple = this.parseEventArgs();
-
-            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
-                this.printEvent(argsInTuple);
-        }
+//        this.printEvent(this.parseEventArgs());
+//        if (EventName.equals(SigExtractor.INSERT)) {
+//            Object[] argsInTuple = this.parseEventArgs();
+//
+//            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
+//                this.printEvent(argsInTuple);
+//        }
 
 //        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
 //            //script_md5 (MY_Script,myMD5)
