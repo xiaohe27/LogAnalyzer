@@ -16,6 +16,7 @@ import java.util.HashMap;
  * Serves as lexer and parser for log file.
  */
 public class LogEntryExtractor implements LogExtractor {
+    static final int OneReadSize = 0xFFFFFFF; //256MB one time
 
     //some tokens
     static final byte newLine = (byte) '\n';
@@ -365,6 +366,9 @@ public class LogEntryExtractor implements LogExtractor {
 
     }
 
+    private long numOfReads;
+    private long lastReadSize;
+
     public void startReadingEventsByteByByte() throws IOException {
         long numOfLogEntries = 0;
 
@@ -375,81 +379,87 @@ public class LogEntryExtractor implements LogExtractor {
         this.fileSize = inChannel.size();
 
 //        System.out.println("There are totally "+this.fileSize+" bytes in the file");
+        this.numOfReads = this.fileSize / OneReadSize;
+        this.lastReadSize = this.fileSize % OneReadSize;
 
-        this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY, 0, this.fileSize);
+        for (int i = 0; i <= numOfReads; i++) {
+            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY, i * numOfReads, i == numOfReads ? lastReadSize : OneReadSize);
 
 //        System.out.println("Log is loaded? "+this.mbb.isLoaded());
 //        System.out.println("MBB is direct? "+this.mbb.isDirect());
-        this.mbb.load();
+            this.mbb.load();
 //        System.out.println("Again, Log is loaded? "+this.mbb.isLoaded());
 
-        this.byteArr = new byte[this.BufSize];
-        this.posInFile = 0;   //pos in file is the absolute pos in file where the current byte array starts
-        this.mbb.position(0);
-        while (this.posInFile + this.posInArr < this.fileSize) {
-            try {
-                this.mbb.get(this.byteArr);
-            } catch (BufferUnderflowException e) {
-                int remaining = this.mbb.remaining();
-                if (remaining > 0) {
-                    this.mbb.get(this.byteArr, 0, remaining);
-                    this.BufSize = remaining;
-                } else
-                    throw new IOException("Unexpected end of file while parsing, cur pos in file is " +
-                            this.posInFile + ", and the file size is " + this.fileSize);
-            }
-            this.posInArr = 0;
-            while (this.posInArr < this.BufSize) {
-                byte b = this.byteArr[this.posInArr++];
-                if (isWhiteSpace(b))
-                    continue;
-
-                //change the order of different branches, cmp whether we can gain perf benefits by
-                //considering the probabilities.
-                if (b == lpa) {
-                    this.rmWhiteSpace();
-                    this.readEvent();
-                } else if (isStringChar(b)) {
-                    this.EventNameStartIndex = this.posInArr - 1;
-                    this.getEventNameLen();
-
-                    String output = "";
-
-                    if (this.posInArr > this.EventNameStartIndex) {
-                        output = new String(this.byteArr, this.EventNameStartIndex,
-                                this.EventNameLen, this.asciiCharSet);
-                    } else if (this.posInArr == this.EventNameStartIndex) {
-                        throw new IOException("Empty String!");
-                    } else {//start index is a pos in the old byte array.
-                        int remainingSizInOldBuf = this.oldByteArr.length - this.EventNameStartIndex;
-                        //            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
-                        //            +start+"\nlen is "+len);
-                        if (remainingSizInOldBuf >= this.EventNameLen)
-                            output = new String(this.oldByteArr, this.EventNameStartIndex, this.EventNameLen, this.asciiCharSet);
-                        else
-                            output = new String(this.oldByteArr, this.EventNameStartIndex,
-                                    remainingSizInOldBuf, this.asciiCharSet) +
-                                    new String(this.byteArr, 0, this.EventNameLen - remainingSizInOldBuf, this.asciiCharSet);
-                    }
-
-                    this.EventName = output;
-                } else if (b == at) {
-                    this.rmWhiteSpace();
-                    this.getTSFromBuf();
-                    numOfLogEntries++;
-                } else if (b == 0) {
-                    break;
-                } else {
-                    throw new IOException("Unexpected char'" + (char) b + "'");
+            this.byteArr = new byte[this.BufSize];
+            this.posInFile = 0;   //pos in file is the absolute pos in file where the current byte array starts
+            this.mbb.position(0);
+            while (this.posInFile + this.posInArr < this.fileSize) {
+                try {
+                    this.mbb.get(this.byteArr);
+                } catch (BufferUnderflowException e) {
+                    int remaining = this.mbb.remaining();
+                    if (remaining > 0) {
+                        this.mbb.get(this.byteArr, 0, remaining);
+                        this.BufSize = remaining;
+                    } else
+                        throw new IOException("Unexpected end of file while parsing, cur pos in file is " +
+                                this.posInFile + ", and the file size is " + this.fileSize);
                 }
+                this.posInArr = 0;
+                while (this.posInArr < this.BufSize) {
+                    byte b = this.byteArr[this.posInArr++];
+                    if (isWhiteSpace(b))
+                        continue;
+
+                    //change the order of different branches, cmp whether we can gain perf benefits by
+                    //considering the probabilities.
+                    if (b == lpa) {
+                        this.rmWhiteSpace();
+                        this.readEvent();
+                    } else if (isStringChar(b)) {
+                        this.EventNameStartIndex = this.posInArr - 1;
+                        this.getEventNameLen();
+
+                        String output = "";
+
+                        if (this.posInArr > this.EventNameStartIndex) {
+                            output = new String(this.byteArr, this.EventNameStartIndex,
+                                    this.EventNameLen, this.asciiCharSet);
+                        } else if (this.posInArr == this.EventNameStartIndex) {
+                            throw new IOException("Empty String!");
+                        } else {//start index is a pos in the old byte array.
+                            int remainingSizInOldBuf = this.oldByteArr.length - this.EventNameStartIndex;
+                            //            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
+                            //            +start+"\nlen is "+len);
+                            if (remainingSizInOldBuf >= this.EventNameLen)
+                                output = new String(this.oldByteArr, this.EventNameStartIndex, this.EventNameLen, this.asciiCharSet);
+                            else
+                                output = new String(this.oldByteArr, this.EventNameStartIndex,
+                                        remainingSizInOldBuf, this.asciiCharSet) +
+                                        new String(this.byteArr, 0, this.EventNameLen - remainingSizInOldBuf, this.asciiCharSet);
+                        }
+
+                        this.EventName = output;
+                    } else if (b == at) {
+                        this.rmWhiteSpace();
+                        this.getTSFromBuf();
+                        numOfLogEntries++;
+                    } else if (b == 0) {
+                        break;
+                    } else {
+                        throw new IOException("Unexpected char'" + (char) b + "'");
+                    }
+                }
+
+                byte[] tmp = this.oldByteArr;
+                this.oldByteArr = this.byteArr;
+                this.byteArr = tmp;
+
+                this.posInFile += this.BufSize;
             }
-
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
         }
+
+
         inChannel.close();
 
         aFile.close();
