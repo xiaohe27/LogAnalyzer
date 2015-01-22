@@ -16,7 +16,7 @@ import java.util.HashMap;
  * Serves as lexer and parser for log file.
  */
 public class LogEntryExtractor implements LogExtractor {
-    static final int OneReadSize = 0xFFFFFFF; //256MB one time
+    static final int OneReadSize = 0xFFFFFFF + 1; //256MB one time
 
     //some tokens
     static final byte newLine = (byte) '\n';
@@ -78,33 +78,21 @@ public class LogEntryExtractor implements LogExtractor {
      *
      * @param tableCol
      * @param logFile
-     * @param multipleOf1K Multiple of 1024.
+     * @param powOf2TimesKB Multiple of 1024.
      * @throws IOException
      */
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int multipleOf1K)
+    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int powOf2TimesKB)
             throws IOException {
         this.TableCol = tableCol;
         this.logFilePath = logFile.toString();
-
-        this.BufSize = multipleOf1K * 1024;
+        this.BufSize = (int) (Math.pow(2, powOf2TimesKB)) * 1024;
         this.byteArr = new byte[this.BufSize];
         this.oldByteArr = new byte[this.BufSize];
-
-        System.out.println("buf size is " + multipleOf1K + " kb");
-//        init();
     }
 
 
     public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
-        this(tableCol, logFile, 4);
-    }
-
-    private void init() throws IOException {
-//        this.TableData = new HashMap<>();
-//        for (String eventName : this.TableCol.keySet()) {
-//            Object[] fields = new Object[this.TableCol.get(eventName).length];
-//            this.TableData.put(eventName, fields);
-//        }
+        this(tableCol, logFile, 5);
     }
 
     private boolean isWhiteSpace(byte b) {
@@ -625,13 +613,13 @@ public class LogEntryExtractor implements LogExtractor {
 //                this.printEvent(argsInTuple);
 //        }
 
-//        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
-//            //script_md5 (MY_Script,myMD5)
-//            Object[] argsInTuple = this.parseEventArgs();
-//
-//            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
-//                this.printEvent(argsInTuple);
-//        }
+        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
+            //script_md5 (MY_Script,myMD5)
+            Object[] argsInTuple = this.parseEventArgs();
+
+            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
+                this.printEvent(argsInTuple);
+        }
     }
 
     /**
