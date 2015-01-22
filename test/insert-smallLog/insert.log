@@ -2,11 +2,11 @@
     insert (    script,db2,5,49887389 )insert(script1,db2,5,
         49887438
         )
-insert (script,db2,5,49887479)
+insert (script,db2,-5,49887479)
 insert (script,db2,5,49888034)
 commit (abc,5) (abcd,52)
 insert (script,db2,5,4.9888075)
-commit (abc,5)
+commit (abc,-5)
 @127.7201625 insert (script2,db2,5,4987299)
 @1277196513 select (user1,db3,[unknown],[unknown])
 @1277200697 script_start (script1)

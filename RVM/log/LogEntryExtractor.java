@@ -35,6 +35,7 @@ public class LogEntryExtractor implements LogExtractor {
     static final byte rightBracket = (byte) ']';
     static final byte exclamation = (byte) '!';
     static final byte dot = (byte) '.';
+    static final byte minus = (byte) '-';
     private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
     private long TimeStamp; //we can add the @ symbol when it is ready to be printed
     private String EventName;
@@ -328,6 +329,11 @@ public class LogEntryExtractor implements LogExtractor {
     //b > 47 && b < 58 then b is a digit char
     private void getFloatingNumLenFromBuf(byte delim) throws IOException {
         int len = 0;
+        if (this.byteArr[this.posInArr] == minus){
+            this.posInArr++;
+            len++;
+        }
+
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
@@ -388,6 +394,11 @@ public class LogEntryExtractor implements LogExtractor {
      */
     private void getIntLenFromBuf(byte delim) throws IOException {
         int len = 0;
+        if (this.byteArr[this.posInArr] == minus){
+            this.posInArr++;
+            len++;
+        }
+
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
@@ -440,6 +451,10 @@ public class LogEntryExtractor implements LogExtractor {
         }
 
 
+    }
+
+    private void checkAround(int start, int len) {
+        System.out.println(new String(this.byteArr, start, len, this.asciiCharSet));
     }
 
     public void startReadingEventsByteByByte() throws IOException {
@@ -548,8 +563,8 @@ public class LogEntryExtractor implements LogExtractor {
 
         aFile.close();
 
-//        System.out.println("There are " +
-//                numOfLogEntries + " log entries in the log file!!!");
+        System.out.println("There are " +
+                numOfLogEntries + " log entries in the log file!!!");
 
     }
 
@@ -605,7 +620,7 @@ public class LogEntryExtractor implements LogExtractor {
             }
         }
 
-
+//        this.printEvent(this.parseEventArgs());
 //        if (EventName.equals(SigExtractor.INSERT)) {
 //            Object[] argsInTuple = this.parseEventArgs();
 //
@@ -613,13 +628,13 @@ public class LogEntryExtractor implements LogExtractor {
 //                this.printEvent(argsInTuple);
 //        }
 
-        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
-            //script_md5 (MY_Script,myMD5)
-            Object[] argsInTuple = this.parseEventArgs();
-
-            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
-                this.printEvent(argsInTuple);
-        }
+//        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
+//            //script_md5 (MY_Script,myMD5)
+//            Object[] argsInTuple = this.parseEventArgs();
+//
+//            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
+//                this.printEvent(argsInTuple);
+//        }
     }
 
     /**
