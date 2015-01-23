@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.HashMap;
 
@@ -15,11 +16,12 @@ import java.util.HashMap;
  */
 public class LogEntryExtractor_ByteBuffer_AllocateDirect {
 
-    //some tokens
     static final byte newLine = (byte) '\n';
     static final byte space = (byte) ' ';
     static final byte tab = (byte) '\t';
     static final byte nl2 = (byte) '\r';
+    static final byte space0B = 0x0B;
+    static final byte spaceF = (byte) '\f';
     static final byte at = (byte) '@';
     static final byte lpa = (byte) '(';
     static final byte rpa = (byte) ')';
@@ -30,6 +32,9 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
     static final byte rightBracket = (byte) ']';
     static final byte exclamation = (byte) '!';
     static final byte dot = (byte) '.';
+    static final byte minus = (byte) '-';
+    private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
+
     private String TimeStamp; //we can add the @ symbol when it is ready to be printed
     private String EventName;
     private HashMap<String, Object[]> TableData;
@@ -70,7 +75,7 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
     }
 
     public LogEntryExtractor_ByteBuffer_AllocateDirect(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
-        this(tableCol, logFile, 4);
+        this(tableCol, logFile, 64); //try 64kb
     }
 
     private void init() throws IOException {
@@ -83,7 +88,7 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
 
 
     private boolean isWhiteSpace(byte b) {
-        return b == newLine || b == space || b == tab || b == nl2;
+        return b == newLine || b == space || b == tab || b == nl2 || b == space0B || b == spaceF;
     }
 
     private boolean isStringChar(byte b) {
@@ -182,7 +187,7 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
         while (true) {
             while (this.buffer.hasRemaining()) {
                 byte b = buffer.get();
-                if (Character.isDigit(b) || b == dot) {
+                if (b > 47 && b < 58 || b == dot) {
 
                     sb.append((char) b);
 
@@ -206,7 +211,7 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
         while (true) {
             while (this.buffer.hasRemaining()) {
                 byte b = buffer.get();
-                if (Character.isDigit(b) || b == dot) {
+                if (b > 47 && b < 58 || b == dot || b == minus) {
                     try {
                         sb.append((char) b);
                     } catch (Exception e) {
@@ -249,7 +254,7 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
         while (true) {
             while (this.buffer.hasRemaining()) {
                 byte b = buffer.get();
-                if (Character.isDigit(b)) {
+                if (b > 47 && b < 58 || b == minus) {
                     try {
                         sb.append((char) b);
                     } catch (Exception e) {
@@ -321,8 +326,8 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
         inChannel.close();
         aFile.close();
 
-//        System.out.println("There are " +
-//                numOfLogEntries + " log entries in the log file!!!");
+        System.out.println("There are " +
+                numOfLogEntries + " log entries in the log file!!!");
 
     }
 
@@ -366,8 +371,15 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
             }
         }
 //        this.printEvent();
-        if (EventName.equals(SigExtractor.INSERT)) {
-            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
+//        if (EventName.equals(SigExtractor.INSERT)) {
+//            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
+//                this.printEvent();
+//        }
+
+                if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
+            //script_md5 (MY_Script,myMD5)
+
+            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
                 this.printEvent();
         }
     }
