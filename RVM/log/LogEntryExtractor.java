@@ -211,6 +211,7 @@ public class LogEntryExtractor implements LogExtractor {
                                     this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
                             this.curNumOfReads++;
                             this.mbb.position(0);
+
                             System.gc();
 
                             continue;
@@ -259,6 +260,10 @@ public class LogEntryExtractor implements LogExtractor {
                                     this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
                             this.curNumOfReads++;
                             this.mbb.position(0);
+
+                            System.gc();
+
+
                             continue;
                         } else {
                             throw new IOException("Unexpected end of file while removing the white spaces");
