@@ -1,5 +1,6 @@
 package log;
 
+import formula.FormulaExtractor;
 import reg.RegHelper;
 import sig.SigExtractor;
 
@@ -65,6 +66,9 @@ public class LogEntryExtractor implements LogExtractor {
     //    private long[] paramEndPosArr = new long[SigExtractor.maxNumOfParams];
     private int[] paramLenArr = new int[SigExtractor.maxNumOfParams];
     private int curParamIndex; // the current index of param in the event
+
+    private Integer[] typesInTuple;
+
     //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
 //        this.TableCol = tableCol;
 //        InputStreamReader isReader = new InputStreamReader(System.in);
@@ -110,9 +114,7 @@ public class LogEntryExtractor implements LogExtractor {
         if (b > 96 && b < 123)
             return true;
 
-        if (b == underscore || b == rightBracket || b == exclamation)
-            return true;
-        else return false;
+        return b == underscore || b == rightBracket || b == exclamation;
     }
 
     private void getEventNameLen() throws IOException {
@@ -156,7 +158,6 @@ public class LogEntryExtractor implements LogExtractor {
 
                             System.gc();
 
-                            continue;
                         } else {
                             throw new IOException("Unexpected end of file while parsing an event name");
                         }
@@ -214,7 +215,6 @@ public class LogEntryExtractor implements LogExtractor {
 
                             System.gc();
 
-                            continue;
                         } else {
                             throw new IOException("Unexpected end of file while parsing a string");
                         }
@@ -229,9 +229,7 @@ public class LogEntryExtractor implements LogExtractor {
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
-                if (isWhiteSpace(b))
-                    continue;
-                else {
+                if (!isWhiteSpace(b)) {
                     this.posInArr--;
                     break out;
                 }
@@ -264,7 +262,6 @@ public class LogEntryExtractor implements LogExtractor {
                             System.gc();
 
 
-                            continue;
                         } else {
                             throw new IOException("Unexpected end of file while removing the white spaces");
                         }
@@ -284,7 +281,7 @@ public class LogEntryExtractor implements LogExtractor {
                 if (b > 47 && b < 58 || b == dot) {
                     TimeStampLen++;
                 } else {
-                    String out = "";
+                    String out;
 
                     if (this.posInArr > TimeStampStartIndex) {
                         out = new String(this.byteArr, TimeStampStartIndex,
@@ -330,7 +327,6 @@ public class LogEntryExtractor implements LogExtractor {
 
                             System.gc();
 
-                            continue;
                         } else {
                             throw new IOException("Unexpected end of file while parsing a time stamp");
                         }
@@ -394,7 +390,6 @@ public class LogEntryExtractor implements LogExtractor {
                             System.gc();
 
 
-                            continue;
                         } else {
                             throw new IOException("Unexpected end of file while parsing a floating number");
                         }
@@ -462,7 +457,6 @@ public class LogEntryExtractor implements LogExtractor {
 
                             System.gc();
 
-                            continue;
                         } else {
                             throw new IOException("Unexpected end of file while parsing an integer");
                         }
@@ -533,17 +527,16 @@ public class LogEntryExtractor implements LogExtractor {
 
                     //change the order of different branches, cmp whether we can gain perf benefits by
                     //considering the probabilities.
-                    if (b == lpa) {
+                    if (b == lpa) { // read the event args
                         this.rmWhiteSpace();
                         this.readEvent();
-                    } else if (isStringChar(b)) {
+                    } else if (isStringChar(b)) { //read an event
                         this.EventNameStartIndex = this.posInArr - 1;
                         this.getEventNameLen();
 
-                        String output = "";
 
                         if (this.posInArr > this.EventNameStartIndex) {
-                            output = new String(this.byteArr, this.EventNameStartIndex,
+                            this.EventName = new String(this.byteArr, this.EventNameStartIndex,
                                     this.EventNameLen, this.asciiCharSet);
                         } else if (this.posInArr == this.EventNameStartIndex) {
                             throw new IOException("Empty String!");
@@ -552,14 +545,24 @@ public class LogEntryExtractor implements LogExtractor {
                             //            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
                             //            +start+"\nlen is "+len);
                             if (remainingSizInOldBuf >= this.EventNameLen)
-                                output = new String(this.oldByteArr, this.EventNameStartIndex, this.EventNameLen, this.asciiCharSet);
+                                this.EventName = new String(this.oldByteArr, this.EventNameStartIndex, this.EventNameLen, this.asciiCharSet);
                             else
-                                output = new String(this.oldByteArr, this.EventNameStartIndex,
+                                this.EventName = new String(this.oldByteArr, this.EventNameStartIndex,
                                         remainingSizInOldBuf, this.asciiCharSet) +
                                         new String(this.byteArr, 0, this.EventNameLen - remainingSizInOldBuf, this.asciiCharSet);
                         }
 
-                        this.EventName = output;
+                        this.typesInTuple = TableCol.get(EventName);
+                        if (this.typesInTuple == null) {
+                            throw new IOException("Unknow event " + EventName);
+                        }
+
+                        if (FormulaExtractor.monitoredEventList.contains(EventName)){
+                            look at here
+                        } else {
+
+                        }
+
                     } else if (b == at) {
                         this.rmWhiteSpace();
                         this.getTSFromBuf();
@@ -599,9 +602,7 @@ public class LogEntryExtractor implements LogExtractor {
      */
     private void readEvent() throws IOException {
         Integer[] typesInTuple = TableCol.get(EventName);
-        if (typesInTuple == null)
-            System.out.println("Null table col, Event name is " + EventName
-                    + ". And number of reads is " + this.numOfReads + ", pos in file is " + this.posInFile);
+
         for (this.curParamIndex = 0; this.curParamIndex < typesInTuple.length - 1; this.curParamIndex++) {
             this.paramStartPosArr[this.curParamIndex] = this.posInArr;
 
