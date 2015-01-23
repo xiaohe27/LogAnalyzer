@@ -376,12 +376,12 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
 //                this.printEvent();
 //        }
 
-                if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
-            //script_md5 (MY_Script,myMD5)
-
-            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
-                this.printEvent();
-        }
+//        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
+//            //script_md5 (MY_Script,myMD5)
+//
+//            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
+//                this.printEvent();
+//        }
     }
 
     private void printEvent() {
