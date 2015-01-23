@@ -35,8 +35,14 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
     static final byte minus = (byte) '-';
     private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
 
+    private byte[] byteArr;
+    private byte[] oldByteArr;
+
     private String TimeStamp; //we can add the @ symbol when it is ready to be printed
     private String EventName;
+    private int[] paramStartPosArr = new int[SigExtractor.maxNumOfParams];
+    private int[] paramLenArr = new int[SigExtractor.maxNumOfParams];
+    private int curParamIndex; // the current index of param in the event
     private HashMap<String, Object[]> TableData;
     /**
      * Given a table name, return the list of types that represent the types for each column (table schema).
@@ -75,15 +81,17 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
     }
 
     public LogEntryExtractor_ByteBuffer_AllocateDirect(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
-        this(tableCol, logFile, 64); //try 64kb
+        this(tableCol, logFile, 4); //try 64kb
     }
 
     private void init() throws IOException {
-        this.TableData = new HashMap<>();
-        for (String eventName : this.TableCol.keySet()) {
-            Object[] fields = new Object[this.TableCol.get(eventName).length];
-            this.TableData.put(eventName, fields);
-        }
+        this.byteArr = new byte[this.BufSize];
+        this.oldByteArr = new byte[this.BufSize];
+//        this.TableData = new HashMap<>();
+//        for (String eventName : this.TableCol.keySet()) {
+//            Object[] fields = new Object[this.TableCol.get(eventName).length];
+//            this.TableData.put(eventName, fields);
+//        }
     }
 
 

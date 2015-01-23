@@ -153,6 +153,9 @@ public class LogEntryExtractor implements LogExtractor {
                                     this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
                             this.curNumOfReads++;
                             this.mbb.position(0);
+
+                            System.gc();
+
                             continue;
                         } else {
                             throw new IOException("Unexpected end of file while parsing an event name");
@@ -208,6 +211,8 @@ public class LogEntryExtractor implements LogExtractor {
                                     this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
                             this.curNumOfReads++;
                             this.mbb.position(0);
+                            System.gc();
+
                             continue;
                         } else {
                             throw new IOException("Unexpected end of file while parsing a string");
@@ -317,6 +322,9 @@ public class LogEntryExtractor implements LogExtractor {
                                     this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
                             this.curNumOfReads++;
                             this.mbb.position(0);
+
+                            System.gc();
+
                             continue;
                         } else {
                             throw new IOException("Unexpected end of file while parsing a time stamp");
@@ -377,6 +385,10 @@ public class LogEntryExtractor implements LogExtractor {
                                     this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
                             this.curNumOfReads++;
                             this.mbb.position(0);
+
+                            System.gc();
+
+
                             continue;
                         } else {
                             throw new IOException("Unexpected end of file while parsing a floating number");
@@ -442,6 +454,9 @@ public class LogEntryExtractor implements LogExtractor {
                                     this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
                             this.curNumOfReads++;
                             this.mbb.position(0);
+
+                            System.gc();
+
                             continue;
                         } else {
                             throw new IOException("Unexpected end of file while parsing an integer");
