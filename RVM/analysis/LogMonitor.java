@@ -120,9 +120,7 @@ public class LogMonitor {
             } else {
                 if (eagerEval) {
                     lee = new LogEntryExtractor_Eager(this.TableCol, path2LogFile);
-                }
-
-                else {
+                } else {
                     lee = new LogEntryExtractor(this.TableCol, path2LogFile, 6); //use lazy eval strategy.
                 }
             }
