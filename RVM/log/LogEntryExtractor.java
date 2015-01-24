@@ -4,7 +4,6 @@ import formula.FormulaExtractor;
 import reg.RegHelper;
 import sig.SigExtractor;
 
-import java.awt.*;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.BufferUnderflowException;
@@ -18,9 +17,20 @@ import java.util.HashMap;
  * Serves as lexer and parser for log file.
  */
 public class LogEntryExtractor implements LogExtractor {
+    /**
+     * Use a byte to denote different tokens in the log.
+     * -1: init state, or NULL.
+     * 0: time stamp;
+     * 1: event name;
+     * 2: event args;
+     * We need to ensure a seq of tokens is accepted only if it is a word in the lang (derivable from the FSM).
+     */
+    public static final byte NULL_TOKEN = -1;
+    public static final byte TS_TOKEN = 0;
+    public static final byte EventName_TOKEN = 1;
+    public static final byte EventArgs_TOKEN = 2;
     static final int Times = 2;
     static final int OneReadSize = (0xFFFFFFF + 1) * Times; //256MB as the unit size
-
     //some tokens
     static final byte newLine = (byte) '\n';
     static final byte space = (byte) ' ';
@@ -42,19 +52,6 @@ public class LogEntryExtractor implements LogExtractor {
     private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
     private long TimeStamp; //we can add the @ symbol when it is ready to be printed
     private String EventName;
-
-    /**
-     * Use a byte to denote different tokens in the log.
-     * -1: init state, or NULL.
-     * 0: time stamp;
-     * 1: event name;
-     * 2: event args;
-     * We need to ensure a seq of tokens is accepted only if it is a word in the lang (derivable from the FSM).
-     */
-    public static final byte NULL_TOKEN = -1;
-    public static final byte TS_TOKEN = 0;
-    public static final byte EventName_TOKEN = 1;
-    public static final byte EventArgs_TOKEN = 2;
     private byte prevToken = NULL_TOKEN;
 
 
@@ -490,6 +487,74 @@ public class LogEntryExtractor implements LogExtractor {
         System.out.println(new String(this.byteArr, start, len, this.asciiCharSet));
     }
 
+    private void looseCheckingEventArgs() throws IOException {
+        boolean isCurFieldEmpty = true;
+        int numOfFields = 0;
+        int expectedNumOfFields = 0;
+
+        while (true) {
+            while (this.posInArr < this.BufSize) {
+                byte b = byteArr[this.posInArr++];
+                if (isStringChar(b)) {
+                    if (isCurFieldEmpty) {
+                        isCurFieldEmpty = false;
+                        numOfFields++;
+                    } else {
+                    }
+
+                } else if (b == comma) {
+                    expectedNumOfFields += expectedNumOfFields == 0 ? 2 : 1;
+                    isCurFieldEmpty = true;
+                } else if (isWhiteSpace(b)) {
+                } else if (b == rpa) {
+                    if (numOfFields == 1)
+                        numOfFields--;
+
+                    if (expectedNumOfFields == numOfFields)
+                        return;
+
+                    else
+                        throw new IOException("Not well formed event args for event " + EventName);
+                } else {
+                    throw new IOException("Unknown char " + (char) b);
+                }
+            }
+
+            byte[] tmp = this.oldByteArr;
+            this.oldByteArr = this.byteArr;
+            this.byteArr = tmp;
+
+            this.posInFile += this.BufSize;
+            this.posInArr = 0;
+
+            while (true) { //refill the mbb and byte array if necessary
+                try {
+                    this.mbb.get(this.byteArr);
+                    break;
+                } catch (BufferUnderflowException e) {
+                    int remaining = this.mbb.remaining();
+                    if (remaining > 0) {
+                        this.mbb.get(this.byteArr, 0, remaining);
+                        this.BufSize = remaining;
+                        break;
+                    } else {
+                        if (this.curNumOfReads <= this.numOfReads) {
+                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
+                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
+                            this.curNumOfReads++;
+                            this.mbb.position(0);
+
+                            System.gc();
+
+                        } else {
+                            throw new IOException("Unexpected end of file while parsing an integer");
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     public void startReadingEventsByteByByte() throws IOException {
         long numOfLogEntries = 0;
         this.posInFile = 0;   //pos in file is the absolute pos in file where the current byte array starts
@@ -553,8 +618,13 @@ public class LogEntryExtractor implements LogExtractor {
                         }
                         this.prevToken = EventArgs_TOKEN;
 
-                        this.rmWhiteSpace();
-                        this.readEvent();
+
+                        if (this.isAMonitoredEvent) {//do the most rigorous type checking to the event args
+                            this.rmWhiteSpace();
+                            this.readEvent();
+                        } else {//event is not monitored, just ensure no syntax error
+                            this.looseCheckingEventArgs();
+                        }
                     } else if (isStringChar(b)) { //read an event
                         if (this.prevToken != EventArgs_TOKEN && this.prevToken != TS_TOKEN) {
                             throw new IOException("Event name should follow a time stamp or event args");
@@ -587,10 +657,10 @@ public class LogEntryExtractor implements LogExtractor {
                             throw new IOException("Unknown event " + EventName);
                         }
 
-                        if (FormulaExtractor.monitoredEventList.contains(EventName)){
-                          this.isAMonitoredEvent = true;
+                        if (FormulaExtractor.monitoredEventList.contains(EventName)) {
+                            this.isAMonitoredEvent = true;
                         } else {
-                          this.isAMonitoredEvent = false;
+                            this.isAMonitoredEvent = false;
                         }
 
                     } else if (b == at) {
@@ -636,8 +706,6 @@ public class LogEntryExtractor implements LogExtractor {
      * @throws IOException
      */
     private void readEvent() throws IOException {
-        Integer[] typesInTuple = TableCol.get(EventName);
-
         for (this.curParamIndex = 0; this.curParamIndex < typesInTuple.length - 1; this.curParamIndex++) {
             this.paramStartPosArr[this.curParamIndex] = this.posInArr;
 
@@ -701,11 +769,9 @@ public class LogEntryExtractor implements LogExtractor {
      * @throws IOException
      */
     private Object[] parseEventArgs() throws IOException {
-        Integer[] typesInTuple = TableCol.get(EventName);
         Object[] data = new Object[typesInTuple.length];
 
         String dataI = null;
-
 
         for (this.curParamIndex = 0; this.curParamIndex < typesInTuple.length - 1; this.curParamIndex++) {
             int startIndex = this.paramStartPosArr[this.curParamIndex];
