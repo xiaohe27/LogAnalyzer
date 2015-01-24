@@ -12,6 +12,7 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.Objects;
 
 /**
  * Serves as lexer and parser for log file.
@@ -76,10 +77,8 @@ public class LogEntryExtractor implements LogExtractor {
 //    private int TimeStampLen;    //ending )
     private int EventNameStartIndex;
     private int EventNameLen;
-    private int[] paramStartPosArr = new int[SigExtractor.maxNumOfParams];
-    //    private long[] paramEndPosArr = new long[SigExtractor.maxNumOfParams];
-    private int[] paramLenArr = new int[SigExtractor.maxNumOfParams];
-    private int curParamIndex; // the current index of param in the event
+
+    private int paramStartIndex;
 
     private Integer[] typesInTuple;
     private boolean isAMonitoredEvent;
@@ -183,21 +182,22 @@ public class LogEntryExtractor implements LogExtractor {
 
     }
 
-    private void getStringLenFromBuf(byte delim) throws IOException {
+    private String getStringFromBuf(byte delim) throws IOException {
         int len = 0;
+        String output;
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
                 if (isStringChar(b)) {
                     len++;
                 } else {
-                    this.paramLenArr[this.curParamIndex] = len;
+                  output = this.getStringFromBytes(this.paramStartIndex, len);
                     if (b == delim)
-                        return;
+                        return output;
 
                     this.rmWhiteSpace();
                     if (this.byteArr[this.posInArr++] == delim) {
-                        return;
+                        return output;
                     } else {
                         throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr - 1]);
                     }
@@ -352,8 +352,9 @@ public class LogEntryExtractor implements LogExtractor {
     }
 
     //b > 47 && b < 58 then b is a digit char
-    private void getFloatingNumLenFromBuf(byte delim) throws IOException {
+    private double getFloatingNumFromBuf(byte delim) throws IOException {
         int len = 0;
+        String output;
         if (this.byteArr[this.posInArr] == minus) {
             this.posInArr++;
             len++;
@@ -365,13 +366,13 @@ public class LogEntryExtractor implements LogExtractor {
                 if (b > 47 && b < 58 || b == dot) {
                     len++;
                 } else {
-                    this.paramLenArr[this.curParamIndex] = len;
+                    output = this.getStringFromBytes(this.paramStartIndex, len);
                     if (b == delim)
-                        return;
+                        return Double.parseDouble(output);
 
                     this.rmWhiteSpace();
                     if (this.byteArr[this.posInArr++] == delim) {
-                        return;
+                        return Double.parseDouble(output);
                     } else {
                         throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr - 1]);
                     }
@@ -420,8 +421,9 @@ public class LogEntryExtractor implements LogExtractor {
      * @return
      * @throws IOException
      */
-    private void getIntLenFromBuf(byte delim) throws IOException {
+    private int getIntFromBuf(byte delim) throws IOException {
         int len = 0;
+        String output;
         if (this.byteArr[this.posInArr] == minus) {
             this.posInArr++;
             len++;
@@ -433,13 +435,14 @@ public class LogEntryExtractor implements LogExtractor {
                 if (b > 47 && b < 58) {
                     len++;
                 } else {
-                    this.paramLenArr[this.curParamIndex] = len;
+                    output = this.getStringFromBytes(this.paramStartIndex, len);
+
                     if (b == delim)
-                        return;
+                        return Integer.parseInt(output);
 
                     this.rmWhiteSpace();
                     if (this.byteArr[this.posInArr++] == delim) {
-                        return;
+                        return Integer.parseInt(output);
                     } else {
                         throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr - 1]);
                     }
@@ -706,20 +709,22 @@ public class LogEntryExtractor implements LogExtractor {
      * @throws IOException
      */
     private void readEvent() throws IOException {
-        for (this.curParamIndex = 0; this.curParamIndex < typesInTuple.length - 1; this.curParamIndex++) {
-            this.paramStartPosArr[this.curParamIndex] = this.posInArr;
+        Object[] tupleData = new Object[typesInTuple.length];
+        int i = 0;
+        for ( ; i < typesInTuple.length - 1; i++) {
+            this.paramStartIndex = this.posInArr;
 
-            switch (typesInTuple[this.curParamIndex]) {
+            switch (typesInTuple[i]) {
                 case RegHelper.INT_TYPE:
-                    this.getIntLenFromBuf(comma);
+                    tupleData[i] = this.getIntFromBuf(comma);
                     break;
 
                 case RegHelper.FLOAT_TYPE:
-                    this.getFloatingNumLenFromBuf(comma);
+                    tupleData[i] = this.getFloatingNumFromBuf(comma);
                     break;
 
                 case RegHelper.STRING_TYPE:
-                    this.getStringLenFromBuf(comma);
+                    tupleData[i] = this.getStringFromBuf(comma);
                     break;
             }
             this.rmWhiteSpace();
@@ -728,131 +733,35 @@ public class LogEntryExtractor implements LogExtractor {
         if (typesInTuple.length > 0) {
             //the last field should be followed by a right parenthesis
 //            this.curParamIndex = typesInTuple.length - 1;
-            this.paramStartPosArr[this.curParamIndex] = this.posInArr;
+            this.paramStartIndex = this.posInArr;
 
-            switch (typesInTuple[this.curParamIndex]) {
+            switch (typesInTuple[i]) {
                 case RegHelper.INT_TYPE:
-                    this.getIntLenFromBuf(rpa);
+                    tupleData[i] = this.getIntFromBuf(rpa);
                     break;
 
                 case RegHelper.FLOAT_TYPE:
-                    this.getFloatingNumLenFromBuf(rpa);
+                    tupleData[i] = this.getFloatingNumFromBuf(rpa);
                     break;
 
                 case RegHelper.STRING_TYPE:
-                    this.getStringLenFromBuf(rpa);
+                    tupleData[i] = this.getStringFromBuf(rpa);
                     break;
             }
         }
 
-//        this.printEvent(this.parseEventArgs());
+//        this.printEvent(tupleData);
 
         if (EventName.equals(SigExtractor.INSERT)) {
-            Object[] argsInTuple = this.parseEventArgs();
-
-            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
-                this.printEvent(argsInTuple);
+            if (tupleData[1].equals("MYDB") && !tupleData[0].equals("notARealUserInTheDB"))
+                this.printEvent(tupleData);
         }
 
 //        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
 //            //script_md5 (MY_Script,myMD5)
-//            Object[] argsInTuple = this.parseEventArgs();
-//
-//            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
-//                this.printEvent(argsInTuple);
+//            if (tupleData[0].equals("MY_Script") && !tupleData[1].equals("ItsMD5"))
+//                this.printEvent(tupleData);
 //        }
-    }
-
-    /**
-     * Parse the args of the event.
-     *
-     * @throws IOException
-     */
-    private Object[] parseEventArgs() throws IOException {
-        Object[] data = new Object[typesInTuple.length];
-
-        String dataI = null;
-
-        for (this.curParamIndex = 0; this.curParamIndex < typesInTuple.length - 1; this.curParamIndex++) {
-            int startIndex = this.paramStartPosArr[this.curParamIndex];
-            int len = this.paramLenArr[this.curParamIndex];
-
-            if (this.posInArr > startIndex) {
-                dataI = new String(this.byteArr, startIndex,
-                        len, this.asciiCharSet);
-            } else if (this.posInArr == this.EventNameStartIndex) {
-                throw new IOException("Empty String!");
-            } else {//start index is a pos in the old byte array.
-                int remainingSizInOldBuf = this.oldByteArr.length - startIndex;
-                //            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
-                //            +start+"\nlen is "+len);
-                if (remainingSizInOldBuf >= len)
-                    dataI = new String(this.oldByteArr, startIndex, len, this.asciiCharSet);
-                else
-                    dataI = new String(this.oldByteArr, startIndex,
-                            remainingSizInOldBuf, this.asciiCharSet) +
-                            new String(this.byteArr, 0, len - remainingSizInOldBuf, this.asciiCharSet);
-            }
-
-
-            switch (typesInTuple[this.curParamIndex]) {
-                case RegHelper.INT_TYPE:
-                    data[this.curParamIndex] = Integer.parseInt(dataI);
-                    break;
-
-                case RegHelper.FLOAT_TYPE:
-                    data[this.curParamIndex] = Double.parseDouble(dataI);
-                    break;
-
-                case RegHelper.STRING_TYPE:
-                    data[this.curParamIndex] = dataI;
-                    break;
-            }
-        }
-
-        if (typesInTuple.length > 0) {
-            //the last field should be followed by a right parenthesis
-            this.curParamIndex = typesInTuple.length - 1;
-
-            int startIndex = this.paramStartPosArr[this.curParamIndex];
-            int len = this.paramLenArr[this.curParamIndex];
-
-            if (this.posInArr > startIndex) {
-                dataI = new String(this.byteArr, startIndex,
-                        len, this.asciiCharSet);
-            } else if (this.posInArr == this.EventNameStartIndex) {
-                throw new IOException("Empty String!");
-            } else {//start index is a pos in the old byte array.
-                int remainingSizInOldBuf = this.oldByteArr.length - startIndex;
-                //            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
-                //            +start+"\nlen is "+len);
-                if (remainingSizInOldBuf >= len)
-                    dataI = new String(this.oldByteArr, startIndex, len, this.asciiCharSet);
-                else
-                    dataI = new String(this.oldByteArr, startIndex,
-                            remainingSizInOldBuf, this.asciiCharSet) +
-                            new String(this.byteArr, 0, len - remainingSizInOldBuf, this.asciiCharSet);
-            }
-
-//            String dataI = output;
-
-            switch (typesInTuple[this.curParamIndex]) {
-                case RegHelper.INT_TYPE:
-                    data[this.curParamIndex] = Integer.parseInt(dataI);
-                    break;
-
-                case RegHelper.FLOAT_TYPE:
-                    data[this.curParamIndex] = Double.parseDouble(dataI);
-                    break;
-
-                case RegHelper.STRING_TYPE:
-                    data[this.curParamIndex] = dataI;
-                    break;
-            }
-        }
-
-        return data;
-
     }
 
     private void printEvent(Object[] data) throws IOException {
@@ -875,7 +784,7 @@ public class LogEntryExtractor implements LogExtractor {
 
 
     private String getStringFromBytes(int start, int len) throws IOException {
-        String output = "";
+        String output;
 
         if (this.posInArr > start) {
             output = new String(this.byteArr, start,
