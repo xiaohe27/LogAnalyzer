@@ -1,8 +1,12 @@
 import fsl.uiuc.Main;
+import log.LogEntryExtractor_ByteBuffer_AllocateDirect;
 import org.junit.Test;
+import sig.SigExtractor;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Created by xiaohe on 14-11-24.
@@ -21,7 +25,7 @@ public class TestLogMonitor {
         Common.testLog_multiTimes("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly", 1);
     }
 
-    @Test
+//    @Test
     public void test9M_Single_Siebel() throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         Common.testLog_multiTimes("/home/xiaohe/SW/offline-log-analysis/ldcc4Monpoly", 1);
     }
@@ -47,7 +51,7 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-    //        @Test
+            @Test
     public void test9MLog_singleViolation_HP() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly_BaseExecTime"};
@@ -85,6 +89,20 @@ public class TestLogMonitor {
         Common.testLogBuffSize("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
     }
 
+//    @Test
+    public void parseLogByDirectByteBuffer() throws IOException {
+        String logFile = "A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly";
+        Path logPath = Paths.get(logFile);
+        LogEntryExtractor_ByteBuffer_AllocateDirect lee = new LogEntryExtractor_ByteBuffer_AllocateDirect(SigExtractor.TableCol, logPath);
+
+        long startT = System.currentTimeMillis();
+        lee.startReadingEventsByteByByte();
+        long timeDiff = System.currentTimeMillis() - startT;
+
+        System.out.println("It takes my log analyzer " + timeDiff +
+                " ms to count all the events in the log file after running ");
+
+    }
 
     //    @Test
     public void testMain() throws Exception {

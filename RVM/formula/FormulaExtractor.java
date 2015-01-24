@@ -1,5 +1,7 @@
 package formula;
 
+import sig.SigExtractor;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,22 +11,25 @@ import java.util.List;
  */
 public class FormulaExtractor {
 
-    private String monitorName;
-    private List<String> methodNameList;
+    private static String monitorName;
+    public static List<String> monitoredEventList =  init();;
 
     public FormulaExtractor(Path formulaPath) {
         //analyze the formula file and set the fields accordingly.
-        init();
+
     }
 
-    private void init() {
+    private static List<String>  init() {
+        List<String> tmp = new ArrayList<>();
         //needs real impl. it is fake method here
-        this.monitorName = "rvm.insertRuntimeMonitor";
+        monitorName = "rvm.insertRuntimeMonitor";
 
-        this.methodNameList = new ArrayList<>();
-        String INSERT = "insert";
+        tmp = new ArrayList<>();
 
-        this.methodNameList.add(INSERT);
+        tmp.add(SigExtractor.INSERT);
+
+//        tmp.add(SigExtractor.SCRIPT_MD5);
+        return tmp;
 
     }
 
@@ -33,7 +38,11 @@ public class FormulaExtractor {
         return monitorName;
     }
 
-    public List<String> getMethodNameList() {
-        return methodNameList;
+    public List<String> getMonitoredEventList() {
+        return monitoredEventList;
+    }
+
+    public boolean isMonitoredEvent(String eventName) {
+        return this.monitoredEventList.contains(eventName);
     }
 }

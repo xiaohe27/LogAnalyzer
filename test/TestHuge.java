@@ -14,12 +14,12 @@ public class TestHuge {
     String path2CompleteLog = "/home/xiaohe/workspace/DATA/ldccComplete_MonpolyStyle";
     String path2CompleteLogWithSingleViolation = "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldccComplete_MonpolyStyle_addMore";
 
-//    @Test
+    @Test
     public void parseHuge() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IllegalAccessException, IOException {
         Common.testLog_multiTimes(this.path2CompleteLogWithSingleViolation, 1);
     }
 
-    @Test
+//    @Test
     public void parseHugeByDirectByteBuffer() throws IOException {
         Path logPath = Paths.get(path2CompleteLogWithSingleViolation);
         LogEntryExtractor_ByteBuffer_AllocateDirect lee = new LogEntryExtractor_ByteBuffer_AllocateDirect(SigExtractor.TableCol, logPath);

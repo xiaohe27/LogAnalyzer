@@ -90,7 +90,7 @@ public class MonitorGenerator {
     }
 
     public List<String> getMethodNameList() {
-        return this.formulaExtractor.getMethodNameList();
+        return this.formulaExtractor.getMonitoredEventList();
     }
 
     public HashMap<String, Integer[]> getMethoArgsMappingFromSigFile() {
