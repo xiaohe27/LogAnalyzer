@@ -12,7 +12,6 @@ import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.HashMap;
-import java.util.Objects;
 
 /**
  * Serves as lexer and parser for log file.
@@ -76,7 +75,6 @@ public class LogEntryExtractor implements LogExtractor {
 //    private int TimeStampStartIndex;  //starting: [
 //    private int TimeStampLen;    //ending )
     private int EventNameStartIndex;
-    private int EventNameLen;
 
     private int paramStartIndex;
 
@@ -131,18 +129,20 @@ public class LogEntryExtractor implements LogExtractor {
         return b == underscore || b == rightBracket || b == exclamation;
     }
 
-    private void getEventNameLen() throws IOException {
-        this.EventNameLen = 1;
+    private String getEventName() throws IOException {
+        int len = 1;
+
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
                 if (isStringChar(b)) {
-                    this.EventNameLen++;
+                    len++;
                 } else {
                     if (b == lpa) {
                         this.posInArr--;
                     }
-                    return;
+
+                    return this.getStringFromBytes(this.EventNameStartIndex, len);
                 }
             }
 
@@ -635,25 +635,9 @@ public class LogEntryExtractor implements LogExtractor {
                         this.prevToken = EventName_TOKEN;
 
                         this.EventNameStartIndex = this.posInArr - 1;
-                        this.getEventNameLen();
+                        this.EventName = this.getEventName();
 
 
-                        if (this.posInArr > this.EventNameStartIndex) {
-                            this.EventName = new String(this.byteArr, this.EventNameStartIndex,
-                                    this.EventNameLen, this.asciiCharSet);
-                        } else if (this.posInArr == this.EventNameStartIndex) {
-                            throw new IOException("Empty String!");
-                        } else {//start index is a pos in the old byte array.
-                            int remainingSizInOldBuf = this.oldByteArr.length - this.EventNameStartIndex;
-                            //            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
-                            //            +start+"\nlen is "+len);
-                            if (remainingSizInOldBuf >= this.EventNameLen)
-                                this.EventName = new String(this.oldByteArr, this.EventNameStartIndex, this.EventNameLen, this.asciiCharSet);
-                            else
-                                this.EventName = new String(this.oldByteArr, this.EventNameStartIndex,
-                                        remainingSizInOldBuf, this.asciiCharSet) +
-                                        new String(this.byteArr, 0, this.EventNameLen - remainingSizInOldBuf, this.asciiCharSet);
-                        }
 
                         this.typesInTuple = TableCol.get(EventName);
                         if (this.typesInTuple == null) {
