@@ -21,4 +21,11 @@ public class ShouldPassTest {
                 "./test/shouldPass/good2.log"};
         Main.main(args);
     }
+
+    @Test
+    public void test3() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
+                "./test/shouldPass/good3.log"};
+        Main.main(args);
+    }
 }

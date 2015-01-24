@@ -629,8 +629,8 @@ public class LogEntryExtractor implements LogExtractor {
                             this.looseCheckingEventArgs();
                         }
                     } else if (isStringChar(b)) { //read an event
-                        if (this.prevToken != EventArgs_TOKEN && this.prevToken != TS_TOKEN) {
-                            throw new IOException("Event name should follow a time stamp or event args");
+                        if (this.prevToken == NULL_TOKEN) {
+                            throw new IOException("Event name should follow a time stamp or event args or event name");
                         }
                         this.prevToken = EventName_TOKEN;
 

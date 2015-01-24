@@ -15,12 +15,6 @@ public class TestNotWellFormedLog {
         Main.main(args);
     }
 
-    @Test(expected = IOException.class)
-    public void test2() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
-                "./test/NotWellFormed/bug2.log"};
-        Main.main(args);
-    }
 
     @Test(expected = IOException.class)
     public void test3() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
