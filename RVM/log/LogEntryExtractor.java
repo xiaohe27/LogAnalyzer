@@ -4,6 +4,7 @@ import formula.FormulaExtractor;
 import reg.RegHelper;
 import sig.SigExtractor;
 
+import java.awt.*;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.BufferUnderflowException;
@@ -41,6 +42,22 @@ public class LogEntryExtractor implements LogExtractor {
     private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
     private long TimeStamp; //we can add the @ symbol when it is ready to be printed
     private String EventName;
+
+    /**
+     * Use a byte to denote different tokens in the log.
+     * -1: init state, or NULL.
+     * 0: time stamp;
+     * 1: event name;
+     * 2: event args;
+     * We need to ensure a seq of tokens is accepted only if it is a word in the lang (derivable from the FSM).
+     */
+    public static final byte NULL_TOKEN = -1;
+    public static final byte TS_TOKEN = 0;
+    public static final byte EventName_TOKEN = 1;
+    public static final byte EventArgs_TOKEN = 2;
+    private byte prevToken = NULL_TOKEN;
+
+
     /**
      * Given a table name, return the list of types that represent the types for each column (table schema).
      */
@@ -68,6 +85,7 @@ public class LogEntryExtractor implements LogExtractor {
     private int curParamIndex; // the current index of param in the event
 
     private Integer[] typesInTuple;
+    private boolean isAMonitoredEvent;
 
     //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
 //        this.TableCol = tableCol;
@@ -528,9 +546,21 @@ public class LogEntryExtractor implements LogExtractor {
                     //change the order of different branches, cmp whether we can gain perf benefits by
                     //considering the probabilities.
                     if (b == lpa) { // read the event args
+                        //ensure it is valid to have an event args followed by prev thing
+                        if (this.prevToken != EventName_TOKEN &&
+                                this.prevToken != EventArgs_TOKEN) {
+                            throw new IOException("Event args should follow an event name or event args");
+                        }
+                        this.prevToken = EventArgs_TOKEN;
+
                         this.rmWhiteSpace();
                         this.readEvent();
                     } else if (isStringChar(b)) { //read an event
+                        if (this.prevToken != EventArgs_TOKEN && this.prevToken != TS_TOKEN) {
+                            throw new IOException("Event name should follow a time stamp or event args");
+                        }
+                        this.prevToken = EventName_TOKEN;
+
                         this.EventNameStartIndex = this.posInArr - 1;
                         this.getEventNameLen();
 
@@ -554,16 +584,21 @@ public class LogEntryExtractor implements LogExtractor {
 
                         this.typesInTuple = TableCol.get(EventName);
                         if (this.typesInTuple == null) {
-                            throw new IOException("Unknow event " + EventName);
+                            throw new IOException("Unknown event " + EventName);
                         }
 
                         if (FormulaExtractor.monitoredEventList.contains(EventName)){
-                            look at here
+                          this.isAMonitoredEvent = true;
                         } else {
-
+                          this.isAMonitoredEvent = false;
                         }
 
                     } else if (b == at) {
+                        if (this.prevToken != EventArgs_TOKEN && this.prevToken != NULL_TOKEN) {
+                            throw new IOException("Time stamp should follow event args or null (if it is the first token in the file)");
+                        }
+                        this.prevToken = TS_TOKEN;
+
                         this.rmWhiteSpace();
                         this.getTSFromBuf();
                         numOfLogEntries++;
