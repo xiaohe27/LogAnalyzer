@@ -42,6 +42,12 @@ public class RegHelper {
         String ts = "@123";
         System.out.println("@123 is ts: " + ts.matches(TimeStamp));
 
+        String lineSeparator = System.getProperty("line.separator");
+        System.out.println("There are " + lineSeparator.length() + " chars in the line separator");
+        System.out.println("First char in line separator is `" + (int) lineSeparator.charAt(0) + "`");
+        System.out.println("Second line separator is `" + (int) lineSeparator.charAt(1) + "`");
+        System.out.println("The \\n 's ascii code is " + ((int) '\n'));
+        System.out.println("The \\r 's ascii code is " + ((int) '\r'));
 //        Integer[] arr=new Integer[0];
 //        System.out.println("arr's len is "+arr.length);
 
