@@ -11,15 +11,16 @@ import java.util.List;
  */
 public class FormulaExtractor {
 
+    public static List<String> monitoredEventList = init();
     private static String monitorName;
-    public static List<String> monitoredEventList =  init();;
+    ;
 
     public FormulaExtractor(Path formulaPath) {
         //analyze the formula file and set the fields accordingly.
 
     }
 
-    private static List<String>  init() {
+    private static List<String> init() {
         List<String> tmp = new ArrayList<>();
         //needs real impl. it is fake method here
         monitorName = "rvm.insertRuntimeMonitor";

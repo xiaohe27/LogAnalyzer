@@ -19,7 +19,7 @@ public class TestHuge {
         Common.testLog_multiTimes(this.path2CompleteLogWithSingleViolation, 1);
     }
 
-//    @Test
+    //    @Test
     public void parseHugeByDirectByteBuffer() throws IOException {
         Path logPath = Paths.get(path2CompleteLogWithSingleViolation);
         LogEntryExtractor_ByteBuffer_AllocateDirect lee = new LogEntryExtractor_ByteBuffer_AllocateDirect(SigExtractor.TableCol, logPath);
@@ -29,7 +29,7 @@ public class TestHuge {
         long timeDiff = System.currentTimeMillis() - startT;
 
         System.out.println("It takes my log analyzer " + timeDiff +
-                        " ms to count all the events in the log file after running ");
+                " ms to count all the events in the log file after running ");
 
     }
 }

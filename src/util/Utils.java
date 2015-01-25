@@ -21,6 +21,7 @@ public class Utils {
 
     private Charset charset = Charset.forName("US-ASCII");
     private BufferedWriter bufferedWriter = init();
+//    public static final String lineSeparator = System.getProperty("line.separator");
 
     public static void writeToFile(String contents, String fileName) {
         Path p = Paths.get(fileName);
