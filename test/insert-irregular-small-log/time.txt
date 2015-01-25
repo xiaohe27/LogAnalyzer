@@ -1,4 +1,0 @@
-Start time : 1418339093
-Finish time : 1418339093
-
-It took 0 seconds to analyze the insert property of the huge log ldcc.csv
