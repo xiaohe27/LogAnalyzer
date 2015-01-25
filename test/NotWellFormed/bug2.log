@@ -1,2 +1,2 @@
-@1277393964 update insert (user6,db3,[unknown],[unknown])
-
+@123 "insert"("a", "b", c , 27)
+delete ("a", )

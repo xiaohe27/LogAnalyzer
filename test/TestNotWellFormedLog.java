@@ -42,4 +42,18 @@ public class TestNotWellFormedLog {
                 "./test/NotWellFormed/bug5.log"};
         Main.main(args);
     }
+
+    @Test(expected = IOException.class)
+    public void test6() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
+                "./test/NotWellFormed/bug6.log"};
+        Main.main(args);
+    }
+
+    @Test(expected = IOException.class)
+    public void test7() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
+                "./test/NotWellFormed/bug7.log"};
+        Main.main(args);
+    }
 }
