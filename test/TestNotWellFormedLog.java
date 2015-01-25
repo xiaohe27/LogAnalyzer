@@ -15,6 +15,12 @@ public class TestNotWellFormedLog {
         Main.main(args);
     }
 
+    @Test(expected = IOException.class)
+    public void test2() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
+                "./test/NotWellFormed/bug2.log"};
+        Main.main(args);
+    }
 
     @Test(expected = IOException.class)
     public void test3() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
@@ -34,6 +40,20 @@ public class TestNotWellFormedLog {
     public void test5() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "./test/NotWellFormed/bug5.log"};
+        Main.main(args);
+    }
+
+    @Test(expected = IOException.class)
+    public void test6() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
+                "./test/NotWellFormed/bug6.log"};
+        Main.main(args);
+    }
+
+    @Test(expected = IOException.class)
+    public void test7() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
+                "./test/NotWellFormed/bug7.log"};
         Main.main(args);
     }
 }
