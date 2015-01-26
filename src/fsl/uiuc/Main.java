@@ -78,7 +78,7 @@ public class Main {
         if (file.exists()) {
             new PrintWriter(file).close();
         } else {
-            if (outputPath.getParent().toFile().exists()){
+            if (outputPath.getParent().toFile().exists()) {
                 file.createNewFile();
             } else {
                 outputPath.getParent().toFile().mkdirs();

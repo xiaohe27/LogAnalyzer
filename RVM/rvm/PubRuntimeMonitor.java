@@ -146,7 +146,7 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
 	}
 
 	final void Prop_1_handler_violation (){
-		{ System.out.println(this.timestamp + " on time point "+this.timePoint+" publish report " + this.report + " without approval");}
+		{ System.out.println("@" + this.timestamp + " on time point "+this.timePoint+" publish report " + this.report + " without approval");}
 
 	}
 

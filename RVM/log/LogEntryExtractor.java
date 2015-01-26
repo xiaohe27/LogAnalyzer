@@ -1,13 +1,12 @@
 package log;
 
-import analysis.LogMonitor;
 import formula.FormulaExtractor;
 import reg.RegHelper;
-import sig.SigExtractor;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.BufferUnderflowException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -52,6 +51,7 @@ public class LogEntryExtractor implements LogExtractor {
     static final byte dot = (byte) '.';
     static final byte minus = (byte) '-';
     private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
+    private HashMap<String, Method> EventNameMethodMap = new HashMap<>();
     private long TimeStamp; //we can add the @ symbol when it is ready to be printed
     private String EventName;
     private byte prevToken = NULL_TOKEN;
@@ -85,17 +85,10 @@ public class LogEntryExtractor implements LogExtractor {
     private Integer[] typesInTuple;
     private boolean isAMonitoredEvent;
 
-    //    public LogEntryExtractor(HashMap<String, Integer[]> tableCol) {
-//        this.TableCol = tableCol;
-//        InputStreamReader isReader = new InputStreamReader(System.in);
-//        scan = new Scanner(new BufferedReader(isReader));
-//    }
     private long numOfReads;
     private long lastReadSize;
     private long curNumOfReads;
     private FileChannel inChannel;
-
-    private LogMonitor logMonitor;
 
     /**
      * Create an obj for log entry extractor.
@@ -105,7 +98,7 @@ public class LogEntryExtractor implements LogExtractor {
      * @param powOf2TimesKB Multiple of 1024.
      * @throws IOException
      */
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int powOf2TimesKB, LogMonitor logMonitor)
+    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int powOf2TimesKB, HashMap<String, Method> map)
             throws IOException {
         this.TableCol = tableCol;
         this.logFilePath = logFile.toString();
@@ -113,12 +106,12 @@ public class LogEntryExtractor implements LogExtractor {
         this.byteArr = new byte[this.BufSize];
         this.oldByteArr = new byte[this.BufSize];
 
-        this.logMonitor = logMonitor;
+        this.EventNameMethodMap = map;
     }
 
 
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, LogMonitor lm) throws IOException {
-        this(tableCol, logFile, 5, lm);
+    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, HashMap<String, Method> map) throws IOException {
+        this(tableCol, logFile, 5, map);
     }
 
     private boolean isWhiteSpace(byte b) {
@@ -932,12 +925,9 @@ public class LogEntryExtractor implements LogExtractor {
         }
 
         tupleData[typesInTuple.length] = TimeStamp;
-        tupleData[typesInTuple.length + 1] = this.numOfLogEntries - 1;
+        tupleData[typesInTuple.length + 1] = this.numOfLogEntries - 1;  //time point
 
-
-        if (EventName.equals(SigExtractor.PUBLISH) || EventName.equals(SigExtractor.APPROVE)) {
-            this.logMonitor.triggerEvent(EventName, tupleData);
-        }
+        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
 
 //        this.printEvent(tupleData);
 

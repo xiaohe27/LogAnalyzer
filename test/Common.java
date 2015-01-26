@@ -27,7 +27,8 @@ public class Common {
 
         long[] timeArr = new long[num];
         for (int i = 0; i < num; i++) {
-            LogExtractor lee = (eager ? new LogEntryExtractor_Eager(SigExtractor.TableCol, logFile) : new LogEntryExtractor(SigExtractor.TableCol, logFile, lm));
+            LogExtractor lee = (eager ? new LogEntryExtractor_Eager(SigExtractor.TableCol, logFile) :
+                    new LogEntryExtractor(SigExtractor.TableCol, logFile, lm.getEventNameMethodMap()));
 
             long startT = System.currentTimeMillis();
 
@@ -66,7 +67,7 @@ public class Common {
             int multiple = (int) Math.pow(2, i + offset);
 
 
-            LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFilePath, multiple, lm);
+            LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFilePath, multiple, lm.getEventNameMethodMap());
 //            LogEntryExtractor_ByteBuffer_AllocateDirect lee = new LogEntryExtractor_ByteBuffer_AllocateDirect(SigExtractor.TableCol, logFile, multiple);
 
             for (int j = 0; j < timeArr[0].length; j++) {
