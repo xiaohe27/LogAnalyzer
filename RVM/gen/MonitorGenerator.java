@@ -93,7 +93,7 @@ public class MonitorGenerator {
         return this.formulaExtractor.getMonitoredEventList();
     }
 
-    public HashMap<String, Integer[]> getMethoArgsMappingFromSigFile() {
+    public HashMap<String, int[]> getMethoArgsMappingFromSigFile() {
         return SigExtractor.extractMethoArgsMappingFromSigFile(sigFile);
     }
 

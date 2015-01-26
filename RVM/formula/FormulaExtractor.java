@@ -4,6 +4,7 @@ import sig.SigExtractor;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -12,12 +13,22 @@ import java.util.List;
 public class FormulaExtractor {
 
     public static List<String> monitoredEventList = init();
+    public static HashMap<String, boolean[]> skippedFieldsMap = init2();
     private static String monitorName;
-    ;
 
     public FormulaExtractor(Path formulaPath) {
         //analyze the formula file and set the fields accordingly.
 
+    }
+    ;
+
+    private static HashMap<String, boolean[]> init2() {
+        HashMap<String, boolean[]> tmp = new HashMap<>();
+        boolean[] skipList = new boolean[SigExtractor.maxNumOfParams];
+        skipList[1] = true;
+        skipList[0] = true;
+        tmp.put(SigExtractor.INSERT, skipList);
+        return tmp;
     }
 
     private static List<String> init() {

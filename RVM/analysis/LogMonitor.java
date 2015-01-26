@@ -17,10 +17,10 @@ import java.util.Scanner;
  */
 public class LogMonitor {
     public Class monitorClass;
-    private HashMap<String, Integer[]> TableCol;
+    private HashMap<String, int[]> TableCol;
     private HashMap<String, Method> EventNameMethodMap = new HashMap<>();
 
-    public LogMonitor(HashMap<String, Integer[]> tableCol, String libName) throws ClassNotFoundException, NoSuchMethodException {
+    public LogMonitor(HashMap<String, int[]> tableCol, String libName) throws ClassNotFoundException, NoSuchMethodException {
         this.TableCol = tableCol;
         this.monitorClass = Class.forName(libName);
         init(); //instantiate the EventNameMethodMap
@@ -33,7 +33,7 @@ public class LogMonitor {
     private void init() throws NoSuchMethodException {
 
         for (String eventName : TableCol.keySet()) {
-            Integer[] types4CurTable = TableCol.get(eventName);
+            int[] types4CurTable = TableCol.get(eventName);
 
             Class[] argTyList4CurMeth = new Class[types4CurTable.length + 2];
             for (int i = 0; i < types4CurTable.length; i++) {

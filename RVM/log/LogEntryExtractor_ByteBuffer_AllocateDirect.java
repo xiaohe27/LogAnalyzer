@@ -47,7 +47,7 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
     /**
      * Given a table name, return the list of types that represent the types for each column (table schema).
      */
-    private HashMap<String, Integer[]> TableCol;
+    private HashMap<String, int[]> TableCol;
 
     private String logFilePath;
     //    indirect optimal 8kb
@@ -71,7 +71,7 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
      * @param multipleOf1K Multiple of 1024.
      * @throws IOException
      */
-    public LogEntryExtractor_ByteBuffer_AllocateDirect(HashMap<String, Integer[]> tableCol, Path logFile, int multipleOf1K)
+    public LogEntryExtractor_ByteBuffer_AllocateDirect(HashMap<String, int[]> tableCol, Path logFile, int multipleOf1K)
             throws IOException {
         this.TableCol = tableCol;
         this.logFilePath = logFile.toString();
@@ -80,7 +80,7 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
         init();
     }
 
-    public LogEntryExtractor_ByteBuffer_AllocateDirect(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
+    public LogEntryExtractor_ByteBuffer_AllocateDirect(HashMap<String, int[]> tableCol, Path logFile) throws IOException {
         this(tableCol, logFile, 4); //try 64kb
     }
 
@@ -341,7 +341,7 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
 
 
     private void triggerEvent() throws IOException {
-        Integer[] typesInTuple = TableCol.get(EventName);
+        int[] typesInTuple = TableCol.get(EventName);
         Object[] argsInTuple = TableData.get(EventName);
         for (int i = 0; i < typesInTuple.length - 1; i++) {
 

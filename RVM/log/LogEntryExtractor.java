@@ -64,7 +64,7 @@ public class LogEntryExtractor implements LogExtractor {
     /**
      * Given a table name, return the list of types that represent the types for each column (table schema).
      */
-    private HashMap<String, Integer[]> TableCol;
+    private HashMap<String, int[]> TableCol;
     private String logFilePath;
     //    indirect optimal 8kb
 //    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
@@ -84,7 +84,7 @@ public class LogEntryExtractor implements LogExtractor {
 
     private int paramStartIndex;
 
-    private Integer[] typesInTuple;
+    private int[] typesInTuple;
     private boolean isAMonitoredEvent;
 
     private long numOfReads;
@@ -92,7 +92,8 @@ public class LogEntryExtractor implements LogExtractor {
     private long curNumOfReads;
     private FileChannel inChannel;
 
-    private boolean[] printedFields = new boolean[SigExtractor.maxNumOfParams];
+    private boolean[] unPrintedFields = new boolean[SigExtractor.maxNumOfParams];
+
     /**
      * Create an obj for log entry extractor.
      *
@@ -101,19 +102,18 @@ public class LogEntryExtractor implements LogExtractor {
      * @param powOf2TimesKB Multiple of 1024.
      * @throws IOException
      */
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int powOf2TimesKB, HashMap<String, Method> map)
+    public LogEntryExtractor(HashMap<String, int[]> tableCol, Path logFile, int powOf2TimesKB, HashMap<String, Method> map)
             throws IOException {
         this.TableCol = tableCol;
         this.logFilePath = logFile.toString();
         this.BufSize = (int) (Math.pow(2, powOf2TimesKB)) * 1024;
         this.byteArr = new byte[this.BufSize];
         this.oldByteArr = new byte[this.BufSize];
-
         this.EventNameMethodMap = map;
     }
 
 
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, HashMap<String, Method> map) throws IOException {
+    public LogEntryExtractor(HashMap<String, int[]> tableCol, Path logFile, HashMap<String, Method> map) throws IOException {
         this(tableCol, logFile, 5, map);
     }
 
@@ -837,6 +837,8 @@ public class LogEntryExtractor implements LogExtractor {
 
                         if (FormulaExtractor.monitoredEventList.contains(EventName)) {
                             this.isAMonitoredEvent = true;
+                            //the boolean list contains info about how to skip certain fields when output the violations
+                            this.unPrintedFields = FormulaExtractor.skippedFieldsMap.get(EventName);
                         } else {
                             this.isAMonitoredEvent = false;
                         }
@@ -957,10 +959,11 @@ public class LogEntryExtractor implements LogExtractor {
         sb.append("\n@" + TimeStamp + " (tp=" + data[data.length - 1] + ") " + this.EventName + "(");
 
         for (int i = 0; i < data.length - 3; i++) {
-            sb.append(data[i] + ",");
+            if (!this.unPrintedFields[i])
+                sb.append(data[i] + ",");
         }
 
-        if (data.length > 2) {
+        if (data.length > 2 && !this.unPrintedFields[data.length - 3]) {
             sb.append(data[data.length - 3]);
         }
 
