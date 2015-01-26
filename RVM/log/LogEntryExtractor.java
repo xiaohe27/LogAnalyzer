@@ -941,10 +941,13 @@ public class LogEntryExtractor implements LogExtractor {
 //            if (tupleData[1].equals("MYDB") && !tupleData[0].equals("notARealUserInTheDB"))
 //                this.printEvent(tupleData);
 //        }
+
         if (EventName.equals(SigExtractor.INSERT)) {
             if (tupleData[1].equals("db2") && !tupleData[0].equals("script1"))
                 this.printEvent(tupleData);
         }
+
+
 
 //        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
 //            //script_md5 (MY_Script,myMD5)

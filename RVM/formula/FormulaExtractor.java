@@ -26,7 +26,6 @@ public class FormulaExtractor {
         HashMap<String, boolean[]> tmp = new HashMap<>();
         boolean[] skipList = new boolean[SigExtractor.maxNumOfParams];
         skipList[1] = true;
-        skipList[0] = true;
         tmp.put(SigExtractor.INSERT, skipList);
         return tmp;
     }
