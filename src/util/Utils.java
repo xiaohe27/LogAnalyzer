@@ -5,6 +5,7 @@ import fsl.uiuc.Main;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,18 +18,13 @@ import static java.nio.file.Files.newBufferedWriter;
  */
 public class Utils {
     public static Utils MyUtils = new Utils();
-    private Charset charset = Charset.forName("US-ASCII");
+//    private Charset charset = StandardCharsets.ISO_8859_1;
+    private Charset charset = StandardCharsets.US_ASCII;
     private BufferedWriter bufferedWriter;
 //    public static final String lineSeparator = System.getProperty("line.separator");
 
     private Utils() {
         this.bufferedWriter = init();
-    }
-
-    public static void writeToOutputFile(String contents) throws IOException {
-        byte[] bytes = contents.getBytes();
-
-        Files.write(Main.outputPath, bytes, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
     }
 
 
