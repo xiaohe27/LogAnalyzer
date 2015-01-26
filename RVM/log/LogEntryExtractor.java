@@ -148,38 +148,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
-            this.posInArr = 0;
-
-            while (true) {
-                try {
-                    this.mbb.get(this.byteArr);
-                    break;
-                } catch (BufferUnderflowException e) {
-                    int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
-                        this.mbb.get(this.byteArr, 0, remaining);
-                        this.BufSize = remaining;
-                        break;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) {
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-
-                            System.gc();
-
-                        } else {
-                            throw new IOException("Unexpected end of file while parsing an event name");
-                        }
-                    }
-                }
-            }
+            this.refill("Unexpected end of file while parsing an event name");
         }
 
     }
@@ -211,38 +180,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
-            this.posInArr = 0;
-
-            while (true) {
-                try {
-                    this.mbb.get(this.byteArr); //refill the byte array if mbb if not exhausted
-                    break;
-                } catch (BufferUnderflowException e) {
-                    int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
-                        this.mbb.get(this.byteArr, 0, remaining);   //mbb's remaining bytes does not fill the whole byte array
-                        this.BufSize = remaining;
-                        break;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) { //mbb is exhausted but more contents available in the file.
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-
-                            System.gc();
-
-                        } else {
-                            throw new IOException("Unexpected end of file while parsing a string");
-                        }
-                    }
-                }
-            }
+            this.refill("Unexpected end of file while parsing a string");
         }
     }
 
@@ -275,38 +213,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
-            this.posInArr = 0;
-
-            while (true) {
-                try {
-                    this.mbb.get(this.byteArr);
-                    break;
-                } catch (BufferUnderflowException e) {
-                    int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
-                        this.mbb.get(this.byteArr, 0, remaining);
-                        this.BufSize = remaining;
-                        break;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) {
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-
-                            System.gc();
-
-                        } else {
-                            throw new IOException("Unexpected end of file while parsing a string");
-                        }
-                    }
-                }
-            }
+            this.refill("Unexpected end of file while parsing a quoted string");
         }
     }
 
@@ -323,38 +230,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
-            this.posInArr = 0;
-
-            while (true) {
-                try {
-                    this.mbb.get(this.byteArr);
-                    break;
-                } catch (BufferUnderflowException e) {
-                    int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
-                        this.mbb.get(this.byteArr, 0, remaining);
-                        this.BufSize = remaining;
-                        break;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) {
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-
-                            System.gc();
-
-                        } else {
-                            throw new IOException("Unexpected end of file while parsing a string");
-                        }
-                    }
-                }
-            }
+            this.refill("Unexpected end of file while reading a quoted string");
         }
     }
 
@@ -369,39 +245,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
-            this.posInArr = 0;
-
-            while (true) {
-                try {
-                    this.mbb.get(this.byteArr);
-                    break;
-                } catch (BufferUnderflowException e) {
-                    int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
-                        this.mbb.get(this.byteArr, 0, remaining);
-                        this.BufSize = remaining;
-                        break;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) {
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-
-                            System.gc();
-
-
-                        } else {
-                            throw new IOException("Unexpected end of file while removing the white spaces");
-                        }
-                    }
-                }
-            }
+            this.refill("Unexpected end of file while removing the white spaces");
         }
     }
 
@@ -414,39 +258,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
-            this.posInArr = 0;
-
-            while (true) {
-                try {
-                    this.mbb.get(this.byteArr);
-                    break;
-                } catch (BufferUnderflowException e) {
-                    int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
-                        this.mbb.get(this.byteArr, 0, remaining);
-                        this.BufSize = remaining;
-                        break;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) {
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-
-                            System.gc();
-
-
-                        } else {
-                            throw new IOException("Unexpected end of file while removing the white spaces");
-                        }
-                    }
-                }
-            }
+          this.refill("Unexpected end of file while removing the comments");
         }
     }
 
@@ -480,38 +292,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
-            this.posInArr = 0;
-
-            while (true) {
-                try {
-                    this.mbb.get(this.byteArr);
-                    break;
-                } catch (BufferUnderflowException e) {
-                    int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
-                        this.mbb.get(this.byteArr, 0, remaining);
-                        this.BufSize = remaining;
-                        break;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) {
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-
-                            System.gc();
-
-                        } else {
-                            throw new IOException("Unexpected end of file while parsing a time stamp");
-                        }
-                    }
-                }
-            }
+          this.refill("Unexpected end of file while parsing a time stamp");
         }
     }
 
@@ -543,39 +324,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
-            this.posInArr = 0;
-
-            while (true) {
-                try {
-                    this.mbb.get(this.byteArr);
-                    break;
-                } catch (BufferUnderflowException e) {
-                    int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
-                        this.mbb.get(this.byteArr, 0, remaining);
-                        this.BufSize = remaining;
-                        break;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) {
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-
-                            System.gc();
-
-
-                        } else {
-                            throw new IOException("Unexpected end of file while parsing a floating number");
-                        }
-                    }
-                }
-            }
+            this.refill("Unexpected end of file while parsing a floating number");
         }
     }
 
@@ -613,38 +362,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
-            this.posInArr = 0;
-
-            while (true) {
-                try {
-                    this.mbb.get(this.byteArr);
-                    break;
-                } catch (BufferUnderflowException e) {
-                    int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
-                        this.mbb.get(this.byteArr, 0, remaining);
-                        this.BufSize = remaining;
-                        break;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) {
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-
-                            System.gc();
-
-                        } else {
-                            throw new IOException("Unexpected end of file while parsing an integer");
-                        }
-                    }
-                }
-            }
+            refill("Unexpected end of file while parsing an integer");
         }
 
 
@@ -708,38 +426,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-            byte[] tmp = this.oldByteArr;
-            this.oldByteArr = this.byteArr;
-            this.byteArr = tmp;
-
-            this.posInFile += this.BufSize;
-            this.posInArr = 0;
-
-            while (true) { //refill the mbb and byte array if necessary
-                try {
-                    this.mbb.get(this.byteArr);
-                    break;
-                } catch (BufferUnderflowException e) {
-                    int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
-                        this.mbb.get(this.byteArr, 0, remaining);
-                        this.BufSize = remaining;
-                        break;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) {
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-
-                            System.gc();
-
-                        } else {
-                            throw new IOException("Unexpected end of file while parsing an integer");
-                        }
-                    }
-                }
-            }
+            refill("Unexpected end of file");
         }
     }
 
@@ -999,6 +686,41 @@ public class LogEntryExtractor implements LogExtractor {
         }
 
         return output;
+    }
+
+    private void refill(String errInfo) throws IOException {
+        byte[] tmp = this.oldByteArr;
+        this.oldByteArr = this.byteArr;
+        this.byteArr = tmp;
+
+        this.posInFile += this.BufSize;
+        this.posInArr = 0;
+
+        while (true) {
+            try {
+                this.mbb.get(this.byteArr);
+                break;
+            } catch (BufferUnderflowException e) {
+                int remaining = this.mbb.remaining();
+                if (remaining > 0) {
+                    this.mbb.get(this.byteArr, 0, remaining);
+                    this.BufSize = remaining;
+                    break;
+                } else {
+                    if (this.curNumOfReads <= this.numOfReads) {
+                        this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
+                                this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
+                        this.curNumOfReads++;
+                        this.mbb.position(0);
+
+                        System.gc();
+
+                    } else {
+                        throw new IOException(errInfo);
+                    }
+                }
+            }
+        }
     }
 
 }
