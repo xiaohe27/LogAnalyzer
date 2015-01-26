@@ -1,11 +1,13 @@
 package log;
 
+import analysis.LogMonitor;
 import formula.FormulaExtractor;
 import reg.RegHelper;
 import sig.SigExtractor;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.BufferUnderflowException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -55,6 +57,8 @@ public class LogEntryExtractor implements LogExtractor {
     private byte prevToken = NULL_TOKEN;
 
 
+    private long numOfLogEntries = 0;
+
     /**
      * Given a table name, return the list of types that represent the types for each column (table schema).
      */
@@ -91,6 +95,8 @@ public class LogEntryExtractor implements LogExtractor {
     private long curNumOfReads;
     private FileChannel inChannel;
 
+    private LogMonitor logMonitor;
+
     /**
      * Create an obj for log entry extractor.
      *
@@ -99,18 +105,20 @@ public class LogEntryExtractor implements LogExtractor {
      * @param powOf2TimesKB Multiple of 1024.
      * @throws IOException
      */
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int powOf2TimesKB)
+    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, int powOf2TimesKB, LogMonitor logMonitor)
             throws IOException {
         this.TableCol = tableCol;
         this.logFilePath = logFile.toString();
         this.BufSize = (int) (Math.pow(2, powOf2TimesKB)) * 1024;
         this.byteArr = new byte[this.BufSize];
         this.oldByteArr = new byte[this.BufSize];
+
+        this.logMonitor = logMonitor;
     }
 
 
-    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
-        this(tableCol, logFile, 5);
+    public LogEntryExtractor(HashMap<String, Integer[]> tableCol, Path logFile, LogMonitor lm) throws IOException {
+        this(tableCol, logFile, 5, lm);
     }
 
     private boolean isWhiteSpace(byte b) {
@@ -739,8 +747,7 @@ public class LogEntryExtractor implements LogExtractor {
         }
     }
 
-    public void startReadingEventsByteByByte() throws IOException {
-        long numOfLogEntries = 0;
+    public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         this.posInFile = 0;   //pos in file is the absolute pos in file where the current byte array starts
 
         RandomAccessFile aFile = new RandomAccessFile
@@ -848,9 +855,8 @@ public class LogEntryExtractor implements LogExtractor {
                         this.getTSFromBuf();
                         numOfLogEntries++;
                     } else if (b == hash) {
-                         this.skipComment();
-                    }
-                    else if (b == 0) {
+                        this.skipComment();
+                    } else if (b == 0) {
                         break;
                     } else {
                         throw new IOException("Unexpected char'" + (char) b + "'");
@@ -883,8 +889,8 @@ public class LogEntryExtractor implements LogExtractor {
      *
      * @throws IOException
      */
-    private void readEvent() throws IOException {
-        Object[] tupleData = new Object[typesInTuple.length];
+    private void readEvent() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+        Object[] tupleData = new Object[typesInTuple.length + 2];
         int i = 0;
         for (; i < typesInTuple.length - 1; i++) {
             this.paramStartIndex = this.posInArr;
@@ -925,12 +931,20 @@ public class LogEntryExtractor implements LogExtractor {
             }
         }
 
+        tupleData[typesInTuple.length] = TimeStamp;
+        tupleData[typesInTuple.length + 1] = this.numOfLogEntries - 1;
+
+
+        if (EventName.equals(SigExtractor.PUBLISH) || EventName.equals(SigExtractor.APPROVE)) {
+            this.logMonitor.triggerEvent(EventName, tupleData);
+        }
+
 //        this.printEvent(tupleData);
 
-        if (EventName.equals(SigExtractor.INSERT)) {
-            if (tupleData[1].equals("MYDB") && !tupleData[0].equals("notARealUserInTheDB"))
-                this.printEvent(tupleData);
-        }
+//        if (EventName.equals(SigExtractor.INSERT)) {
+//            if (tupleData[1].equals("MYDB") && !tupleData[0].equals("notARealUserInTheDB"))
+//                this.printEvent(tupleData);
+//        }
 
 //        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
 //            //script_md5 (MY_Script,myMD5)
@@ -939,7 +953,7 @@ public class LogEntryExtractor implements LogExtractor {
 //        }
     }
 
-    private void printEvent(Object[] data) throws IOException {
+    public void printEvent(Object[] data) throws IOException {
         StringBuilder sb = new StringBuilder();
 
         sb.append("\n@" + TimeStamp + " " + this.EventName + "(");

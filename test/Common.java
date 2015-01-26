@@ -1,3 +1,5 @@
+import analysis.LogMonitor;
+import gen.MonitorGenerator;
 import log.LogEntryExtractor;
 import log.LogEntryExtractor_Eager;
 import log.LogExtractor;
@@ -18,10 +20,14 @@ public class Common {
 
     public static void testLog_multiTimes(String path, int num, boolean eager) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         Path logFile = Paths.get(path);
+        MonitorGenerator mg = new MonitorGenerator(logFile, null);
+
+        LogMonitor lm = new LogMonitor(mg.getMethoArgsMappingFromSigFile(), mg.getMonitorClassPath());
+
 
         long[] timeArr = new long[num];
         for (int i = 0; i < num; i++) {
-            LogExtractor lee = (eager ? new LogEntryExtractor_Eager(SigExtractor.TableCol, logFile) : new LogEntryExtractor(SigExtractor.TableCol, logFile));
+            LogExtractor lee = (eager ? new LogEntryExtractor_Eager(SigExtractor.TableCol, logFile) : new LogEntryExtractor(SigExtractor.TableCol, logFile, lm));
 
             long startT = System.currentTimeMillis();
 
@@ -38,7 +44,13 @@ public class Common {
                 num + " tests");
     }
 
-    public static void testLogBuffSize(String logFilePath) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+    public static void testLogBuffSize(String logFile) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
+        Path logFilePath = Paths.get(logFile);
+
+        MonitorGenerator mg = new MonitorGenerator(logFilePath, null);
+
+        LogMonitor lm = new LogMonitor(mg.getMethoArgsMappingFromSigFile(), mg.getMonitorClassPath());
+
         int numOfLines = 2;
         int numOfCols = 3;
 
@@ -47,8 +59,6 @@ public class Common {
         long[][] timeArr = new long[numOfLines][numOfCols];
         long[] avgTimeArr = new long[numOfLines];
 
-        Path logFile = Paths.get(logFilePath);
-
         //each i represents a test with a specific buffer size
         //run multiple times to get the avg time
         for (int i = 0; i < timeArr.length; i++) {
@@ -56,7 +66,7 @@ public class Common {
             int multiple = (int) Math.pow(2, i + offset);
 
 
-            LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFile, multiple);
+            LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFilePath, multiple, lm);
 //            LogEntryExtractor_ByteBuffer_AllocateDirect lee = new LogEntryExtractor_ByteBuffer_AllocateDirect(SigExtractor.TableCol, logFile, multiple);
 
             for (int j = 0; j < timeArr[0].length; j++) {

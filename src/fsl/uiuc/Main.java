@@ -3,13 +3,18 @@ package fsl.uiuc;
 import analysis.LogMonitor;
 import gen.MonitorGenerator;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
-    public static String outputPath = "./test-out/violation.txt";
+    private static String outputPathStr = "./test-out/violation.txt";
+
+    public static Path outputPath = Paths.get(outputPathStr);
+
     private static boolean eagerEval;
 
     /**
@@ -53,6 +58,8 @@ public class Main {
 
         LogMonitor lm = new LogMonitor(mg.getMethoArgsMappingFromSigFile(), mg.getMonitorClassPath());
 
+        initOutputFile();
+
 //        lm.monitor(path2Log); //default mapped byte buffer
 //        lm.monitor_bytebuffer_allocateDirect(path2Log);
 //        eagerEval = true;
@@ -63,6 +70,20 @@ public class Main {
         } else {
 //            System.out.println("Going to read a normal log file");
             lm.monitor(path2Log, false, eagerEval); //default mapped byte buffer
+        }
+    }
+
+    private static void initOutputFile() throws IOException {
+        File file = outputPath.toFile();
+        if (file.exists()) {
+            new PrintWriter(file).close();
+        } else {
+            if (outputPath.getParent().toFile().exists()){
+                file.createNewFile();
+            } else {
+                outputPath.getParent().toFile().mkdirs();
+                file.createNewFile();
+            }
         }
     }
 }

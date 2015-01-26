@@ -23,6 +23,13 @@ public class Utils {
     private BufferedWriter bufferedWriter = init();
 //    public static final String lineSeparator = System.getProperty("line.separator");
 
+    public static void writeToOutputFile(String contents) throws IOException {
+        byte[] bytes = contents.getBytes();
+
+        Files.write(Main.outputPath, bytes, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
+    }
+
+
     public static void writeToFile(String contents, String fileName) {
         Path p = Paths.get(fileName);
         byte[] bytes = contents.getBytes();
@@ -48,21 +55,21 @@ public class Utils {
     }
 
     private BufferedWriter init() {
-        Path output = Paths.get(Main.outputPath);
-        File outFile = output.toFile();
+
+        File outFile = Main.outputPath.toFile();
         boolean outFileExist = outFile.exists();
         try {
             if (!outFileExist) {
-                if (!output.getParent().toFile().exists())
-                    output.getParent().toFile().mkdirs();
+                if (!Main.outputPath.getParent().toFile().exists())
+                    Main.outputPath.getParent().toFile().mkdirs();
 
-                output.toFile().createNewFile();
+                Main.outputPath.toFile().createNewFile();
             }
 
             StandardOpenOption option = outFileExist ? StandardOpenOption.TRUNCATE_EXISTING :
                     StandardOpenOption.APPEND;
 
-            return newBufferedWriter(output, charset, option, StandardOpenOption.WRITE);
+            return newBufferedWriter(Main.outputPath, charset, option, StandardOpenOption.WRITE);
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Unable to create a buffered writerTruncate, exit");

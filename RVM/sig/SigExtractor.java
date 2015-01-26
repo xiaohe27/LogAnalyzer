@@ -19,6 +19,9 @@ public class SigExtractor {
     public static final String SCRIPT_MD5 = "script_md5";
     public static final String COMMIT = "commit";
 
+    public static final String PUBLISH = "publish";
+    public static final String APPROVE = "approve";
+
     public static final int maxNumOfParams = 5;
 
     public static final byte[] insertByte = INSERT.getBytes();
@@ -36,6 +39,8 @@ public class SigExtractor {
         Integer[] argTy4ScriptMD5 = new Integer[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE};
         Integer[] argTy4Commit = new Integer[]{RegHelper.STRING_TYPE, RegHelper.INT_TYPE};
 
+        Integer[] argTy4Pub = new Integer[]{RegHelper.INT_TYPE};
+
         tmp.put(SELECT, argTy4Insert);
         tmp.put(INSERT, argTy4Insert);
         tmp.put(UPDATE, argTy4Insert);
@@ -45,6 +50,9 @@ public class SigExtractor {
         tmp.put(SCRIPT_SVN, argTy4ScriptSVN);
         tmp.put(SCRIPT_MD5, argTy4ScriptMD5);
         tmp.put(COMMIT, argTy4Commit);
+
+        tmp.put(APPROVE, argTy4Pub);
+        tmp.put(PUBLISH, argTy4Pub);
         return tmp;
     }
 

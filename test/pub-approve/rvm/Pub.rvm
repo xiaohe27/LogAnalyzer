@@ -1,0 +1,22 @@
+package rvm;
+
+Pub(Integer report) {
+  Integer report;
+  long timestamp;
+  long timePoint;
+
+  event publish (Integer report, long ts, long tp) {
+		this.report=report;
+		this.timestamp=ts;
+		this.timePoint=tp;		
+	} 
+
+  event approve (Integer report, long ts, long tp) {
+		this.report=report;
+	}
+
+  ltl: [](publish => (*) approve)
+
+  @violation { System.out.println(this.timestamp + " on time point "+this.timePoint+" publish report " + this.report + " without approval");}
+ 
+}
