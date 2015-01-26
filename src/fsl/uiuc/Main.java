@@ -42,6 +42,8 @@ public class Main {
                     + " in which case the contents of log file will be read from the System.in");
         }
 
+        initOutputFile();
+
         Path path2SigFile = Paths.get(args[0]);
 
         Path path2FormulaFile = Paths.get(args[1]);
@@ -57,9 +59,6 @@ public class Main {
         MonitorGenerator mg = new MonitorGenerator(path2SigFile, path2FormulaFile);
 
         LogMonitor lm = new LogMonitor(mg.getMethoArgsMappingFromSigFile(), mg.getMonitorClassPath());
-
-        initOutputFile();
-
 //        lm.monitor(path2Log); //default mapped byte buffer
 //        lm.monitor_bytebuffer_allocateDirect(path2Log);
 //        eagerEval = true;

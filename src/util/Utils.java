@@ -3,7 +3,6 @@ package util;
 import fsl.uiuc.Main;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -17,11 +16,14 @@ import static java.nio.file.Files.newBufferedWriter;
  * Created by xiaohe on 9/17/14.
  */
 public class Utils {
-    public static final Utils MY_Utils = new Utils();
-
+    public static Utils MyUtils = new Utils();
     private Charset charset = Charset.forName("US-ASCII");
-    private BufferedWriter bufferedWriter = init();
+    private BufferedWriter bufferedWriter;
 //    public static final String lineSeparator = System.getProperty("line.separator");
+
+    private Utils() {
+        this.bufferedWriter = init();
+    }
 
     public static void writeToOutputFile(String contents) throws IOException {
         byte[] bytes = contents.getBytes();
@@ -46,7 +48,7 @@ public class Utils {
         }
     }
 
-    public void writeToDefaultOutputFile(String contents) throws IOException {
+    public void writeToOutputFileUsingBW(String contents) throws IOException {
         this.bufferedWriter.write(contents);
     }
 
@@ -55,25 +57,11 @@ public class Utils {
     }
 
     private BufferedWriter init() {
-
-        File outFile = Main.outputPath.toFile();
-        boolean outFileExist = outFile.exists();
         try {
-            if (!outFileExist) {
-                if (!Main.outputPath.getParent().toFile().exists())
-                    Main.outputPath.getParent().toFile().mkdirs();
-
-                Main.outputPath.toFile().createNewFile();
-            }
-
-            StandardOpenOption option = outFileExist ? StandardOpenOption.TRUNCATE_EXISTING :
-                    StandardOpenOption.APPEND;
-
-            return newBufferedWriter(Main.outputPath, charset, option, StandardOpenOption.WRITE);
+            return newBufferedWriter(Main.outputPath, charset, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Unable to create a buffered writerTruncate, exit");
-            System.exit(0);
+            System.exit(2);
         }
         return null;
     }

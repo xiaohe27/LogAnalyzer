@@ -28,11 +28,11 @@ public class FormulaExtractor {
 
         tmp = new ArrayList<>();
 
-//        tmp.add(SigExtractor.INSERT);
+        tmp.add(SigExtractor.INSERT);
 
 //        tmp.add(SigExtractor.SCRIPT_MD5);
-        tmp.add(SigExtractor.APPROVE);
-        tmp.add(SigExtractor.PUBLISH);
+//        tmp.add(SigExtractor.APPROVE);
+//        tmp.add(SigExtractor.PUBLISH);
         return tmp;
 
     }

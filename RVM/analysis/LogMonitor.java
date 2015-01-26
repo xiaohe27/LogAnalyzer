@@ -64,8 +64,8 @@ public class LogMonitor {
 
             if (FormulaExtractor.monitoredEventList.contains(eventName)) {
                 String methName = eventName + "Event";
-                Method monitorMethod = this.monitorClass.getDeclaredMethod(methName, argTyList4CurMeth);
-                this.EventNameMethodMap.put(eventName, monitorMethod);
+//                Method monitorMethod = this.monitorClass.getDeclaredMethod(methName, argTyList4CurMeth);
+//                this.EventNameMethodMap.put(eventName, monitorMethod);
             }
         }
     }
