@@ -661,18 +661,6 @@ public class LogEntryExtractor implements LogExtractor {
     }
 
 
-    private void outputTS() throws IOException {
-
-        StringBuilder sb = new StringBuilder("@");
-        sb.append(this.TimeStamp);
-        sb.append(" (time-point ");
-        sb.append(this.numOfLogEntries - 1);
-        sb.append("):");
-
-        Utils.MyUtils.writeToOutputFileUsingBW(sb.toString());
-
-    }
-
     public void printEvent(Object[] data) throws IOException {
         StringBuilder sb = new StringBuilder();
 
