@@ -38,7 +38,7 @@ public class LogEntryExtractor_FromArchive implements LogExtractor {
     /**
      * Given a table name, return the list of types that represent the types for each column (table schema).
      */
-    private HashMap<String, Integer[]> TableCol;
+    private HashMap<String, int[]> TableCol;
 
     private String logFile_compressed;
     //    indirect optimal 8kb
@@ -64,7 +64,7 @@ public class LogEntryExtractor_FromArchive implements LogExtractor {
      * @param multipleOf1K Multiple of 1024.
      * @throws java.io.IOException
      */
-    public LogEntryExtractor_FromArchive(HashMap<String, Integer[]> tableCol, Path logFile, int multipleOf1K)
+    public LogEntryExtractor_FromArchive(HashMap<String, int[]> tableCol, Path logFile, int multipleOf1K)
             throws IOException {
         this.TableCol = tableCol;
         this.logFile_compressed = logFile.toString();
@@ -74,7 +74,7 @@ public class LogEntryExtractor_FromArchive implements LogExtractor {
         init();
     }
 
-    public LogEntryExtractor_FromArchive(HashMap<String, Integer[]> tableCol, Path logFile) throws IOException {
+    public LogEntryExtractor_FromArchive(HashMap<String, int[]> tableCol, Path logFile) throws IOException {
         this(tableCol, logFile, 4);
     }
 
@@ -341,7 +341,7 @@ public class LogEntryExtractor_FromArchive implements LogExtractor {
 
 
     private void triggerEvent() throws IOException {
-        Integer[] typesInTuple = TableCol.get(EventName);
+        int[] typesInTuple = TableCol.get(EventName);
         Object[] argsInTuple = TableData.get(EventName);
         for (int i = 0; i < typesInTuple.length - 1; i++) {
 

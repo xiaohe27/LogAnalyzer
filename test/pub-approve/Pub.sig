@@ -1,3 +1,5 @@
+publish(x:int)
+approve(x:int)
 select(string,string,string,string)
 insert(string,string,string,string)
 update(string,string,string,string)

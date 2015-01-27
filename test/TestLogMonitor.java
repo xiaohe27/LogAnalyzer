@@ -51,20 +51,23 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-                @Test
+//    @Test
     public void test9MLog_singleViolation_HP() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly_BaseExecTime"};
         Main.main(args);
     }
 
-//    @Test
+        @Test
     public void test9MLog_Siebel_SingleRun() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
 
         String logPath_base = "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy";
 //        Common.testLog_multiTimes(logPath_base, 5, true); //eager eval
 
-        Common.testLog_multiTimes(logPath_base, 1, false); //lazy eval
+//        Common.testLog_multiTimes(logPath_base, 1, false); //lazy eval
+
+        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl", logPath_base};
+        Main.main(args);
 
     }
 

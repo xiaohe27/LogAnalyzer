@@ -1,11 +1,13 @@
 package analysis;
 
+import formula.FormulaExtractor;
 import log.*;
 import reg.RegHelper;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -14,24 +16,26 @@ import java.util.Scanner;
  * Created by xiaohe on 11/24/14.
  */
 public class LogMonitor {
-    private HashMap<String, Integer[]> TableCol;
+    public Class monitorClass;
+    private HashMap<String, int[]> TableCol;
+    private HashMap<String, Method> EventNameMethodMap = new HashMap<>();
 
-    private HashMap<String, Class[]> MethodArgListMap = new HashMap<>();
-
-    private Class monitorClass;
-
-    public LogMonitor(HashMap<String, Integer[]> tableCol, String libName) throws ClassNotFoundException {
+    public LogMonitor(HashMap<String, int[]> tableCol, String libName) throws ClassNotFoundException, NoSuchMethodException {
         this.TableCol = tableCol;
-        init(); //instantiate the MethodArgListMap
         this.monitorClass = Class.forName(libName);
+        init(); //instantiate the EventNameMethodMap
     }
 
-    private void init() {
+    public HashMap<String, Method> getEventNameMethodMap() {
+        return this.EventNameMethodMap;
+    }
 
-        for (String tableName : TableCol.keySet()) {
-            Integer[] types4CurTable = TableCol.get(tableName);
+    private void init() throws NoSuchMethodException {
 
-            Class[] argTyList4CurMeth = new Class[types4CurTable.length + 1];
+        for (String eventName : TableCol.keySet()) {
+            int[] types4CurTable = TableCol.get(eventName);
+
+            Class[] argTyList4CurMeth = new Class[types4CurTable.length + 2];
             for (int i = 0; i < types4CurTable.length; i++) {
                 switch (types4CurTable[i]) {
                     case RegHelper.INT_TYPE:
@@ -39,7 +43,7 @@ public class LogMonitor {
                         break;
 
                     case RegHelper.FLOAT_TYPE:
-                        argTyList4CurMeth[i] = Float.class;
+                        argTyList4CurMeth[i] = Double.class;
                         break;
 
                     case RegHelper.STRING_TYPE:
@@ -47,7 +51,7 @@ public class LogMonitor {
                         break;
 
                     default: {
-                        System.err.println("Unknown type: only support int, float, double, long and string at " +
+                        System.err.println("Unknown type: only support int, double and string at " +
                                 "the moment!");
                         System.exit(0);
                     }
@@ -55,11 +59,21 @@ public class LogMonitor {
             }
 
             //append the long type at the end which is the type for the timestamp.
-            argTyList4CurMeth[argTyList4CurMeth.length - 1] = long.class;
+            argTyList4CurMeth[types4CurTable.length] = long.class; //ts
+            argTyList4CurMeth[argTyList4CurMeth.length - 1] = long.class;  //time point
 
-            MethodArgListMap.put(tableName, argTyList4CurMeth);
+            if (FormulaExtractor.monitoredEventList.contains(eventName)) {
+                String methName = eventName + "Event";
+//                Method monitorMethod = this.monitorClass.getDeclaredMethod(methName, argTyList4CurMeth);
+//                this.EventNameMethodMap.put(eventName, monitorMethod);
+            }
         }
     }
+
+
+//    public void triggerEvent(String EventName, Object[] tupleData) throws InvocationTargetException, IllegalAccessException, IOException, NoSuchMethodException {
+//
+//    }
 
 
     /**
@@ -67,18 +81,17 @@ public class LogMonitor {
      *
      * @param path2LogFile
      */
-    public void monitorWithProfiling(Path path2LogFile, boolean isTarGz) throws IOException {
-        LogExtractor lee = null;
-
+    public void monitorWithProfiling(Path path2LogFile, boolean isTarGz) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        LogExtractor lee;
         if (path2LogFile != null) {
             //the path to the log file should be obtained from outside as an argument of 'main'
             if (isTarGz) {
                 lee = new LogEntryExtractor_FromArchive(this.TableCol, path2LogFile);
             } else {
-                lee = new LogEntryExtractor(this.TableCol, path2LogFile);
+                lee = new LogEntryExtractor(this.TableCol, path2LogFile, this.EventNameMethodMap);
             }
         } else { //path to log file is null: indicating the scanner will read log entries from System.in
-//            lee = new LogEntryExtractor(this.TableCol);
+            lee = null;
         }
 
         System.out.println("Please get ready to profile the app, input a line with `enter` please.");
@@ -97,11 +110,11 @@ public class LogMonitor {
     }
 
 
-    public void monitor(Path path2LogFile, boolean isTarGz) throws IOException {
+    public void monitor(Path path2LogFile, boolean isTarGz) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         this.monitor(path2LogFile, isTarGz, false);
     }
 
-    public void monitor(Path path2LogFile) throws IOException {
+    public void monitor(Path path2LogFile) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         this.monitor(path2LogFile, false, false);
     }
 
@@ -110,7 +123,7 @@ public class LogMonitor {
      *
      * @param path2LogFile
      */
-    public void monitor(Path path2LogFile, boolean isTarGz, boolean eagerEval) throws IOException {
+    public void monitor(Path path2LogFile, boolean isTarGz, boolean eagerEval) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         LogExtractor lee = null;
 
         if (path2LogFile != null) {
@@ -121,7 +134,7 @@ public class LogMonitor {
                 if (eagerEval) {
                     lee = new LogEntryExtractor_Eager(this.TableCol, path2LogFile);
                 } else {
-                    lee = new LogEntryExtractor(this.TableCol, path2LogFile, 6); //use lazy eval strategy.
+                    lee = new LogEntryExtractor(this.TableCol, path2LogFile, 6, this.EventNameMethodMap); //use lazy eval strategy.
                 }
             }
 
@@ -219,7 +232,7 @@ public class LogMonitor {
 //                        Object[] fields = curTuple.getFields();
 //
 //                        String methName = eventName + "Event";
-//                        Class[] paramTypes = MethodArgListMap.get(eventName);
+//                        Class[] paramTypes = EventNameMethodMap.get(eventName);
 //                        Object[] args4MonitorMethod = new Object[fields.length + 1];
 //                        System.arraycopy(fields, 0, args4MonitorMethod, 0, fields.length);
 //                        //the last arg is the timestamp.

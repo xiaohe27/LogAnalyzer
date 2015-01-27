@@ -1,4 +1,0 @@
-Start time : 1419020465
-Finish time : 1419020515
-
-It took 50 seconds to read all the insert events in the 9M log

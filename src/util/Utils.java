@@ -3,9 +3,9 @@ package util;
 import fsl.uiuc.Main;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,11 +17,16 @@ import static java.nio.file.Files.newBufferedWriter;
  * Created by xiaohe on 9/17/14.
  */
 public class Utils {
-    public static final Utils MY_Utils = new Utils();
-
-    private Charset charset = Charset.forName("US-ASCII");
-    private BufferedWriter bufferedWriter = init();
+    public static Utils MyUtils = new Utils();
+//    private Charset charset = StandardCharsets.ISO_8859_1;
+    private Charset charset = StandardCharsets.US_ASCII;
+    private BufferedWriter bufferedWriter;
 //    public static final String lineSeparator = System.getProperty("line.separator");
+
+    private Utils() {
+        this.bufferedWriter = init();
+    }
+
 
     public static void writeToFile(String contents, String fileName) {
         Path p = Paths.get(fileName);
@@ -39,7 +44,7 @@ public class Utils {
         }
     }
 
-    public void writeToDefaultOutputFile(String contents) throws IOException {
+    public void writeToOutputFileUsingBW(String contents) throws IOException {
         this.bufferedWriter.write(contents);
     }
 
@@ -48,25 +53,11 @@ public class Utils {
     }
 
     private BufferedWriter init() {
-        Path output = Paths.get(Main.outputPath);
-        File outFile = output.toFile();
-        boolean outFileExist = outFile.exists();
         try {
-            if (!outFileExist) {
-                if (!output.getParent().toFile().exists())
-                    output.getParent().toFile().mkdirs();
-
-                output.toFile().createNewFile();
-            }
-
-            StandardOpenOption option = outFileExist ? StandardOpenOption.TRUNCATE_EXISTING :
-                    StandardOpenOption.APPEND;
-
-            return newBufferedWriter(output, charset, option, StandardOpenOption.WRITE);
+            return newBufferedWriter(Main.outputPath, charset, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Unable to create a buffered writerTruncate, exit");
-            System.exit(0);
+            System.exit(2);
         }
         return null;
     }

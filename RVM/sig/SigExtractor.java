@@ -19,22 +19,27 @@ public class SigExtractor {
     public static final String SCRIPT_MD5 = "script_md5";
     public static final String COMMIT = "commit";
 
+    public static final String PUBLISH = "publish";
+    public static final String APPROVE = "approve";
+
     public static final int maxNumOfParams = 5;
 
     public static final byte[] insertByte = INSERT.getBytes();
 
-    public static HashMap<String, Integer[]> TableCol = initTableCol();
+    public static HashMap<String, int[]> TableCol = initTableCol();
 
-    private static HashMap<String, Integer[]> initTableCol() {
-        HashMap<String, Integer[]> tmp = new HashMap<>();
+    private static HashMap<String, int[]> initTableCol() {
+        HashMap<String, int[]> tmp = new HashMap<>();
         //the arg types can be inferred from the signature file
-        Integer[] argTy4Insert = new Integer[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE,
+        int[] argTy4Insert = new int[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE,
                 RegHelper.STRING_TYPE, RegHelper.STRING_TYPE};
-        Integer[] argTy4Script = new Integer[]{RegHelper.STRING_TYPE};
-        Integer[] argTy4ScriptSVN = new Integer[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE,
+        int[] argTy4Script = new int[]{RegHelper.STRING_TYPE};
+        int[] argTy4ScriptSVN = new int[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE,
                 RegHelper.STRING_TYPE, RegHelper.INT_TYPE, RegHelper.INT_TYPE};
-        Integer[] argTy4ScriptMD5 = new Integer[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE};
-        Integer[] argTy4Commit = new Integer[]{RegHelper.STRING_TYPE, RegHelper.INT_TYPE};
+        int[] argTy4ScriptMD5 = new int[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE};
+        int[] argTy4Commit = new int[]{RegHelper.STRING_TYPE, RegHelper.INT_TYPE};
+
+        int[] argTy4Pub = new int[]{RegHelper.INT_TYPE};
 
         tmp.put(SELECT, argTy4Insert);
         tmp.put(INSERT, argTy4Insert);
@@ -45,11 +50,14 @@ public class SigExtractor {
         tmp.put(SCRIPT_SVN, argTy4ScriptSVN);
         tmp.put(SCRIPT_MD5, argTy4ScriptMD5);
         tmp.put(COMMIT, argTy4Commit);
+
+        tmp.put(APPROVE, argTy4Pub);
+        tmp.put(PUBLISH, argTy4Pub);
         return tmp;
     }
 
 
-    public static HashMap<String, Integer[]> extractMethoArgsMappingFromSigFile(File f) {
+    public static HashMap<String, int[]> extractMethoArgsMappingFromSigFile(File f) {
         //fake method at the moment, needs to be implemented.
         return TableCol;
     }
