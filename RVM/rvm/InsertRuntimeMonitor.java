@@ -22,7 +22,7 @@ final class InsertRawMonitor_Set extends com.runtimeverification.rvmonitor.java.
 		this.size = 0;
 		this.elements = new InsertRawMonitor[4];
 	}
-	final void event_insert(String user, String db, String p, String data, boolean[] result) {
+	final void event_insert(String user, String db, String p, String data) {
 		int numAlive = 0 ;
 		for(int i = 0; i < this.size; i++){
 			InsertRawMonitor monitor = this.elements[i];
@@ -30,7 +30,7 @@ final class InsertRawMonitor_Set extends com.runtimeverification.rvmonitor.java.
 				elements[numAlive] = monitor;
 				numAlive++;
 
-				monitor.event_insert(user, db, p, data, result);
+				monitor.event_insert(user, db, p, data);
 			}
 		}
 		for(int i = numAlive; i < this.size; i++){
@@ -38,63 +38,6 @@ final class InsertRawMonitor_Set extends com.runtimeverification.rvmonitor.java.
 		}
 		size = numAlive;
 	}
-}
-
-class InsertRawMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractSynchronizedMonitor implements Cloneable, com.runtimeverification.rvmonitor.java.rt.RVMObject {
-	protected Object clone() {
-		try {
-			InsertRawMonitor ret = (InsertRawMonitor) super.clone();
-			return ret;
-		}
-		catch (CloneNotSupportedException e) {
-			throw new InternalError(e.toString());
-		}
-	}
-
-	// String user;
-	// String db;
-
-	@Override
-	public final int getState() {
-		return -1;
-	}
-
-	final boolean event_insert(String user, String db, String p, String data, boolean[] result) {
-		RVM_lastevent = 0;
-		{
-			if(db.equals("db2") && !user.equals("script1"))
-			{
-				result[0] = true;
-			}
-		}
-		return true;
-	}
-
-	final void reset() {
-		RVM_lastevent = -1;
-	}
-
-	// RVMRef_user was suppressed to reduce memory overhead
-	// RVMRef_db was suppressed to reduce memory overhead
-
-	@Override
-	protected final void terminateInternal(int idnum) {
-		switch(idnum){
-			case 0:
-			break;
-			case 1:
-			break;
-		}
-		switch(RVM_lastevent) {
-			case -1:
-			return;
-			case 0:
-			//insert
-			return;
-		}
-		return;
-	}
-
 }
 
 public final class InsertRuntimeMonitor implements com.runtimeverification.rvmonitor.java.rt.RVMObject {
@@ -132,7 +75,7 @@ public final class InsertRuntimeMonitor implements com.runtimeverification.rvmon
 		RuntimeOption.enableFineGrainedLock(false) ;
 	}
 
-	public static final void insertEvent(String user, String db, String p, String data, boolean[] result) {
+	public static final void insertEvent(String user, String db, String p, String data) {
 		Insert_activated = true;
 		while (!Insert_RVMLock.tryLock()) {
 			Thread.yield();
@@ -176,7 +119,7 @@ public final class InsertRuntimeMonitor implements com.runtimeverification.rvmon
 			matchedLastMap.putNode(wr_db, created) ;
 		}
 		// D(X) main:8--9
-		matchedEntry.event_insert(user, db, p, data, result);
+		matchedEntry.event_insert(user, db, p, data);
 
 		if ((cachehit == false) ) {
 			Insert_user_db_Map_cachekey_db = db;

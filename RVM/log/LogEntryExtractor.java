@@ -2,6 +2,8 @@ package log;
 
 import formula.FormulaExtractor;
 import reg.RegHelper;
+import rvm.InsertRawMonitor;
+import rvm.InsertRuntimeMonitor;
 import sig.SigExtractor;
 import util.Utils;
 
@@ -97,7 +99,6 @@ public class LogEntryExtractor implements LogExtractor {
     private boolean[] unPrintedFields = new boolean[SigExtractor.maxNumOfParams];
 
     private ArrayList<Object[]> violationsInCurLogEntry = new ArrayList<>();
-    private boolean[] hasViolation = new boolean[1]; // this boolean array is used to gather the result from RVM.
 
     /**
      * Create an obj for log entry extractor.
@@ -591,7 +592,7 @@ public class LogEntryExtractor implements LogExtractor {
      * @throws IOException
      */
     private void readEvent() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Object[] tupleData = new Object[typesInTuple.length + 1];
+        Object[] tupleData = new Object[typesInTuple.length];
         int i = 0;
         for (; i < typesInTuple.length - 1; i++) {
             this.paramStartIndex = this.posInArr;
@@ -632,13 +633,11 @@ public class LogEntryExtractor implements LogExtractor {
             }
         }
 
-//        tupleData[typesInTuple.length] = TimeStamp;
-//        tupleData[typesInTuple.length + 1] = this.numOfLogEntries - 1;  //time point
-        this.hasViolation[0] = false;
-        tupleData[typesInTuple.length] = this.hasViolation; //use the boolean array to gather result from RVM
+
+        InsertRawMonitor.hasViolation = false;
         this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
 
-        if (this.hasViolation[0]) { // the result true indicates the detection of violation in the tuple
+        if (InsertRawMonitor.hasViolation) { // the result true indicates the detection of violation in the tuple
             this.violationsInCurLogEntry.add(tupleData);
         }
 
@@ -698,7 +697,7 @@ public class LogEntryExtractor implements LogExtractor {
             sb.append(" (");
             boolean isFirst = true;
 
-            for (int j = 0; j < data.length - 1; j++) {
+            for (int j = 0; j < data.length; j++) {
                 if (!unPrintedFields[j]) {
                     if (isFirst) {
                         isFirst = false;
