@@ -21,7 +21,7 @@ public class Utils {
 //    private Charset charset = StandardCharsets.ISO_8859_1;
     private Charset charset = StandardCharsets.US_ASCII;
     private BufferedWriter bufferedWriter;
-//    public static final String lineSeparator = System.getProperty("line.separator");
+    public static final String lineSeparator = System.getProperty("line.separator");
 
     private Utils() {
         this.bufferedWriter = init();

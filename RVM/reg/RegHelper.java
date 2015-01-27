@@ -48,9 +48,6 @@ public class RegHelper {
         System.out.println("Second line separator is `" + (int) lineSeparator.charAt(1) + "`");
         System.out.println("The \\n 's ascii code is " + ((int) '\n'));
         System.out.println("The \\r 's ascii code is " + ((int) '\r'));
-//        Integer[] arr=new Integer[0];
-//        System.out.println("arr's len is "+arr.length);
-
     }
 
     private HashMap<String, Pattern> init(HashMap<String, Integer[]> tableCol) {

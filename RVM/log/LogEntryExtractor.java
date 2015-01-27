@@ -53,6 +53,7 @@ public class LogEntryExtractor implements LogExtractor {
     static final byte exclamation = (byte) '!';
     static final byte dot = (byte) '.';
     static final byte minus = (byte) '-';
+
     private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
     private HashMap<String, Method> EventNameMethodMap = new HashMap<>();
     private long TimeStamp; //we can add the @ symbol when it is ready to be printed
@@ -262,7 +263,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-          this.refill("Unexpected end of file while removing the comments");
+            this.refill("Unexpected end of file while removing the comments");
         }
     }
 
@@ -296,7 +297,7 @@ public class LogEntryExtractor implements LogExtractor {
                 }
             }
 
-          this.refill("Unexpected end of file while parsing a time stamp");
+            this.refill("Unexpected end of file while parsing a time stamp");
         }
     }
 
@@ -537,13 +538,7 @@ public class LogEntryExtractor implements LogExtractor {
                     } else if (b == at) {
                         //handle all the violations found in the previous log entry!
                         if (this.violationsInCurLogEntry.size() > 0) {
-                            this.outputTS();
-                            for (int i = 0; i < this.violationsInCurLogEntry.size(); i++) {
-                                this.printEvent(this.violationsInCurLogEntry.get(i));
-                            }
-
-                            Utils.MyUtils.writeToOutputFileUsingBW("\n");
-                            this.violationsInCurLogEntry.clear();
+                            handleViolationsInLogEntry();
                         }
 
                         if (this.prevToken != EventArgs_TOKEN && this.prevToken != NULL_TOKEN) {
@@ -578,13 +573,7 @@ public class LogEntryExtractor implements LogExtractor {
 
         //handle the last entry's violations if there are any
         if (this.violationsInCurLogEntry.size() > 0) {
-            this.outputTS();
-            for (int i = 0; i < this.violationsInCurLogEntry.size(); i++) {
-                this.printEvent(this.violationsInCurLogEntry.get(i));
-            }
-
-            Utils.MyUtils.writeToOutputFileUsingBW("\n");
-            this.violationsInCurLogEntry.clear();
+            handleViolationsInLogEntry();
         }
 
         System.out.println("There are " +
@@ -664,7 +653,6 @@ public class LogEntryExtractor implements LogExtractor {
         }
 
 
-
 //        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
 //            //script_md5 (MY_Script,myMD5)
 //            if (tupleData[0].equals("MY_Script") && !tupleData[1].equals("ItsMD5"))
@@ -675,13 +663,13 @@ public class LogEntryExtractor implements LogExtractor {
 
     private void outputTS() throws IOException {
 
-            StringBuilder sb = new StringBuilder("@");
-            sb.append(this.TimeStamp);
-            sb.append(" (time-point ");
-            sb.append(this.numOfLogEntries - 1);
-            sb.append("):");
+        StringBuilder sb = new StringBuilder("@");
+        sb.append(this.TimeStamp);
+        sb.append(" (time-point ");
+        sb.append(this.numOfLogEntries - 1);
+        sb.append("):");
 
-            Utils.MyUtils.writeToOutputFileUsingBW(sb.toString());
+        Utils.MyUtils.writeToOutputFileUsingBW(sb.toString());
 
     }
 
@@ -692,8 +680,8 @@ public class LogEntryExtractor implements LogExtractor {
         boolean isFirst = true;
 
         for (int i = 0; i < data.length; i++) {
-            if (!unPrintedFields[i]){
-                if (isFirst){
+            if (!unPrintedFields[i]) {
+                if (isFirst) {
                     isFirst = false;
                     sb.append(data[i]);
                 } else {
@@ -705,6 +693,37 @@ public class LogEntryExtractor implements LogExtractor {
         sb.append(")");
 
         Utils.MyUtils.writeToOutputFileUsingBW(sb.toString());
+    }
+
+    private void handleViolationsInLogEntry() throws IOException {
+        StringBuilder sb = new StringBuilder("@");
+        sb.append(this.TimeStamp);
+        sb.append(" (time-point ");
+        sb.append(this.numOfLogEntries - 1);
+        sb.append("):");
+
+        for (int i = 0; i < this.violationsInCurLogEntry.size(); i++) {
+            Object[] data = this.violationsInCurLogEntry.get(i);
+            sb.append(" (");
+            boolean isFirst = true;
+
+            for (int j = 0; j < data.length; j++) {
+                if (!unPrintedFields[j]) {
+                    if (isFirst) {
+                        isFirst = false;
+                        sb.append(data[j]);
+                    } else {
+                        sb.append("," + data[j]);
+                    }
+                }
+            }
+
+            sb.append(")");
+        }
+        sb.append(Utils.lineSeparator);
+        Utils.MyUtils.writeToOutputFileUsingBW(sb.toString());
+
+        this.violationsInCurLogEntry.clear();
     }
 
 
