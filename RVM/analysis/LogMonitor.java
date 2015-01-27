@@ -35,7 +35,7 @@ public class LogMonitor {
         for (String eventName : TableCol.keySet()) {
             int[] types4CurTable = TableCol.get(eventName);
 
-            Class[] argTyList4CurMeth = new Class[types4CurTable.length + 2];
+            Class[] argTyList4CurMeth = new Class[types4CurTable.length];
             for (int i = 0; i < types4CurTable.length; i++) {
                 switch (types4CurTable[i]) {
                     case RegHelper.INT_TYPE:
@@ -58,14 +58,10 @@ public class LogMonitor {
                 }
             }
 
-            //append the long type at the end which is the type for the timestamp.
-            argTyList4CurMeth[types4CurTable.length] = long.class; //ts
-            argTyList4CurMeth[argTyList4CurMeth.length - 1] = long.class;  //time point
-
             if (FormulaExtractor.monitoredEventList.contains(eventName)) {
                 String methName = eventName + "Event";
-//                Method monitorMethod = this.monitorClass.getDeclaredMethod(methName, argTyList4CurMeth);
-//                this.EventNameMethodMap.put(eventName, monitorMethod);
+                Method monitorMethod = this.monitorClass.getDeclaredMethod(methName, argTyList4CurMeth);
+                this.EventNameMethodMap.put(eventName, monitorMethod);
             }
         }
     }

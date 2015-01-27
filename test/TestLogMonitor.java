@@ -13,7 +13,7 @@ import java.nio.file.Paths;
  */
 public class TestLogMonitor {
 
-    //      @Test
+//          @Test
     public void testMain1() throws Exception {
         String[] args = new String[]{"./test/insert-smallLog/insert.sig", "./test/insert-smallLog/insert.fl",
                 "./test/insert-smallLog/insert.log"};
@@ -51,14 +51,14 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-//    @Test
+    @Test
     public void test9MLog_singleViolation_HP() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly_BaseExecTime"};
         Main.main(args);
     }
 
-        @Test
+//        @Test
     public void test9MLog_Siebel_SingleRun() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
 
         String logPath_base = "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy";

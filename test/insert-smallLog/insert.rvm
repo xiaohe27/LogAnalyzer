@@ -1,26 +1,11 @@
 package rvm;
+Insert(String user,String db) {
+public static boolean hasViolation;
 
-  Insert(String user,String db,String p,String data) {
-  String user;
-  String db;
-  String p;
-  String data;
-  long time;
-
-
-
-  event insert (String user,String db,String p,String data, long time) {
-
-		if(db.equals("db2"))
+  event insert (String user,String db,String p,String data) {
+		if(db.equals("db2") && !user.equals("script1"))
 		{
-		if(user.equals("script1")) {}
-		else{
-		    System.out.println("@"+this.time+" User "+user+" insert to db2 the data: "+data);
-		    return;
+			hasViolation = true;
 		}
-		}
-
-		else{}
 	}
-
 }
