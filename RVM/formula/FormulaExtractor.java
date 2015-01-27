@@ -33,8 +33,8 @@ public class FormulaExtractor {
     private static List<String> init() {
         List<String> tmp = new ArrayList<>();
         //needs real impl. it is fake method here
-//        monitorName = "rvm.insertRuntimeMonitor";
-        monitorName = "rvm.PubRuntimeMonitor";
+        monitorName = "rvm.InsertRuntimeMonitor";
+//        monitorName = "rvm.PubRuntimeMonitor";
 
         tmp = new ArrayList<>();
 

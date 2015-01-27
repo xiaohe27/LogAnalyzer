@@ -1,5 +1,4 @@
 package rvm;
-import java.io.IOException;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.*;
 import java.util.*;
@@ -23,7 +22,7 @@ final class InsertRawMonitor_Set extends com.runtimeverification.rvmonitor.java.
 		this.size = 0;
 		this.elements = new InsertRawMonitor[4];
 	}
-	final void event_Insert(String user, String db, String p, String data) {
+	final void event_insert(String user, String db, String p, String data, boolean[] result) {
 		int numAlive = 0 ;
 		for(int i = 0; i < this.size; i++){
 			InsertRawMonitor monitor = this.elements[i];
@@ -31,7 +30,7 @@ final class InsertRawMonitor_Set extends com.runtimeverification.rvmonitor.java.
 				elements[numAlive] = monitor;
 				numAlive++;
 
-				monitor.event_Insert(user, db, p, data);
+				monitor.event_insert(user, db, p, data, result);
 			}
 		}
 		for(int i = numAlive; i < this.size; i++){
@@ -52,21 +51,20 @@ class InsertRawMonitor extends com.runtimeverification.rvmonitor.java.rt.tableba
 		}
 	}
 
-	String user;
-	String db;
+	// String user;
+	// String db;
 
 	@Override
 	public final int getState() {
 		return -1;
 	}
 
-	final boolean event_Insert(String user, String db, String p, String data) {
+	final boolean event_insert(String user, String db, String p, String data, boolean[] result) {
 		RVM_lastevent = 0;
 		{
-
 			if(db.equals("db2") && !user.equals("script1"))
 			{
-				throw new IOException();
+				result[0] = true;
 			}
 		}
 		return true;
@@ -91,7 +89,7 @@ class InsertRawMonitor extends com.runtimeverification.rvmonitor.java.rt.tableba
 			case -1:
 			return;
 			case 0:
-			//Insert
+			//insert
 			return;
 		}
 		return;
@@ -99,16 +97,16 @@ class InsertRawMonitor extends com.runtimeverification.rvmonitor.java.rt.tableba
 
 }
 
-public final class insertRuntimeMonitor implements com.runtimeverification.rvmonitor.java.rt.RVMObject {
-	private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager insertMapManager;
+public final class InsertRuntimeMonitor implements com.runtimeverification.rvmonitor.java.rt.RVMObject {
+	private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager InsertMapManager;
 	static {
-		insertMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
-		insertMapManager.start();
+		InsertMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
+		InsertMapManager.start();
 	}
 
 	// Declarations for the Lock
-	static final ReentrantLock insert_RVMLock = new ReentrantLock();
-	static final Condition insert_RVMLock_cond = insert_RVMLock.newCondition();
+	static final ReentrantLock Insert_RVMLock = new ReentrantLock();
+	static final Condition Insert_RVMLock_cond = Insert_RVMLock.newCondition();
 
 	private static boolean Insert_activated = false;
 
@@ -134,9 +132,9 @@ public final class insertRuntimeMonitor implements com.runtimeverification.rvmon
 		RuntimeOption.enableFineGrainedLock(false) ;
 	}
 
-	public static final void InsertEvent(String user, String db, String p, String data) {
+	public static final void insertEvent(String user, String db, String p, String data, boolean[] result) {
 		Insert_activated = true;
-		while (!insert_RVMLock.tryLock()) {
+		while (!Insert_RVMLock.tryLock()) {
 			Thread.yield();
 		}
 
@@ -178,7 +176,7 @@ public final class insertRuntimeMonitor implements com.runtimeverification.rvmon
 			matchedLastMap.putNode(wr_db, created) ;
 		}
 		// D(X) main:8--9
-		matchedEntry.event_Insert(user, db, p, data);
+		matchedEntry.event_insert(user, db, p, data, result);
 
 		if ((cachehit == false) ) {
 			Insert_user_db_Map_cachekey_db = db;
@@ -186,7 +184,7 @@ public final class insertRuntimeMonitor implements com.runtimeverification.rvmon
 			Insert_user_db_Map_cachevalue = matchedEntry;
 		}
 
-		insert_RVMLock.unlock();
+		Insert_RVMLock.unlock();
 	}
 
 }

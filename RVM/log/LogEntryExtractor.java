@@ -97,7 +97,7 @@ public class LogEntryExtractor implements LogExtractor {
     private boolean[] unPrintedFields = new boolean[SigExtractor.maxNumOfParams];
 
     private ArrayList<Object[]> violationsInCurLogEntry = new ArrayList<>();
-
+    private boolean[] hasViolation = new boolean[1]; // this boolean array is used to gather the result from RVM.
 
     /**
      * Create an obj for log entry extractor.
@@ -591,7 +591,7 @@ public class LogEntryExtractor implements LogExtractor {
      * @throws IOException
      */
     private void readEvent() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Object[] tupleData = new Object[typesInTuple.length];
+        Object[] tupleData = new Object[typesInTuple.length + 1];
         int i = 0;
         for (; i < typesInTuple.length - 1; i++) {
             this.paramStartIndex = this.posInArr;
@@ -634,8 +634,13 @@ public class LogEntryExtractor implements LogExtractor {
 
 //        tupleData[typesInTuple.length] = TimeStamp;
 //        tupleData[typesInTuple.length + 1] = this.numOfLogEntries - 1;  //time point
+        this.hasViolation[0] = false;
+        tupleData[typesInTuple.length] = this.hasViolation; //use the boolean array to gather result from RVM
+        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
 
-//        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
+        if (this.hasViolation[0]) { // the result true indicates the detection of violation in the tuple
+            this.violationsInCurLogEntry.add(tupleData);
+        }
 
 //        this.printEvent(tupleData);
 
@@ -644,13 +649,11 @@ public class LogEntryExtractor implements LogExtractor {
 //                this.printEvent(tupleData);
 //        }
 
-        if (EventName.equals(SigExtractor.INSERT)) {
-            if (tupleData[1].equals("db2") && !tupleData[0].equals("script1")) {
-
-                this.violationsInCurLogEntry.add(tupleData);
-
-            }
-        }
+//        if (EventName.equals(SigExtractor.INSERT)) {
+//            if (tupleData[1].equals("db2") && !tupleData[0].equals("script1")) {
+//                this.violationsInCurLogEntry.add(tupleData);
+//            }
+//        }
 
 
 //        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
@@ -695,7 +698,7 @@ public class LogEntryExtractor implements LogExtractor {
             sb.append(" (");
             boolean isFirst = true;
 
-            for (int j = 0; j < data.length; j++) {
+            for (int j = 0; j < data.length - 1; j++) {
                 if (!unPrintedFields[j]) {
                     if (isFirst) {
                         isFirst = false;

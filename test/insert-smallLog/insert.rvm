@@ -1,15 +1,12 @@
 package rvm;
-import java.io.IOException;
-
   Insert(String user,String db) {
-  String user;
-  String db;
+ // String user;
+ // String db;
 
-  event Insert (String user,String db,String p,String data) throws IOException {
-
+  event insert (String user,String db,String p,String data, boolean[] result) {
 		if(db.equals("db2") && !user.equals("script1"))
 		{
-			throw new IOException();
+			result[0] = true;
 		}
 	}
 }
