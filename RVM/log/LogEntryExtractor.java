@@ -14,6 +14,7 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -93,6 +94,9 @@ public class LogEntryExtractor implements LogExtractor {
     private FileChannel inChannel;
 
     private boolean[] unPrintedFields = new boolean[SigExtractor.maxNumOfParams];
+
+    private ArrayList<Object[]> violationsInCurLogEntry = new ArrayList<>();
+
 
     /**
      * Create an obj for log entry extractor.
@@ -531,6 +535,17 @@ public class LogEntryExtractor implements LogExtractor {
                         }
 
                     } else if (b == at) {
+                        //handle all the violations found in the previous log entry!
+                        if (this.violationsInCurLogEntry.size() > 0) {
+                            this.outputTS();
+                            for (int i = 0; i < this.violationsInCurLogEntry.size(); i++) {
+                                this.printEvent(this.violationsInCurLogEntry.get(i));
+                            }
+
+                            Utils.MyUtils.writeToOutputFileUsingBW("\n");
+                            this.violationsInCurLogEntry.clear();
+                        }
+
                         if (this.prevToken != EventArgs_TOKEN && this.prevToken != NULL_TOKEN) {
                             throw new IOException("Time stamp should follow event args or null (if it is the first token in the file)");
                         }
@@ -561,6 +576,17 @@ public class LogEntryExtractor implements LogExtractor {
 
         aFile.close();
 
+        //handle the last entry's violations if there are any
+        if (this.violationsInCurLogEntry.size() > 0) {
+            this.outputTS();
+            for (int i = 0; i < this.violationsInCurLogEntry.size(); i++) {
+                this.printEvent(this.violationsInCurLogEntry.get(i));
+            }
+
+            Utils.MyUtils.writeToOutputFileUsingBW("\n");
+            this.violationsInCurLogEntry.clear();
+        }
+
         System.out.println("There are " +
                 numOfLogEntries + " log entries in the log file!!!");
 
@@ -576,7 +602,7 @@ public class LogEntryExtractor implements LogExtractor {
      * @throws IOException
      */
     private void readEvent() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-        Object[] tupleData = new Object[typesInTuple.length + 2];
+        Object[] tupleData = new Object[typesInTuple.length];
         int i = 0;
         for (; i < typesInTuple.length - 1; i++) {
             this.paramStartIndex = this.posInArr;
@@ -617,8 +643,8 @@ public class LogEntryExtractor implements LogExtractor {
             }
         }
 
-        tupleData[typesInTuple.length] = TimeStamp;
-        tupleData[typesInTuple.length + 1] = this.numOfLogEntries - 1;  //time point
+//        tupleData[typesInTuple.length] = TimeStamp;
+//        tupleData[typesInTuple.length + 1] = this.numOfLogEntries - 1;  //time point
 
 //        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
 
@@ -630,8 +656,11 @@ public class LogEntryExtractor implements LogExtractor {
 //        }
 
         if (EventName.equals(SigExtractor.INSERT)) {
-            if (tupleData[1].equals("db2") && !tupleData[0].equals("script1"))
-                this.printEvent(tupleData);
+            if (tupleData[1].equals("db2") && !tupleData[0].equals("script1")) {
+
+                this.violationsInCurLogEntry.add(tupleData);
+
+            }
         }
 
 
@@ -643,24 +672,38 @@ public class LogEntryExtractor implements LogExtractor {
 //        }
     }
 
+
+    private void outputTS() throws IOException {
+
+            StringBuilder sb = new StringBuilder("@");
+            sb.append(this.TimeStamp);
+            sb.append(" (time-point ");
+            sb.append(this.numOfLogEntries - 1);
+            sb.append("):");
+
+            Utils.MyUtils.writeToOutputFileUsingBW(sb.toString());
+
+    }
+
     public void printEvent(Object[] data) throws IOException {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("\n@" + TimeStamp + " (tp=" + data[data.length - 1] + ") " + this.EventName + "(");
+        sb.append(" (");
+        boolean isFirst = true;
 
-        for (int i = 0; i < data.length - 3; i++) {
-            if (!this.unPrintedFields[i])
-                sb.append(data[i] + ",");
+        for (int i = 0; i < data.length; i++) {
+            if (!unPrintedFields[i]){
+                if (isFirst){
+                    isFirst = false;
+                    sb.append(data[i]);
+                } else {
+                    sb.append("," + data[i]);
+                }
+            }
         }
 
-        if (data.length > 2 && !this.unPrintedFields[data.length - 3]) {
-            sb.append(data[data.length - 3]);
-        }
+        sb.append(")");
 
-        sb.append(")\n");
-
-//        System.out.println(sb.toString());
-//        Utils.writeToOutputFile(sb.toString());
         Utils.MyUtils.writeToOutputFileUsingBW(sb.toString());
     }
 
