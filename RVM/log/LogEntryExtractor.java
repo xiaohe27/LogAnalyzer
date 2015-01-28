@@ -2,8 +2,6 @@ package log;
 
 import formula.FormulaExtractor;
 import reg.RegHelper;
-import rvm.InsertRawMonitor;
-import rvm.InsertRuntimeMonitor;
 import sig.SigExtractor;
 import util.Utils;
 
@@ -340,7 +338,7 @@ public class LogEntryExtractor implements LogExtractor {
      * @return
      * @throws IOException
      */
-    private int getIntFromBuf(byte delim) throws IOException {
+    private Integer getIntFromBuf(byte delim) throws IOException {
         int len = 0;
         String output;
         if (this.byteArr[this.posInArr] == minus) {
@@ -538,9 +536,9 @@ public class LogEntryExtractor implements LogExtractor {
 
                     } else if (b == at) {
                         //handle all the violations found in the previous log entry!
-                        if (this.violationsInCurLogEntry.size() > 0) {
-                            handleViolationsInLogEntry();
-                        }
+//                        if (this.violationsInCurLogEntry.size() > 0) {
+//                            handleViolationsInLogEntry();
+//                        }
 
                         if (this.prevToken != EventArgs_TOKEN && this.prevToken != NULL_TOKEN) {
                             throw new IOException("Time stamp should follow event args or null (if it is the first token in the file)");
@@ -573,9 +571,9 @@ public class LogEntryExtractor implements LogExtractor {
         aFile.close();
 
         //handle the last entry's violations if there are any
-        if (this.violationsInCurLogEntry.size() > 0) {
-            handleViolationsInLogEntry();
-        }
+//        if (this.violationsInCurLogEntry.size() > 0) {
+//            handleViolationsInLogEntry();
+//        }
 
         System.out.println("There are " +
                 numOfLogEntries + " log entries in the log file!!!");
@@ -634,12 +632,12 @@ public class LogEntryExtractor implements LogExtractor {
         }
 
 
-        InsertRawMonitor.hasViolation = false;
+//        InsertRawMonitor.hasViolation = false;
         this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
 
-        if (InsertRawMonitor.hasViolation) { // the result true indicates the detection of violation in the tuple
-            this.violationsInCurLogEntry.add(tupleData);
-        }
+//        if (InsertRawMonitor.hasViolation) { // the result true indicates the detection of violation in the tuple
+//            this.violationsInCurLogEntry.add(tupleData);
+//        }
 
 //        this.printEvent(tupleData);
 

@@ -39,7 +39,8 @@ public class SigExtractor {
         int[] argTy4ScriptMD5 = new int[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE};
         int[] argTy4Commit = new int[]{RegHelper.STRING_TYPE, RegHelper.INT_TYPE};
 
-        int[] argTy4Pub = new int[]{RegHelper.INT_TYPE};
+//        int[] argTy4Pub = new int[]{RegHelper.INT_TYPE};
+        int[] argTy4Pub = new int[]{RegHelper.STRING_TYPE};
 
         tmp.put(SELECT, argTy4Insert);
         tmp.put(INSERT, argTy4Insert);
