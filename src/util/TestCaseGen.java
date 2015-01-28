@@ -15,7 +15,7 @@ public class TestCaseGen {
             sb.append( SigExtractor.PUBLISH+"("+i+")\n");
         }
 
-        Utils.writeToFile(sb.toString(), "/home/xiaohe/workspace/DATA/FakeData4TestingPerf/"+nameOfGeneratedDataFile);
+        Utils.writeToFile(sb.toString(), "A:\\DATA\\Gen\\"+nameOfGeneratedDataFile);
     }
 
     public static void main(String[] args) {

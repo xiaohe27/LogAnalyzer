@@ -1,12 +1,20 @@
 package rvm;
-import com.runtimeverification.rvmonitor.java.rt.RuntimeOption;
-import com.runtimeverification.rvmonitor.java.rt.ref.CachedWeakReference;
-import com.runtimeverification.rvmonitor.java.rt.table.MapOfMonitor;
+import java.util.concurrent.*;
+import java.util.concurrent.locks.*;
+import java.util.*;
+import java.lang.ref.*;
+import com.runtimeverification.rvmonitor.java.rt.*;
+import com.runtimeverification.rvmonitor.java.rt.ref.*;
+import com.runtimeverification.rvmonitor.java.rt.table.*;
+import com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractIndexingTree;
+import com.runtimeverification.rvmonitor.java.rt.tablebase.SetEventDelegator;
+import com.runtimeverification.rvmonitor.java.rt.tablebase.TableAdopter.Tuple2;
+import com.runtimeverification.rvmonitor.java.rt.tablebase.TableAdopter.Tuple3;
+import com.runtimeverification.rvmonitor.java.rt.tablebase.IDisableHolder;
+import com.runtimeverification.rvmonitor.java.rt.tablebase.IMonitor;
+import com.runtimeverification.rvmonitor.java.rt.tablebase.DisableHolder;
 import com.runtimeverification.rvmonitor.java.rt.tablebase.TerminatedMonitorCleaner;
-
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.ReentrantLock;
 
 final class PubMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tablebase.AbstractMonitorSet<PubMonitor> {
 
@@ -14,7 +22,7 @@ final class PubMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tab
 		this.size = 0;
 		this.elements = new PubMonitor[4];
 	}
-	final void event_publish(String report) {
+	final void event_publish(Integer report) {
 		int numAlive = 0 ;
 		for(int i = 0; i < this.size; i++){
 			PubMonitor monitor = this.elements[i];
@@ -34,7 +42,7 @@ final class PubMonitor_Set extends com.runtimeverification.rvmonitor.java.rt.tab
 		}
 		size = numAlive;
 	}
-	final void event_approve(String report) {
+	final void event_approve(Integer report) {
 		int numAlive = 0 ;
 		for(int i = 0; i < this.size; i++){
 			PubMonitor monitor = this.elements[i];
@@ -109,7 +117,7 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
 		return nextstate;
 	}
 
-	final boolean Prop_1_event_publish(String report) {
+	final boolean Prop_1_event_publish(Integer report) {
 		{
 
 		}
@@ -120,7 +128,7 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
 		return true;
 	}
 
-	final boolean Prop_1_event_approve(String report) {
+	final boolean Prop_1_event_approve(Integer report) {
 		{
 
 		}
@@ -144,7 +152,7 @@ class PubMonitor extends com.runtimeverification.rvmonitor.java.rt.tablebase.Abs
 
 	// RVMRef_report was suppressed to reduce memory overhead
 
-	//alive_parameters_0 = [String report]
+	//alive_parameters_0 = [Integer report]
 	boolean alive_parameters_0 = true;
 
 	@Override
@@ -225,7 +233,7 @@ public final class PubRuntimeMonitor implements com.runtimeverification.rvmonito
 		RuntimeOption.enableFineGrainedLock(false) ;
 	}
 
-	public static final void publishEvent(String report) {
+	public static final void publishEvent(Integer report) {
 		Pub_activated = true;
 		while (!Pub_RVMLock.tryLock()) {
 			Thread.yield();
@@ -274,7 +282,7 @@ public final class PubRuntimeMonitor implements com.runtimeverification.rvmonito
 		Pub_RVMLock.unlock();
 	}
 
-	public static final void approveEvent(String report) {
+	public static final void approveEvent(Integer report) {
 		Pub_activated = true;
 		while (!Pub_RVMLock.tryLock()) {
 			Thread.yield();

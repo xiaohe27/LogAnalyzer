@@ -16,8 +16,8 @@ public class TestMonitor {
             System.out.println("hash2 is "+test2.hashCode());
 
 
-            PubRuntimeMonitor.approveEvent(test1);
-            PubRuntimeMonitor.publishEvent(test2);
+//            PubRuntimeMonitor.approveEvent(test1);
+//            PubRuntimeMonitor.publishEvent(test2);
         }
 
 

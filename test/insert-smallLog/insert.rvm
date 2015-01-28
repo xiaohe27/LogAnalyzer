@@ -1,11 +1,8 @@
 package rvm;
 Insert(String user,String db) {
-public static boolean hasViolation;
+public static int num;
 
   event insert (String user,String db,String p,String data) {
-		if(db.equals("db2") && !user.equals("script1"))
-		{
-			hasViolation = true;
-		}
+		num++;
 	}
 }

@@ -1,12 +1,12 @@
 package rvm;
 
-Pub(String report) {
+Pub(Integer report) {
 
-  event publish (String report) {
+  event publish (Integer report) {
 		
 	} 
 
-  event approve (String report) {
+  event approve (Integer report) {
 
 	}
 
