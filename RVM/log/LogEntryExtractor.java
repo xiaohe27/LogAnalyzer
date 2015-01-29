@@ -75,8 +75,6 @@ public class LogEntryExtractor implements LogExtractor {
 //    private FileChannel inChannel;
     private byte[] byteArr;
     private MappedByteBuffer mbb;
-    private long fileSize;
-    private long posInFile; //pos in the file
     private int posInArr;
     private byte[] oldByteArr;
     //if the ending index is less than the starting one, then the starting index comes from the old byte array
@@ -435,17 +433,16 @@ public class LogEntryExtractor implements LogExtractor {
     }
 
     public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        this.posInFile = 0;   //pos in file is the absolute pos in file where the current byte array starts
 
         RandomAccessFile aFile = new RandomAccessFile
                 (this.logFilePath, "r");
 
         this.inChannel = aFile.getChannel();
-        this.fileSize = inChannel.size();
+        long fileSize = inChannel.size();
 
 //        System.out.println("There are totally "+this.fileSize+" bytes in the file");
-        this.numOfReads = this.fileSize / OneReadSize;
-        this.lastReadSize = this.fileSize % OneReadSize;
+        this.numOfReads = fileSize / OneReadSize;
+        this.lastReadSize = fileSize % OneReadSize;
 
         while (this.curNumOfReads <= this.numOfReads) {
             this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
@@ -457,26 +454,15 @@ public class LogEntryExtractor implements LogExtractor {
 //        System.out.println("Again, Log is loaded? "+this.mbb.isLoaded());
 
             this.mbb.position(0);
-            while (this.posInFile + this.posInArr < this.fileSize) {
+            while (this.mbb.hasRemaining()) {
                 try {
                     this.mbb.get(this.byteArr);
                 } catch (BufferUnderflowException e) {
                     int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
+
                         this.mbb.get(this.byteArr, 0, remaining);
                         this.BufSize = remaining;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) {
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-                            continue;
-                        } else {
-                            throw new IOException("Unexpected end of file while parsing, cur pos in file is " +
-                                    this.posInFile + ", and the file size is " + this.fileSize);
-                        }
-                    }
+
                 }
 
 
@@ -562,8 +548,6 @@ public class LogEntryExtractor implements LogExtractor {
                 byte[] tmp = this.oldByteArr;
                 this.oldByteArr = this.byteArr;
                 this.byteArr = tmp;
-
-                this.posInFile += this.BufSize;
 
             }
         }
@@ -745,7 +729,6 @@ public class LogEntryExtractor implements LogExtractor {
         this.oldByteArr = this.byteArr;
         this.byteArr = tmp;
 
-        this.posInFile += this.BufSize;
         this.posInArr = 0;
 
         while (true) {
