@@ -619,7 +619,23 @@ public class LogEntryExtractor implements LogExtractor {
 
 
 //        InsertRawMonitor.hasViolation = false;
-        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
+
+//        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
+//
+//        switch (this.EventName) {
+//            case SigExtractor.APPROVE :
+//                PubRuntimeMonitor.approveEvent((Integer) tupleData[0]);
+//                break;
+//
+//            case SigExtractor.PUBLISH :
+//                PubRuntimeMonitor.publishEvent((Integer) tupleData[0]);
+//                break;
+//        }
+
+        switch (this.EventName) {
+            case SigExtractor.INSERT :
+                
+        }
 
 //        if (InsertRawMonitor.hasViolation) { // the result true indicates the detection of violation in the tuple
 //            this.violationsInCurLogEntry.add(tupleData);
