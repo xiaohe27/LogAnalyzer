@@ -581,7 +581,6 @@ public class LogEntryExtractor implements LogExtractor {
         Utils.MyUtils.flushOutput();
     }
 
-
     /**
      * We may decide whether to invoke an event method or not;
      * Only parse the event arg if we know we will invoke the method;

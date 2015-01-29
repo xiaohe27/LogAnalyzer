@@ -209,18 +209,16 @@ public final class PubRuntimeMonitor implements com.runtimeverification.rvmonito
 	// Declarations for the Lock
 	static final ReentrantLock Pub_RVMLock = new ReentrantLock();
 	static final Condition Pub_RVMLock_cond = Pub_RVMLock.newCondition();
-
+	static final HashMap<String,PubMonitor> pubMap = new HashMap<>();
 	private static boolean Pub_activated = false;
 
 	// Declarations for Indexing Trees
 	private static Object Pub_report_Map_cachekey_report;
 	private static PubMonitor Pub_report_Map_cachevalue;
-	private static final MapOfMonitor<PubMonitor> Pub_report_Map = new MapOfMonitor<PubMonitor>(0) ;
 
 	public static int cleanUp() {
 		int collected = 0;
 		// indexing trees
-		collected += Pub_report_Map.cleanUpUnnecessaryMappings();
 		return collected;
 	}
 
@@ -239,42 +237,42 @@ public final class PubRuntimeMonitor implements com.runtimeverification.rvmonito
 			Thread.yield();
 		}
 
-		CachedWeakReference wr_report = null;
-		MapOfMonitor<PubMonitor> matchedLastMap = null;
 		PubMonitor matchedEntry = null;
 		boolean cachehit = false;
-		if ((report == Pub_report_Map_cachekey_report) ) {
+		if ((report.equals(Pub_report_Map_cachekey_report)) ) {
+//			System.out.println("pub report "+report+" hits the cache!");
 			matchedEntry = Pub_report_Map_cachevalue;
 			cachehit = true;
 		}
 		else {
-			wr_report = new CachedWeakReference(report) ;
+//			System.out.println("pub report "+report+" does NOT hit the cache!");
+
+
 			{
 				// FindOrCreateEntry
-				MapOfMonitor<PubMonitor> itmdMap = Pub_report_Map;
-				matchedLastMap = itmdMap;
-				PubMonitor node_report = Pub_report_Map.getNodeEquivalent(wr_report) ;
+				PubMonitor node_report = pubMap.get(report.toString()) ;
 				matchedEntry = node_report;
 			}
 		}
 		// D(X) main:1
 		if ((matchedEntry == null) ) {
-			if ((wr_report == null) ) {
-				wr_report = new CachedWeakReference(report) ;
-			}
+//			System.out.println("pub matched entry is null");
+
 			// D(X) main:4
 			PubMonitor created = new PubMonitor() ;
 			matchedEntry = created;
-			matchedLastMap.putNode(wr_report, created) ;
+			pubMap.put(report.toString(), created) ;
 		}
 		// D(X) main:8--9
 		final PubMonitor matchedEntryfinalMonitor = matchedEntry;
 		matchedEntry.Prop_1_event_publish(report);
 		if(matchedEntryfinalMonitor.Prop_1_Category_violation) {
+//			System.out.println("pub Find pub violation on report "+report);
 			matchedEntryfinalMonitor.Prop_1_handler_violation();
 		}
 
 		if ((cachehit == false) ) {
+//			System.out.println("pub init the cache");
 			Pub_report_Map_cachekey_report = report;
 			Pub_report_Map_cachevalue = matchedEntry;
 		}
@@ -288,42 +286,43 @@ public final class PubRuntimeMonitor implements com.runtimeverification.rvmonito
 			Thread.yield();
 		}
 
-		CachedWeakReference wr_report = null;
-		MapOfMonitor<PubMonitor> matchedLastMap = null;
 		PubMonitor matchedEntry = null;
 		boolean cachehit = false;
-		if ((report == Pub_report_Map_cachekey_report) ) {
+		if ((report.equals(Pub_report_Map_cachekey_report) ) ) {
+//			System.out.println("approve report "+report+" hits the cache!");
+
 			matchedEntry = Pub_report_Map_cachevalue;
 			cachehit = true;
 		}
 		else {
-			wr_report = new CachedWeakReference(report) ;
+//			System.out.println("approve report "+report+" does NOT hit the cache");
+
 			{
 				// FindOrCreateEntry
-				MapOfMonitor<PubMonitor> itmdMap = Pub_report_Map;
-				matchedLastMap = itmdMap;
-				PubMonitor node_report = Pub_report_Map.getNodeEquivalent(wr_report) ;
+
+				PubMonitor node_report = pubMap.get(report.toString()) ;
 				matchedEntry = node_report;
 			}
 		}
 		// D(X) main:1
 		if ((matchedEntry == null) ) {
-			if ((wr_report == null) ) {
-				wr_report = new CachedWeakReference(report) ;
-			}
+//			System.out.println("approve matched entry is NULL for report " + report);
+
 			// D(X) main:4
 			PubMonitor created = new PubMonitor() ;
 			matchedEntry = created;
-			matchedLastMap.putNode(wr_report, created) ;
+			pubMap.put(report.toString(), created) ;
 		}
 		// D(X) main:8--9
 		final PubMonitor matchedEntryfinalMonitor = matchedEntry;
 		matchedEntry.Prop_1_event_approve(report);
 		if(matchedEntryfinalMonitor.Prop_1_Category_violation) {
+//			System.out.println("approve report "+report+" finds violation");
 			matchedEntryfinalMonitor.Prop_1_handler_violation();
 		}
 
 		if ((cachehit == false) ) {
+//			System.out.println("approve report "+report+" init cache");
 			Pub_report_Map_cachekey_report = report;
 			Pub_report_Map_cachevalue = matchedEntry;
 		}
