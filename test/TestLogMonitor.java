@@ -61,7 +61,9 @@ public class TestLogMonitor {
 //        @Test
     public void test9MLog_Siebel_SingleRun() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
 
-        String logPath_base = "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy";
+//        String logPath_base = "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy";
+            String logPath_base = "./test/pub-approve/Pub.log";
+//            String logPath_base = "/home/xiaohe/workspace/DATA/FakeData4TestingPerf/Pub_fake.log";
 //        Common.testLog_multiTimes(logPath_base, 5, true); //eager eval
 
 //        Common.testLog_multiTimes(logPath_base, 1, false); //lazy eval
