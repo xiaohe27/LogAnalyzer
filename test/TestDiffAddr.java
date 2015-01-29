@@ -14,10 +14,15 @@ import java.lang.reflect.InvocationTargetException;
  * Created by hx312 on 27/01/2015.
  */
 public class TestDiffAddr {
+    private String logPath_HP = "A:\\DATA\\Gen\\Pub_fake.log";
+    private String logPath_Siebel = "/home/xiaohe/workspace/DATA/FakeData4TestingPerf/Pub_fake.log";
+
     @Test
     public void testBigPub() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
-                "A:\\DATA\\Gen\\Pub_fake.log"};
+//                logPath_HP
+                logPath_Siebel
+        };
         Main.main(args);
     }
 

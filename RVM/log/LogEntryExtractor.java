@@ -535,6 +535,7 @@ public class LogEntryExtractor implements LogExtractor {
                         }
 
                     } else if (b == at) {
+
                         //handle all the violations found in the previous log entry!
 //                        if (this.violationsInCurLogEntry.size() > 0) {
 //                            handleViolationsInLogEntry();
@@ -557,11 +558,13 @@ public class LogEntryExtractor implements LogExtractor {
                     }
                 }
 
+                this.posInArr = 0;
                 byte[] tmp = this.oldByteArr;
                 this.oldByteArr = this.byteArr;
                 this.byteArr = tmp;
 
                 this.posInFile += this.BufSize;
+
             }
         }
 
