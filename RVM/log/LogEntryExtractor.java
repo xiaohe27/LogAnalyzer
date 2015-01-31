@@ -2,7 +2,6 @@ package log;
 
 import formula.FormulaExtractor;
 import reg.RegHelper;
-import rvm.InsertRawMonitor;
 import sig.SigExtractor;
 import util.Utils;
 
@@ -337,28 +336,74 @@ public class LogEntryExtractor implements LogExtractor {
      * @return
      * @throws IOException
      */
-    private Integer getIntFromBuf(byte delim) throws IOException {
-        int len = 0;
-        String output;
+    private int getIntFromBuf(byte delim) throws IOException {
+        int result = 0;
+        boolean isNeg = false;
+
         if (this.byteArr[this.posInArr] == minus) {
             this.posInArr++;
-            len++;
+            isNeg = true;
         }
 
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
                 if (b > 47 && b < 58) {
-                    len++;
+                    result*=10;
+
+                    switch (b) {
+                        case 48 : //0
+                            break;
+
+                        case 49 : //1
+                            result+=1;
+                            break;
+
+                        case 50 : //2
+                            result+=2;
+                            break;
+
+                        case 51 : //3
+                            result+=3;
+                            break;
+
+                        case 52 : //4
+                            result+=4;
+                            break;
+
+                        case 53 : //5
+                            result+=5;
+                            break;
+
+                        case 54 : //6
+                            result+=6;
+                            break;
+
+                        case 55 : //7
+                            result+=7;
+                            break;
+
+                        case 56 : //8
+                            result+=8;
+                            break;
+
+                        case 57 : //9
+                            result+=9;
+                            break;
+
+
+                    }
                 } else {
-                    output = this.getStringFromBytes(this.paramStartIndex, len);
+                    if (isNeg) {
+                        result = - result;
+                    }
 
                     if (b == delim)
-                        return Integer.parseInt(output);
+                        return result;
 
                     this.rmWhiteSpace();
                     if (this.byteArr[this.posInArr++] == delim) {
-                        return Integer.parseInt(output);
+                        return result;
                     } else {
                         throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr - 1]);
                     }
@@ -367,7 +412,6 @@ public class LogEntryExtractor implements LogExtractor {
 
             refill("Unexpected end of file while parsing an integer");
         }
-
 
     }
 
@@ -633,13 +677,13 @@ public class LogEntryExtractor implements LogExtractor {
 //                break;
 //        }
 
-        InsertRawMonitor.hasViolation = false;
+//        InsertRawMonitor.hasViolation = false;
         this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
 //        InsertRuntimeMonitor.insertEvent((String) tupleData[0], (String) tupleData[1], (String) tupleData[2], (String) tupleData[3]);
 
-        if (InsertRawMonitor.hasViolation) { // the result true indicates the detection of violation in the tuple
-            this.violationsInCurLogEntry.add(tupleData);
-        }
+//        if (InsertRawMonitor.hasViolation) { // the result true indicates the detection of violation in the tuple
+//            this.violationsInCurLogEntry.add(tupleData);
+//        }
 
 //        this.printEvent(tupleData);
 
