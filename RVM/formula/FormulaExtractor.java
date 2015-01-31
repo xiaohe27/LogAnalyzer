@@ -20,6 +20,7 @@ public class FormulaExtractor {
         //analyze the formula file and set the fields accordingly.
 
     }
+
     ;
 
     private static HashMap<String, boolean[]> init2() {

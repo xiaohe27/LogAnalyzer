@@ -26,7 +26,7 @@ public class TestDiffAddr {
         Main.main(args);
     }
 
-//    @Test
+    //    @Test
     public void testSmallPub() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "./test/pub-approve/Pub.log"};

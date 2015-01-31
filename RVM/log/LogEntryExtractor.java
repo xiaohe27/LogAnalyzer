@@ -461,8 +461,8 @@ public class LogEntryExtractor implements LogExtractor {
                 } catch (BufferUnderflowException e) {
                     int remaining = this.mbb.remaining();
 
-                        this.mbb.get(this.byteArr, 0, remaining);
-                        this.BufSize = remaining;
+                    this.mbb.get(this.byteArr, 0, remaining);
+                    this.BufSize = remaining;
 
                 }
 
