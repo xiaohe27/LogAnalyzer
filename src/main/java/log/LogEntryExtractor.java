@@ -349,53 +349,53 @@ public class LogEntryExtractor implements LogExtractor {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
                 if (b > 47 && b < 58) {
-                    result*=10;
+                    result *= 10;
 
                     switch (b) {
-                        case 48 : //0
+                        case 48: //0
                             break;
 
-                        case 49 : //1
-                            result+=1;
+                        case 49: //1
+                            result += 1;
                             break;
 
-                        case 50 : //2
-                            result+=2;
+                        case 50: //2
+                            result += 2;
                             break;
 
-                        case 51 : //3
-                            result+=3;
+                        case 51: //3
+                            result += 3;
                             break;
 
-                        case 52 : //4
-                            result+=4;
+                        case 52: //4
+                            result += 4;
                             break;
 
-                        case 53 : //5
-                            result+=5;
+                        case 53: //5
+                            result += 5;
                             break;
 
-                        case 54 : //6
-                            result+=6;
+                        case 54: //6
+                            result += 6;
                             break;
 
-                        case 55 : //7
-                            result+=7;
+                        case 55: //7
+                            result += 7;
                             break;
 
-                        case 56 : //8
-                            result+=8;
+                        case 56: //8
+                            result += 8;
                             break;
 
-                        case 57 : //9
-                            result+=9;
+                        case 57: //9
+                            result += 9;
                             break;
 
 
                     }
                 } else {
                     if (isNeg) {
-                        result = - result;
+                        result = -result;
                     }
 
                     if (b == delim)

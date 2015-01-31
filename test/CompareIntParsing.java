@@ -2,6 +2,14 @@
  * Created by xiaohe on 1/31/15.
  */
 public class CompareIntParsing {
+    public static void main(String[] args) {
+        CompareIntParsing cip = new CompareIntParsing();
+        String bigNum = "201399929";
+        System.out.println(cip.parseIntByDigits(bigNum.getBytes()));
+
+        System.out.println(cip.parseIntByStdLib(bigNum.getBytes()));
+    }
+
     public int parseIntByDigits(byte[] number) {
         int result = 0;
 
@@ -61,14 +69,5 @@ public class CompareIntParsing {
 
     public int parseIntByStdLib(byte[] number) {
         return Integer.parseInt(new String(number));
-    }
-
-
-    public static void main(String[] args) {
-        CompareIntParsing cip=new CompareIntParsing();
-        String bigNum = "201399929";
-        System.out.println(cip.parseIntByDigits(bigNum.getBytes()));
-
-        System.out.println(cip.parseIntByStdLib(bigNum.getBytes()));
     }
 }

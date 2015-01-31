@@ -205,10 +205,12 @@ public final class PubRuntimeMonitor implements com.runtimeverification.rvmonito
     static final Condition Pub_RVMLock_cond = Pub_RVMLock.newCondition();
     static final HashMap<String, PubMonitor> pubMap = new HashMap<>();
     private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager PubMapManager;
+
     static {
         PubMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
         PubMapManager.start();
     }
+
     private static boolean Pub_activated = false;
 
     // Declarations for Indexing Trees

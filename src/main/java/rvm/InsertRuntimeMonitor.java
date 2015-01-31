@@ -40,10 +40,12 @@ public final class InsertRuntimeMonitor implements com.runtimeverification.rvmon
     static final Condition Insert_RVMLock_cond = Insert_RVMLock.newCondition();
     private static final MapOfMap<MapOfMonitor<InsertRawMonitor>> Insert_user_db_Map = new MapOfMap<MapOfMonitor<InsertRawMonitor>>(0);
     private static com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager InsertMapManager;
+
     static {
         InsertMapManager = new com.runtimeverification.rvmonitor.java.rt.map.RVMMapManager();
         InsertMapManager.start();
     }
+
     private static boolean Insert_activated = false;
     // Declarations for Indexing Trees
     private static Object Insert_user_db_Map_cachekey_db;

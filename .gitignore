@@ -8,3 +8,4 @@ out/*
 production/*
 test-out/*
 *.bak
+target/*
