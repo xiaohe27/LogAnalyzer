@@ -17,11 +17,11 @@ import static java.nio.file.Files.newBufferedWriter;
  * Created by xiaohe on 9/17/14.
  */
 public class Utils {
+    public static final String lineSeparator = System.getProperty("line.separator");
     public static Utils MyUtils = new Utils();
-//    private Charset charset = StandardCharsets.ISO_8859_1;
+    //    private Charset charset = StandardCharsets.ISO_8859_1;
     private Charset charset = StandardCharsets.US_ASCII;
     private BufferedWriter bufferedWriter;
-    public static final String lineSeparator = System.getProperty("line.separator");
 
     private Utils() {
         this.bufferedWriter = init();

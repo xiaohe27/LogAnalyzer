@@ -75,8 +75,6 @@ public class LogEntryExtractor implements LogExtractor {
 //    private FileChannel inChannel;
     private byte[] byteArr;
     private MappedByteBuffer mbb;
-    private long fileSize;
-    private long posInFile; //pos in the file
     private int posInArr;
     private byte[] oldByteArr;
     //if the ending index is less than the starting one, then the starting index comes from the old byte array
@@ -338,28 +336,74 @@ public class LogEntryExtractor implements LogExtractor {
      * @return
      * @throws IOException
      */
-    private Integer getIntFromBuf(byte delim) throws IOException {
-        int len = 0;
-        String output;
+    private int getIntFromBuf(byte delim) throws IOException {
+        int result = 0;
+        boolean isNeg = false;
+
         if (this.byteArr[this.posInArr] == minus) {
             this.posInArr++;
-            len++;
+            isNeg = true;
         }
 
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
                 if (b > 47 && b < 58) {
-                    len++;
+                    result *= 10;
+
+                    switch (b) {
+                        case 48: //0
+                            break;
+
+                        case 49: //1
+                            result += 1;
+                            break;
+
+                        case 50: //2
+                            result += 2;
+                            break;
+
+                        case 51: //3
+                            result += 3;
+                            break;
+
+                        case 52: //4
+                            result += 4;
+                            break;
+
+                        case 53: //5
+                            result += 5;
+                            break;
+
+                        case 54: //6
+                            result += 6;
+                            break;
+
+                        case 55: //7
+                            result += 7;
+                            break;
+
+                        case 56: //8
+                            result += 8;
+                            break;
+
+                        case 57: //9
+                            result += 9;
+                            break;
+
+
+                    }
                 } else {
-                    output = this.getStringFromBytes(this.paramStartIndex, len);
+                    if (isNeg) {
+                        result = -result;
+                    }
 
                     if (b == delim)
-                        return Integer.parseInt(output);
+                        return result;
 
                     this.rmWhiteSpace();
                     if (this.byteArr[this.posInArr++] == delim) {
-                        return Integer.parseInt(output);
+                        return result;
                     } else {
                         throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr - 1]);
                     }
@@ -368,7 +412,6 @@ public class LogEntryExtractor implements LogExtractor {
 
             refill("Unexpected end of file while parsing an integer");
         }
-
 
     }
 
@@ -435,17 +478,16 @@ public class LogEntryExtractor implements LogExtractor {
     }
 
     public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-        this.posInFile = 0;   //pos in file is the absolute pos in file where the current byte array starts
 
         RandomAccessFile aFile = new RandomAccessFile
                 (this.logFilePath, "r");
 
         this.inChannel = aFile.getChannel();
-        this.fileSize = inChannel.size();
+        long fileSize = inChannel.size();
 
 //        System.out.println("There are totally "+this.fileSize+" bytes in the file");
-        this.numOfReads = this.fileSize / OneReadSize;
-        this.lastReadSize = this.fileSize % OneReadSize;
+        this.numOfReads = fileSize / OneReadSize;
+        this.lastReadSize = fileSize % OneReadSize;
 
         while (this.curNumOfReads <= this.numOfReads) {
             this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
@@ -457,26 +499,15 @@ public class LogEntryExtractor implements LogExtractor {
 //        System.out.println("Again, Log is loaded? "+this.mbb.isLoaded());
 
             this.mbb.position(0);
-            while (this.posInFile + this.posInArr < this.fileSize) {
+            while (this.mbb.hasRemaining()) {
                 try {
                     this.mbb.get(this.byteArr);
                 } catch (BufferUnderflowException e) {
                     int remaining = this.mbb.remaining();
-                    if (remaining > 0) {
-                        this.mbb.get(this.byteArr, 0, remaining);
-                        this.BufSize = remaining;
-                    } else {
-                        if (this.curNumOfReads <= this.numOfReads) {
-                            this.mbb = inChannel.map(FileChannel.MapMode.READ_ONLY,
-                                    this.curNumOfReads * OneReadSize, this.curNumOfReads == numOfReads ? lastReadSize : OneReadSize);
-                            this.curNumOfReads++;
-                            this.mbb.position(0);
-                            continue;
-                        } else {
-                            throw new IOException("Unexpected end of file while parsing, cur pos in file is " +
-                                    this.posInFile + ", and the file size is " + this.fileSize);
-                        }
-                    }
+
+                    this.mbb.get(this.byteArr, 0, remaining);
+                    this.BufSize = remaining;
+
                 }
 
 
@@ -537,9 +568,9 @@ public class LogEntryExtractor implements LogExtractor {
                     } else if (b == at) {
 
                         //handle all the violations found in the previous log entry!
-//                        if (this.violationsInCurLogEntry.size() > 0) {
-//                            handleViolationsInLogEntry();
-//                        }
+                        if (this.violationsInCurLogEntry.size() > 0) {
+                            handleViolationsInLogEntry();
+                        }
 
                         if (this.prevToken != EventArgs_TOKEN && this.prevToken != NULL_TOKEN) {
                             throw new IOException("Time stamp should follow event args or null (if it is the first token in the file)");
@@ -563,8 +594,6 @@ public class LogEntryExtractor implements LogExtractor {
                 this.oldByteArr = this.byteArr;
                 this.byteArr = tmp;
 
-                this.posInFile += this.BufSize;
-
             }
         }
 
@@ -574,9 +603,9 @@ public class LogEntryExtractor implements LogExtractor {
         aFile.close();
 
         //handle the last entry's violations if there are any
-//        if (this.violationsInCurLogEntry.size() > 0) {
-//            handleViolationsInLogEntry();
-//        }
+        if (this.violationsInCurLogEntry.size() > 0) {
+            handleViolationsInLogEntry();
+        }
 
         System.out.println("There are " +
                 numOfLogEntries + " log entries in the log file!!!");
@@ -635,7 +664,22 @@ public class LogEntryExtractor implements LogExtractor {
 
 
 //        InsertRawMonitor.hasViolation = false;
+
+//        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
+//
+//        switch (this.EventName) {
+//            case SigExtractor.APPROVE :
+//                PubRuntimeMonitor.approveEvent((Integer) tupleData[0]);
+//                break;
+//
+//            case SigExtractor.PUBLISH :
+//                PubRuntimeMonitor.publishEvent((Integer) tupleData[0]);
+//                break;
+//        }
+
+//        InsertRawMonitor.hasViolation = false;
         this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
+//        InsertRuntimeMonitor.insertEvent((String) tupleData[0], (String) tupleData[1], (String) tupleData[2], (String) tupleData[3]);
 
 //        if (InsertRawMonitor.hasViolation) { // the result true indicates the detection of violation in the tuple
 //            this.violationsInCurLogEntry.add(tupleData);
@@ -745,7 +789,6 @@ public class LogEntryExtractor implements LogExtractor {
         this.oldByteArr = this.byteArr;
         this.byteArr = tmp;
 
-        this.posInFile += this.BufSize;
         this.posInArr = 0;
 
         while (true) {

@@ -7,15 +7,15 @@ import sig.SigExtractor;
  */
 public class TestCaseGen {
     public static void genTestCase(String nameOfGeneratedDataFile, int numOfLogEntries) {
-        StringBuilder sb= new StringBuilder(10000);
+        StringBuilder sb = new StringBuilder(10000);
 
         for (int i = 0; i < numOfLogEntries; i++) {
             sb.append("@" + i);
-            sb.append(" "+ SigExtractor.APPROVE+"("+i+") ");
-            sb.append( SigExtractor.PUBLISH+"("+i+")\n");
+            sb.append(" " + SigExtractor.APPROVE + "(" + i + ") ");
+            sb.append(SigExtractor.PUBLISH + "(" + i + ")\n");
         }
 
-        Utils.writeToFile(sb.toString(), "A:\\DATA\\Gen\\"+nameOfGeneratedDataFile);
+        Utils.writeToFile(sb.toString(), "A:\\DATA\\Gen\\" + nameOfGeneratedDataFile);
     }
 
     public static void main(String[] args) {
