@@ -415,10 +415,6 @@ public class LogEntryExtractor implements LogExtractor {
 
     }
 
-    private void checkAround(int start, int len) {
-        System.out.println(new String(this.byteArr, start, len, this.asciiCharSet));
-    }
-
     private void looseCheckingEventArgs() throws IOException {
         boolean isCurFieldEmpty = true;
         boolean canSeeComma = false;

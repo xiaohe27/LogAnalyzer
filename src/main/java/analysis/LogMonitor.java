@@ -1,10 +1,11 @@
 package analysis;
 
 import formula.FormulaExtractor;
-import log.*;
+import log.LogEntryExtractor;
+import log.LogEntryExtractor_FromArchive;
+import log.LogExtractor;
 import reg.RegHelper;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -121,17 +122,12 @@ public class LogMonitor {
      */
     public void monitor(Path path2LogFile, boolean isTarGz, boolean eagerEval) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
         LogExtractor lee = null;
-
         if (path2LogFile != null) {
             //the path to the log file should be obtained from outside as an argument of 'main'
             if (isTarGz) {
                 lee = new LogEntryExtractor_FromArchive(this.TableCol, path2LogFile, 8);
             } else {
-                if (eagerEval) {
-                    lee = new LogEntryExtractor_Eager(this.TableCol, path2LogFile);
-                } else {
-                    lee = new LogEntryExtractor(this.TableCol, path2LogFile, 6, this.EventNameMethodMap); //use lazy eval strategy.
-                }
+                lee = new LogEntryExtractor(this.TableCol, path2LogFile, 6, this.EventNameMethodMap); //use lazy eval strategy.
             }
 
         } else { //path to log file is null: indicating the scanner will read log entries from System.in
@@ -146,30 +142,6 @@ public class LogMonitor {
 
         System.out.println("It took my log analyzer " + totalT + " ms to " +
                 "count all the log entries in the log file in the format of " + (isTarGz ? "tar.gz" : "plain txt"));
-    }
-
-    public void monitor_bytebuffer_allocateDirect(Path path2LogFile) throws IOException {
-        LogEntryExtractor_ByteBuffer_AllocateDirect lee = null;
-
-        if (path2LogFile != null) {
-            //the path to the log file should be obtained from outside as an argument of 'main'
-            File logFile = path2LogFile.toFile();
-
-            lee = new LogEntryExtractor_ByteBuffer_AllocateDirect(this.TableCol, path2LogFile);
-
-        } else { //path to log file is null: indicating the scanner will read log entries from System.in
-//            lee = new LogEntryExtractor(this.TableCol);
-        }
-
-
-        long startT = System.currentTimeMillis();
-
-        lee.startReadingEventsByteByByte();
-
-        long totalT = System.currentTimeMillis() - startT;
-
-        System.out.println("It took my log analyzer " + totalT + " ms to " +
-                "count all the log entries in the log file.");
     }
 
 
