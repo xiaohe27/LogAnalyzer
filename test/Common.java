@@ -1,7 +1,6 @@
 import analysis.LogMonitor;
 import gen.MonitorGenerator;
 import log.LogEntryExtractor;
-import log.LogEntryExtractor_Eager;
 import log.LogExtractor;
 import sig.SigExtractor;
 
@@ -27,8 +26,8 @@ public class Common {
 
         long[] timeArr = new long[num];
         for (int i = 0; i < num; i++) {
-            LogExtractor lee = (eager ? new LogEntryExtractor_Eager(SigExtractor.TableCol, logFile) :
-                    new LogEntryExtractor(SigExtractor.TableCol, logFile, lm.getEventNameMethodMap()));
+            LogExtractor lee =
+                    new LogEntryExtractor(SigExtractor.TableCol, logFile, lm.getEventNameMethodMap());
 
             long startT = System.currentTimeMillis();
 

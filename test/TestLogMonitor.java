@@ -1,12 +1,8 @@
 import fsl.uiuc.Main;
-import log.LogEntryExtractor_ByteBuffer_AllocateDirect;
 import org.junit.Test;
-import sig.SigExtractor;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Created by xiaohe on 14-11-24.
@@ -96,20 +92,6 @@ public class TestLogMonitor {
         Common.testLogBuffSize("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
     }
 
-    //    @Test
-    public void parseLogByDirectByteBuffer() throws IOException {
-        String logFile = "A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly";
-        Path logPath = Paths.get(logFile);
-        LogEntryExtractor_ByteBuffer_AllocateDirect lee = new LogEntryExtractor_ByteBuffer_AllocateDirect(SigExtractor.TableCol, logPath);
-
-        long startT = System.currentTimeMillis();
-        lee.startReadingEventsByteByByte();
-        long timeDiff = System.currentTimeMillis() - startT;
-
-        System.out.println("It takes my log analyzer " + timeDiff +
-                " ms to count all the events in the log file after running ");
-
-    }
 
     //    @Test
     public void testMain() throws Exception {

@@ -14,7 +14,7 @@ public class FormulaExtractor {
 
     public static List<String> monitoredEventList = init();
     public static HashMap<String, boolean[]> skippedFieldsMap = init2();
-    private static String monitorName;
+    public static String monitorName;
 
     public FormulaExtractor(Path formulaPath) {
         //analyze the formula file and set the fields accordingly.

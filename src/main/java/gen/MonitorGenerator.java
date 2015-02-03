@@ -12,27 +12,27 @@ import java.util.List;
 /**
  * Created by xiaohe on 12/3/14.
  * Generate a monitor lib according to the template below and instantiation parameters.
- * <p/>
+ * <p>
  * package rvm;
- * <p/>
+ * <p>
  * Pub(Integer report) {
  * Integer report;
  * long time;
- * <p/>
+ * <p>
  * event publish (Integer report, long time) {
  * this.report=report;
  * this.time=time;
  * }
- * <p/>
+ * <p>
  * event approve (Integer report, long time) {
  * this.report=report;
  * this.time=time;
  * }
- * <p/>
+ * <p>
  * ltl: [](publish => (*) approve)
  *
  * @violation { System.out.println("should not publish financial report "+this.report+" without pre-approval");}
- * <p/>
+ * <p>
  * }
  */
 public class MonitorGenerator {
