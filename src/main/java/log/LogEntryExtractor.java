@@ -1,6 +1,7 @@
 package log;
 
 import formula.FormulaExtractor;
+import gen.InvokerGenerator;
 import reg.RegHelper;
 import sig.SigExtractor;
 import util.Utils;
@@ -112,6 +113,8 @@ public class LogEntryExtractor implements LogExtractor {
         this.byteArr = new byte[this.BufSize];
         this.oldByteArr = new byte[this.BufSize];
         this.EventNameMethodMap = map;
+
+        InvokerGenerator.generateCustomizedInvoker(FormulaExtractor.monitorName, tableCol);
     }
 
 
@@ -658,7 +661,7 @@ public class LogEntryExtractor implements LogExtractor {
             }
         }
 
-
+//        MonitorMethodsInvoker.invoke(EventName, tupleData);
 //        InsertRawMonitor.hasViolation = false;
 
 //        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);

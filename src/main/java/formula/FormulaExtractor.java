@@ -36,18 +36,18 @@ public class FormulaExtractor {
     private static List<String> init() {
         List<String> tmp = new ArrayList<>();
         //needs real impl. it is fake method here
-//        monitorName = "rvm.InsertRuntimeMonitor";
-        monitorName = "rvm.PubRuntimeMonitor";
+        monitorName = "rvm.InsertRuntimeMonitor";
+//        monitorName = "rvm.PubRuntimeMonitor";
 
         tmp = new ArrayList<>();
 
-//        tmp.add(SigExtractor.INSERT);
-
+        tmp.add(SigExtractor.INSERT);
+//        tmp.add(SigExtractor.SCRIPT_SVN);
+//        tmp.add(SigExtractor.COMMIT);
 //        tmp.add(SigExtractor.SCRIPT_MD5);
-        tmp.add(SigExtractor.APPROVE);
-        tmp.add(SigExtractor.PUBLISH);
+//        tmp.add(SigExtractor.APPROVE);
+//        tmp.add(SigExtractor.PUBLISH);
         return tmp;
-
     }
 
 
