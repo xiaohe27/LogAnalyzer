@@ -4,6 +4,7 @@ import log.invoker.MonitorMethodsInvoker;
 import rvm.InsertRawMonitor;
 
 import java.io.*;
+import java.lang.reflect.InvocationTargetException;
 import java.nio.BufferUnderflowException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -23,7 +24,7 @@ import static java.nio.file.Files.newBufferedWriter;
 /**
  * Serves as lexer and parser for log file.
  */
-class LogEntryExtractor implements LogExtractor {
+class LogEntryExtractor implements LogReader.LogExtractor {
     /**
      * Use a byte to denote different tokens in the log.
      * -1: init state, or NULL.
@@ -1037,6 +1038,9 @@ class RegHelper {
 }
 
 public class LogReader {
+    public static interface LogExtractor {
+        public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException;
+    }
     private static String outputPathStr = "./test-out/violation.txt";
 
     public static Path outputPath = Paths.get(outputPathStr);
