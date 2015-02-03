@@ -21,15 +21,13 @@ public class FormulaExtractor {
 
     }
 
-    ;
-
     private static HashMap<String, boolean[]> init2() {
         HashMap<String, boolean[]> tmp = new HashMap<>();
         boolean[] skipList = new boolean[SigExtractor.maxNumOfParams];
-//        skipList[1] = true;
-//        tmp.put(SigExtractor.INSERT, skipList);
-        tmp.put(SigExtractor.APPROVE, skipList);
-        tmp.put(SigExtractor.PUBLISH, skipList);
+        skipList[1] = true;
+        tmp.put(SigExtractor.INSERT, skipList);
+//        tmp.put(SigExtractor.APPROVE, skipList);
+//        tmp.put(SigExtractor.PUBLISH, skipList);
         return tmp;
     }
 

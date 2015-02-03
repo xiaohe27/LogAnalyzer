@@ -1,27 +1,29 @@
 package log;
 
-import formula.FormulaExtractor;
-import gen.InvokerGenerator;
-import reg.RegHelper;
-import sig.SigExtractor;
-import util.Utils;
+import log.invoker.MonitorMethodsInvoker;
+import rvm.InsertRawMonitor;
 
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
+import java.io.*;
 import java.nio.BufferUnderflowException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import static java.nio.file.Files.newBufferedWriter;
 
 /**
  * Serves as lexer and parser for log file.
  */
-public class LogEntryExtractor implements LogExtractor {
+class LogEntryExtractor implements LogExtractor {
     /**
      * Use a byte to denote different tokens in the log.
      * -1: init state, or NULL.
@@ -56,7 +58,6 @@ public class LogEntryExtractor implements LogExtractor {
     static final byte minus = (byte) '-';
 
     private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
-    private HashMap<String, Method> EventNameMethodMap = new HashMap<>();
     private long TimeStamp; //we can add the @ symbol when it is ready to be printed
     private String EventName;
     private byte prevToken = NULL_TOKEN;
@@ -93,7 +94,7 @@ public class LogEntryExtractor implements LogExtractor {
     private long curNumOfReads;
     private FileChannel inChannel;
 
-    private boolean[] unPrintedFields = new boolean[SigExtractor.maxNumOfParams];
+    private boolean[] unPrintedFields = new boolean[EventSigExtractor.maxNumOfParams];
 
     private ArrayList<Object[]> violationsInCurLogEntry = new ArrayList<>();
 
@@ -105,21 +106,18 @@ public class LogEntryExtractor implements LogExtractor {
      * @param powOf2TimesKB Multiple of 1024.
      * @throws IOException
      */
-    public LogEntryExtractor(HashMap<String, int[]> tableCol, Path logFile, int powOf2TimesKB, HashMap<String, Method> map)
+    public LogEntryExtractor(HashMap<String, int[]> tableCol, Path logFile, int powOf2TimesKB)
             throws IOException {
         this.TableCol = tableCol;
         this.logFilePath = logFile.toString();
         this.BufSize = (int) (Math.pow(2, powOf2TimesKB)) * 1024;
         this.byteArr = new byte[this.BufSize];
         this.oldByteArr = new byte[this.BufSize];
-        this.EventNameMethodMap = map;
-
-        InvokerGenerator.generateCustomizedInvoker(FormulaExtractor.monitorName, tableCol);
     }
 
 
-    public LogEntryExtractor(HashMap<String, int[]> tableCol, Path logFile, HashMap<String, Method> map) throws IOException {
-        this(tableCol, logFile, 5, map);
+    public LogEntryExtractor(HashMap<String, int[]> tableCol, Path logFile) throws IOException {
+        this(tableCol, logFile, 5);
     }
 
     private boolean isWhiteSpace(byte b) {
@@ -476,7 +474,7 @@ public class LogEntryExtractor implements LogExtractor {
         }
     }
 
-    public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void startReadingEventsByteByByte() throws IOException {
 
         RandomAccessFile aFile = new RandomAccessFile
                 (this.logFilePath, "r");
@@ -556,10 +554,10 @@ public class LogEntryExtractor implements LogExtractor {
                             throw new IOException("Unknown event " + EventName);
                         }
 
-                        if (FormulaExtractor.monitoredEventList.contains(EventName)) {
+                        if (EventSigExtractor.isMonitoredEvent(EventName)) {
                             this.isAMonitoredEvent = true;
                             //the boolean list contains info about how to skip certain fields when output the violations
-                            this.unPrintedFields = FormulaExtractor.skippedFieldsMap.get(EventName);
+                            this.unPrintedFields = EventSigExtractor.skippedFieldsMap.get(EventName);
                         } else {
                             this.isAMonitoredEvent = false;
                         }
@@ -619,7 +617,7 @@ public class LogEntryExtractor implements LogExtractor {
      *
      * @throws IOException
      */
-    private void readEvent() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    private void readEvent() throws IOException {
         Object[] tupleData = new Object[typesInTuple.length];
         int i = 0;
         for (; i < typesInTuple.length - 1; i++) {
@@ -661,28 +659,19 @@ public class LogEntryExtractor implements LogExtractor {
             }
         }
 
-//        MonitorMethodsInvoker.invoke(EventName, tupleData);
-//        InsertRawMonitor.hasViolation = false;
+        InsertRawMonitor.hasViolation = false;
+        MonitorMethodsInvoker.invoke(EventName, tupleData);
+
 
 //        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
 //
-//        switch (this.EventName) {
-//            case SigExtractor.APPROVE :
-//                PubRuntimeMonitor.approveEvent((Integer) tupleData[0]);
-//                break;
-//
-//            case SigExtractor.PUBLISH :
-//                PubRuntimeMonitor.publishEvent((Integer) tupleData[0]);
-//                break;
-//        }
 
-//        InsertRawMonitor.hasViolation = false;
-//        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
+
 //        InsertRuntimeMonitor.insertEvent((String) tupleData[0], (String) tupleData[1], (String) tupleData[2], (String) tupleData[3]);
 
-//        if (InsertRawMonitor.hasViolation) { // the result true indicates the detection of violation in the tuple
-//            this.violationsInCurLogEntry.add(tupleData);
-//        }
+        if (InsertRawMonitor.hasViolation) { // the result true indicates the detection of violation in the tuple
+            this.violationsInCurLogEntry.add(tupleData);
+        }
 
 //        this.printEvent(tupleData);
 
@@ -817,4 +806,277 @@ public class LogEntryExtractor implements LogExtractor {
         }
     }
 
+}
+
+class EventSigExtractor {
+    public static final String SELECT = "select";
+    public static final String INSERT = "insert";
+    public static final String UPDATE = "update";
+    public static final String DELETE = "delete";
+    public static final String SCRIPT_START = "script_start";
+    public static final String SCRIPT_END = "script_end";
+    public static final String SCRIPT_SVN = "script_svn";
+    public static final String SCRIPT_MD5 = "script_md5";
+    public static final String COMMIT = "commit";
+
+    public static final String PUBLISH = "publish";
+    public static final String APPROVE = "approve";
+
+    public static final int maxNumOfParams = 5;
+
+    public static List<String> monitoredEventList = init();
+    public static HashMap<String, boolean[]> skippedFieldsMap = init2();
+    public static String monitorName;
+    private static HashMap<String, int[]> TableCol = initTableCol();
+
+    private static HashMap<String, int[]> initTableCol() {
+        HashMap<String, int[]> tmp = new HashMap<>();
+        //the arg types can be inferred from the signature file
+        int[] argTy4Insert = new int[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE,
+                RegHelper.STRING_TYPE, RegHelper.STRING_TYPE};
+        int[] argTy4Script = new int[]{RegHelper.STRING_TYPE};
+        int[] argTy4ScriptSVN = new int[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE,
+                RegHelper.STRING_TYPE, RegHelper.INT_TYPE, RegHelper.INT_TYPE};
+        int[] argTy4ScriptMD5 = new int[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE};
+        int[] argTy4Commit = new int[]{RegHelper.STRING_TYPE, RegHelper.INT_TYPE};
+
+        int[] argTy4Pub = new int[]{RegHelper.INT_TYPE};
+
+        tmp.put(SELECT, argTy4Insert);
+        tmp.put(INSERT, argTy4Insert);
+        tmp.put(UPDATE, argTy4Insert);
+        tmp.put(DELETE, argTy4Insert);
+        tmp.put(SCRIPT_START, argTy4Script);
+        tmp.put(SCRIPT_END, argTy4Script);
+        tmp.put(SCRIPT_SVN, argTy4ScriptSVN);
+        tmp.put(SCRIPT_MD5, argTy4ScriptMD5);
+        tmp.put(COMMIT, argTy4Commit);
+
+        tmp.put(APPROVE, argTy4Pub);
+        tmp.put(PUBLISH, argTy4Pub);
+        return tmp;
+    }
+
+    public static HashMap<String, int[]> extractMethoArgsMappingFromSigFile(File f) {
+        //fake method at the moment, needs to be implemented.
+        return TableCol;
+    }
+
+    private static HashMap<String, boolean[]> init2() {
+        HashMap<String, boolean[]> tmp = new HashMap<>();
+        boolean[] skipList = new boolean[maxNumOfParams];
+        skipList[1] = true;
+        tmp.put(INSERT, skipList);
+//        tmp.put(SigExtractor.APPROVE, skipList);
+//        tmp.put(SigExtractor.PUBLISH, skipList);
+        return tmp;
+    }
+
+    private static List<String> init() {
+        List<String> tmp = new ArrayList<>();
+        //needs real impl. it is fake method here
+        monitorName = "rvm.InsertRuntimeMonitor";
+//        monitorName = "rvm.PubRuntimeMonitor";
+
+        tmp = new ArrayList<>();
+
+        tmp.add(INSERT);
+//        tmp.add(SigExtractor.SCRIPT_SVN);
+//        tmp.add(SigExtractor.COMMIT);
+//        tmp.add(SigExtractor.SCRIPT_MD5);
+//        tmp.add(SigExtractor.APPROVE);
+//        tmp.add(SigExtractor.PUBLISH);
+        return tmp;
+    }
+
+
+    public static String getMonitorName() {
+        return monitorName;
+    }
+
+    public static List<String> getMonitoredEventList() {
+        return monitoredEventList;
+    }
+
+    public static boolean isMonitoredEvent(String eventName) {
+        return monitoredEventList.contains(eventName);
+    }
+}
+
+class Utils {
+    public static final String lineSeparator = System.getProperty("line.separator");
+    public static Utils MyUtils = new Utils();
+    //    private Charset charset = StandardCharsets.ISO_8859_1;
+    private Charset charset = StandardCharsets.US_ASCII;
+    private BufferedWriter bufferedWriter;
+
+    private Utils() {
+        this.bufferedWriter = init();
+    }
+
+
+    public static void writeToFile(String contents, String fileName) {
+        Path p = Paths.get(fileName);
+        byte[] bytes = contents.getBytes();
+        try {
+            Files.write(p, bytes, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            try {
+                p.getParent().toFile().mkdirs();
+
+                Files.write(p, bytes, StandardOpenOption.CREATE_NEW);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
+
+    public void writeToOutputFileUsingBW(String contents) throws IOException {
+        this.bufferedWriter.write(contents);
+    }
+
+    public void flushOutput() throws IOException {
+        this.bufferedWriter.flush();
+    }
+
+    private BufferedWriter init() {
+        try {
+            return newBufferedWriter(LogReader.outputPath, charset, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(2);
+        }
+        return null;
+    }
+}
+
+class RegHelper {
+    public static final int INT_TYPE = 0;
+    public static final int FLOAT_TYPE = 1;
+    public static final int STRING_TYPE = 4;
+
+    // '_' | '[' | ']' | '/' | ':' | '-' | '.' | '!')* | '"'[^'"']*'"'
+
+    public static final String IntReg = "(\\d+)";
+    public static final String FloatReg = "(\\d*.\\d+)";
+    public static final String DoubleQuotesRegEx = "\"[^\"]+\"";
+    public static final String StringRegEx = "(" + "[\\w\\[\\]\\/\\:\\-\\.\\!]+|" + DoubleQuotesRegEx + ")";
+    public static final String TimeStamp = "(@\\d+)";
+
+
+    public final HashMap<String, Pattern> eventTupleRegEx;
+
+
+    public RegHelper(HashMap<String, Integer[]> tableCol) {
+        this.eventTupleRegEx = this.init(tableCol);
+    }
+
+
+    private HashMap<String, Pattern> init(HashMap<String, Integer[]> tableCol) {
+        HashMap<String, Pattern> eventNameAndTupleRegexMap = new HashMap<>();
+
+        for (String eventName : tableCol.keySet()) {
+            Integer[] types = tableCol.get(eventName);
+
+            String regex = "";
+
+            if (types.length == 0) {
+                regex = "\\s*\\(\\s*\\s)";
+            } else {
+                switch (types[0]) {
+                    case INT_TYPE:
+                        regex = IntReg;
+                        break;
+
+                    case FLOAT_TYPE:
+                        regex = FloatReg;
+                        break;
+
+                    case STRING_TYPE:
+                        regex = StringRegEx;
+                        break;
+                }
+
+                regex = "\\s*" + regex; //the first field
+
+                for (int i = 1; i < types.length; i++) {
+                    String tmp = "";
+
+                    switch (types[i]) {
+                        case INT_TYPE:
+                            tmp = IntReg;
+                            break;
+
+                        case FLOAT_TYPE:
+                            tmp = FloatReg;
+                            break;
+
+                        case STRING_TYPE:
+                            tmp = StringRegEx;
+                            break;
+                    }
+
+                    regex += "\\s*,\\s*" + tmp;
+                }
+                regex = "\\s*\\(" + regex + "\\s*\\)";
+            }
+
+            //gen the event name and corresponding tuple's reg ex.
+            eventNameAndTupleRegexMap.put(eventName, Pattern.compile(regex));
+
+        }
+
+        return eventNameAndTupleRegexMap;
+    }
+
+    public void showEventTupleRegEx() {
+        for (String eventName : this.eventTupleRegEx.keySet()) {
+            System.out.println(eventName + "'s tuple's reg ex is: " + this.eventTupleRegEx.get(eventName));
+        }
+    }
+}
+
+public class LogReader {
+    private static String outputPathStr = "./test-out/violation.txt";
+
+    public static Path outputPath = Paths.get(outputPathStr);
+
+    private static void initOutputFile() throws IOException {
+        File file = outputPath.toFile();
+        if (file.exists()) {
+            new PrintWriter(file).close();
+        } else {
+            if (outputPath.getParent().toFile().exists()) {
+                file.createNewFile();
+            } else {
+                outputPath.getParent().toFile().mkdirs();
+                file.createNewFile();
+            }
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        if (args.length > 2 || args.length < 1) {
+            System.err.println("Two args should be provided in this order: <path to rvm spec file>" +
+                    " <path to log file> \nOr omit the path to log file,"
+                    + " in which case the contents of log file will be read from the System.in");
+        }
+
+        initOutputFile();
+
+        Path path2SigFile = Paths.get(args[0]);
+
+        //if there is no log file's path is given, then the log will be read from stdin
+        Path path2Log = null;
+        if (args.length == 2) {
+            path2Log = Paths.get(args[1]);
+        } else {
+            throw new IOException("Does not support reading form std input yet.");
+        }
+
+
+        LogEntryExtractor lee = new LogEntryExtractor(EventSigExtractor.extractMethoArgsMappingFromSigFile(path2SigFile.toFile()), path2Log, 6);
+
+        lee.startReadingEventsByteByByte();
+    }
 }
