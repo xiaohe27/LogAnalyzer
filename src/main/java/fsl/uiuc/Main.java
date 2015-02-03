@@ -58,22 +58,6 @@ public class Main {
         }
 
         InvokerGenerator.generateCustomizedInvoker(FormulaExtractor.monitorName, SigExtractor.extractMethoArgsMappingFromSigFile(path2SigFile.toFile()));
-
-
-//        MonitorGenerator mg = new MonitorGenerator(path2SigFile, path2FormulaFile);
-//
-//        LogMonitor lm = new LogMonitor(mg.getMethoArgsMappingFromSigFile(), mg.getMonitorClassPath());
-////        lm.monitor(path2Log); //default mapped byte buffer
-////        lm.monitor_bytebuffer_allocateDirect(path2Log);
-////        eagerEval = true;
-//
-//        if (path2Log.toString().endsWith(".tar.gz")) {
-////            System.out.println("Going to read a .tar.gz log file: " + path2Log.toString());
-//            lm.monitor(path2Log, true);
-//        } else {
-////            System.out.println("Going to read a normal log file");
-//            lm.monitor(path2Log, false); //default mapped byte buffer
-//        }
     }
 
     private static void initOutputFile() throws IOException {

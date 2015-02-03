@@ -29,8 +29,10 @@ public class InvokerGenerator {
             File outputDir = new File("./target/generated-sources/CodeModel");
             if (!outputDir.exists())
                 outputDir.mkdirs();
-//            CodeModel.build(sscw);
-            CodeModel.build(outputDir);
+
+            definedClass._class(JMod.PROTECTED | JMod.STATIC, "myInner");
+            CodeModel.build(sscw);
+//            CodeModel.build(outputDir);
 
         } catch (JClassAlreadyExistsException e) {
             // ...
