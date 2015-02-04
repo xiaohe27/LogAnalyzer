@@ -16,10 +16,16 @@ import java.util.HashMap;
 public class InvokerGenerator {
     private static JCodeModel CodeModel;
     private static String MonitorName;
+    private static String RawMonitorName;
 
     public static void generateCustomizedInvoker(String monitorClassPath, HashMap<String, int[]> tableSchema) {
         CodeModel = new JCodeModel();
         MonitorName = monitorClassPath;
+
+        assert MonitorName != null;
+
+        RawMonitorName = inferRawMonitorNameFromMonitorName(MonitorName);
+
         try {
             JDefinedClass definedClass = CodeModel._class("log.invoker.MonitorMethodsInvoker");
 
@@ -30,10 +36,9 @@ public class InvokerGenerator {
             if (!outputDir.exists())
                 outputDir.mkdirs();
 
-//            definedClass._class(JMod.PROTECTED | JMod.STATIC, "myInner").direct("what ever code");
 
-//            CodeModel.build(sscw);
-            CodeModel.build(outputDir);
+            CodeModel.build(sscw);
+//            CodeModel.build(outputDir);
 
         } catch (JClassAlreadyExistsException e) {
             // ...
@@ -42,6 +47,11 @@ public class InvokerGenerator {
             // ...
             System.err.println("IO-Exception: " + e.getMessage());
         }
+    }
+
+    private static String inferRawMonitorNameFromMonitorName(String monitorName) {
+        int index = monitorName.lastIndexOf("RuntimeMonitor");
+        return monitorName.substring(0, index) + "RawMonitor";
     }
 
 
@@ -56,6 +66,8 @@ public class InvokerGenerator {
 
         //gen the body of the method
         JBlock body = method.body();
+
+
 
         JSwitch jSwitch = body._switch(eventNameParam);
 
