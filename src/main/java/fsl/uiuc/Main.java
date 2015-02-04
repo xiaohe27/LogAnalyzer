@@ -7,9 +7,7 @@ import gen.InvokerGenerator;
 import sig.SigExtractor;
 import util.Utils;
 
-import javax.sql.rowset.serial.SerialRef;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
@@ -18,7 +16,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
-    public static Path genLogReaderPath = initOutputFile();
+    public static Path genLogReaderPath;
 
     /**
      * These are the event names.
@@ -37,13 +35,15 @@ public class Main {
      * @throws InvocationTargetException
      */
     public static void main(String[] args) throws IOException {
+        genLogReaderPath = initOutputFile();
+
         Path path2SigFile = Paths.get(args[0]);
 
         InvokerGenerator.generateCustomizedInvoker(FormulaExtractor.monitorName, SigExtractor.extractMethoArgsMappingFromSigFile(path2SigFile.toFile()));
         String imports = new String(Files.readAllBytes(Paths.get("./src/main/resources/import.code")));
         String mainBody = new String(Files.readAllBytes(Paths.get("./src/main/resources/main.code")));
         //A:\Projects\LogAnalyzer\target\generated-sources\CodeModel
-        String logReader = new String(Files.readAllBytes(Paths.get(".\\target\\generated-sources\\CodeModel\\LogReader.java")));
+        String logReader = new String(Files.readAllBytes(Paths.get("./target/generated-sources/CodeModel/LogReader.java")));
         Utils.MyUtils.writeToOutputFileUsingBW(imports);
         Utils.MyUtils.writeToOutputFileUsingBW(logReader);
         Utils.MyUtils.writeToOutputFileUsingBW(mainBody);
