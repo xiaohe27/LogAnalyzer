@@ -9,3 +9,4 @@ production/*
 test-out/*
 *.bak
 target/*
+CustomizedLogReader/*

@@ -5,19 +5,20 @@ package fsl.uiuc;
 import formula.FormulaExtractor;
 import gen.InvokerGenerator;
 import sig.SigExtractor;
+import util.Utils;
 
+import javax.sql.rowset.serial.SerialRef;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
-    private static String outputPathStr = "./test-out/violation.txt";
-
-    public static Path outputPath = Paths.get(outputPathStr);
-
+    public static Path genLogReaderPath = initOutputFile();
 
     /**
      * These are the event names.
@@ -35,24 +36,38 @@ public class Main {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-
-    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
+    public static void main(String[] args) throws IOException {
         Path path2SigFile = Paths.get(args[0]);
 
         InvokerGenerator.generateCustomizedInvoker(FormulaExtractor.monitorName, SigExtractor.extractMethoArgsMappingFromSigFile(path2SigFile.toFile()));
+        String imports = new String(Files.readAllBytes(Paths.get("./src/main/resources/import.code")));
+        String mainBody = new String(Files.readAllBytes(Paths.get("./src/main/resources/main.code")));
+        //A:\Projects\LogAnalyzer\target\generated-sources\CodeModel
+        String logReader = new String(Files.readAllBytes(Paths.get(".\\target\\generated-sources\\CodeModel\\LogReader.java")));
+        Utils.MyUtils.writeToOutputFileUsingBW(imports);
+        Utils.MyUtils.writeToOutputFileUsingBW(logReader);
+        Utils.MyUtils.writeToOutputFileUsingBW(mainBody);
+        Utils.MyUtils.flushOutput();
     }
 
-    private static void initOutputFile() throws IOException {
-        File file = outputPath.toFile();
-        if (file.exists()) {
-            new PrintWriter(file).close();
-        } else {
-            if (outputPath.getParent().toFile().exists()) {
-                file.createNewFile();
+    private static Path initOutputFile() {
+       Path path = Paths.get("./CustomizedLogReader/log/LogReader.java");
+        File file = path.toFile();
+        try {
+            if (file.exists()) {
+                new PrintWriter(file).close();
             } else {
-                outputPath.getParent().toFile().mkdirs();
-                file.createNewFile();
+                if (path.getParent().toFile().exists()) {
+                    file.createNewFile();
+                } else {
+                    path.getParent().toFile().mkdirs();
+                    file.createNewFile();
+                }
             }
+        } catch (IOException ioe) {
+            System.err.println(ioe.getMessage());
+            System.exit(1);
         }
+       return path;
     }
 }

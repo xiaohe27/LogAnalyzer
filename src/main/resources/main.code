@@ -1,25 +1,3 @@
-package log;
-
-import log.invoker.MonitorMethodsInvoker;
-
-import java.io.*;
-import java.lang.reflect.InvocationTargetException;
-import java.nio.BufferUnderflowException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.regex.Pattern;
-
-import static java.nio.file.Files.newBufferedWriter;
-
 /**
  * Serves as lexer and parser for log file.
  */
@@ -660,7 +638,7 @@ class LogEntryExtractor implements LogReader.LogExtractor {
         }
 
 
-        MonitorMethodsInvoker.invoke(EventName, tupleData, this.violationsInCurLogEntry);
+        LogReader.MonitorMethodsInvoker.invoke(EventName, tupleData, this.violationsInCurLogEntry);
         // the customized method invoker will call the method as well as update the violation list
 
 
@@ -1031,53 +1009,5 @@ class RegHelper {
         for (String eventName : this.eventTupleRegEx.keySet()) {
             System.out.println(eventName + "'s tuple's reg ex is: " + this.eventTupleRegEx.get(eventName));
         }
-    }
-}
-
-public class LogReader {
-    private static String outputPathStr = "./test-out/violation.txt";
-    public static Path outputPath = Paths.get(outputPathStr);
-
-    private static void initOutputFile() throws IOException {
-        File file = outputPath.toFile();
-        if (file.exists()) {
-            new PrintWriter(file).close();
-        } else {
-            if (outputPath.getParent().toFile().exists()) {
-                file.createNewFile();
-            } else {
-                outputPath.getParent().toFile().mkdirs();
-                file.createNewFile();
-            }
-        }
-    }
-
-    public static void main(String[] args) throws IOException {
-        if (args.length > 2 || args.length < 1) {
-            System.err.println("Two args should be provided in this order: <path to rvm spec file>" +
-                    " <path to log file> \nOr omit the path to log file,"
-                    + " in which case the contents of log file will be read from the System.in");
-        }
-
-        initOutputFile();
-
-        Path path2SigFile = Paths.get(args[0]);
-
-        //if there is no log file's path is given, then the log will be read from stdin
-        Path path2Log = null;
-        if (args.length == 2) {
-            path2Log = Paths.get(args[1]);
-        } else {
-            throw new IOException("Does not support reading form std input yet.");
-        }
-
-
-        LogEntryExtractor lee = new LogEntryExtractor(EventSigExtractor.extractMethoArgsMappingFromSigFile(path2SigFile.toFile()), path2Log, 6);
-
-        lee.startReadingEventsByteByByte();
-    }
-
-    public static interface LogExtractor {
-        public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException;
     }
 }
