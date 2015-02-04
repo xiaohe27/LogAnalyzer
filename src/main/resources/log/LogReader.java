@@ -1,7 +1,6 @@
 package log;
 
 import log.invoker.MonitorMethodsInvoker;
-import rvm.InsertRawMonitor;
 
 import java.io.*;
 import java.lang.reflect.InvocationTargetException;
@@ -660,8 +659,9 @@ class LogEntryExtractor implements LogReader.LogExtractor {
             }
         }
 
-        InsertRawMonitor.hasViolation = false;
-        MonitorMethodsInvoker.invoke(EventName, tupleData);
+
+        MonitorMethodsInvoker.invoke(EventName, tupleData, this.violationsInCurLogEntry);
+        // the customized method invoker will call the method as well as update the violation list
 
 
 //        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
@@ -670,9 +670,7 @@ class LogEntryExtractor implements LogReader.LogExtractor {
 
 //        InsertRuntimeMonitor.insertEvent((String) tupleData[0], (String) tupleData[1], (String) tupleData[2], (String) tupleData[3]);
 
-        if (InsertRawMonitor.hasViolation) { // the result true indicates the detection of violation in the tuple
-            this.violationsInCurLogEntry.add(tupleData);
-        }
+
 
 //        this.printEvent(tupleData);
 
@@ -1038,11 +1036,7 @@ class RegHelper {
 }
 
 public class LogReader {
-    public static interface LogExtractor {
-        public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException;
-    }
     private static String outputPathStr = "./test-out/violation.txt";
-
     public static Path outputPath = Paths.get(outputPathStr);
 
     private static void initOutputFile() throws IOException {
@@ -1082,5 +1076,9 @@ public class LogReader {
         LogEntryExtractor lee = new LogEntryExtractor(EventSigExtractor.extractMethoArgsMappingFromSigFile(path2SigFile.toFile()), path2Log, 6);
 
         lee.startReadingEventsByteByByte();
+    }
+
+    public static interface LogExtractor {
+        public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException;
     }
 }

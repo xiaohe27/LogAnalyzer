@@ -37,25 +37,7 @@ public class Main {
      */
 
     public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
-
-        if (args.length > 3 || args.length < 2) {
-            System.err.println("Three args should be provided in this order: <path to signature file>" +
-                    " <path to formula file> <path to log file> \nOr omit the path to log file,"
-                    + " in which case the contents of log file will be read from the System.in");
-        }
-
-        initOutputFile();
-
         Path path2SigFile = Paths.get(args[0]);
-
-        Path path2FormulaFile = Paths.get(args[1]);
-
-        //if there is no log file's path is given, then the log will be read from stdin
-        Path path2Log = null;
-        if (args.length == 3) {
-            path2Log = Paths.get(args[2]);
-        } else {
-        }
 
         InvokerGenerator.generateCustomizedInvoker(FormulaExtractor.monitorName, SigExtractor.extractMethoArgsMappingFromSigFile(path2SigFile.toFile()));
     }

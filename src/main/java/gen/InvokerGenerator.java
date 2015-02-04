@@ -25,14 +25,15 @@ public class InvokerGenerator {
 
             SingleStreamCodeWriter sscw = new SingleStreamCodeWriter(System.out);
 
-            buildMethod(definedClass, tableSchema);
+            buildInvocationMethod(definedClass, tableSchema);
             File outputDir = new File("./target/generated-sources/CodeModel");
             if (!outputDir.exists())
                 outputDir.mkdirs();
 
-            definedClass._class(JMod.PROTECTED | JMod.STATIC, "myInner");
-            CodeModel.build(sscw);
-//            CodeModel.build(outputDir);
+//            definedClass._class(JMod.PROTECTED | JMod.STATIC, "myInner").direct("what ever code");
+
+//            CodeModel.build(sscw);
+            CodeModel.build(outputDir);
 
         } catch (JClassAlreadyExistsException e) {
             // ...
@@ -43,7 +44,8 @@ public class InvokerGenerator {
         }
     }
 
-    private static void buildMethod(JDefinedClass definedClass, HashMap<String, int[]> tableSchema) {
+
+    private static void buildInvocationMethod(JDefinedClass definedClass, HashMap<String, int[]> tableSchema) {
         JMethod method = definedClass.method(JMod.PUBLIC | JMod.STATIC, Void.TYPE, "invoke");
         String eventNameStr = "eventName";
         String methodArgsStr = "data";
