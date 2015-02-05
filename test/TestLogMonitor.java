@@ -66,8 +66,7 @@ public class TestLogMonitor {
 
 //        String logPath_base = "/home/xiaohe/workspace/DATA/ldccComplete_MonpolyStyle";
 
-        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl", logPath_base};
-        Main.main(args);
+        Common.testLog_multiTimes(logPath_base, 1);
 
     }
 

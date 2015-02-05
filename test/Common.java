@@ -1,37 +1,26 @@
-import analysis.LogMonitor;
-import gen.MonitorGenerator;
-import log.LogEntryExtractor;
-import log.LogExtractor;
-import sig.SigExtractor;
+import log.LogReader;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
- * Created by xiaohe on 15-1-18.
- */
+* Created by xiaohe on 15-1-18.
+*/
 public class Common {
     public static void testLog_multiTimes(String path, int num) throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         testLog_multiTimes(path, num, false); //by default, use lazy eval
     }
 
     public static void testLog_multiTimes(String path, int num, boolean eager) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        Path logFile = Paths.get(path);
-        MonitorGenerator mg = new MonitorGenerator(logFile, null);
-
-        LogMonitor lm = new LogMonitor(mg.getMethoArgsMappingFromSigFile(), mg.getMonitorClassPath());
-
+        String[] args = new String[]{"./test/count/insert.sig", path};
 
         long[] timeArr = new long[num];
         for (int i = 0; i < num; i++) {
-            LogExtractor lee =
-                    new LogEntryExtractor(SigExtractor.TableCol, logFile, lm.getEventNameMethodMap());
+
 
             long startT = System.currentTimeMillis();
 
-            lee.startReadingEventsByteByByte();
+            LogReader.main(args);
 
             long totalT = System.currentTimeMillis() - startT;
 
@@ -45,11 +34,7 @@ public class Common {
     }
 
     public static void testLogBuffSize(String logFile) throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        Path logFilePath = Paths.get(logFile);
-
-        MonitorGenerator mg = new MonitorGenerator(logFilePath, null);
-
-        LogMonitor lm = new LogMonitor(mg.getMethoArgsMappingFromSigFile(), mg.getMonitorClassPath());
+        String[] args = new String[]{"./test/count/insert.sig", logFile};
 
         int numOfLines = 2;
         int numOfCols = 3;
@@ -66,13 +51,10 @@ public class Common {
             int multiple = (int) Math.pow(2, i + offset);
 
 
-            LogEntryExtractor lee = new LogEntryExtractor(SigExtractor.TableCol, logFilePath, multiple, lm.getEventNameMethodMap());
-//            LogEntryExtractor_ByteBuffer_AllocateDirect lee = new LogEntryExtractor_ByteBuffer_AllocateDirect(SigExtractor.TableCol, logFile, multiple);
-
             for (int j = 0; j < timeArr[0].length; j++) {
                 long startT = System.currentTimeMillis();
 
-                lee.startReadingEventsByteByByte();
+                LogReader.main(args);
 
                 long totalT = System.currentTimeMillis() - startT;
 

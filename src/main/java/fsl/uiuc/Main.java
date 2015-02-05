@@ -51,7 +51,7 @@ public class Main {
     }
 
     private static Path initOutputFile() {
-       Path path = Paths.get("./CustomizedLogReader/log/LogReader.java");
+       Path path = Paths.get("./target/CustomizedLogReader/log/LogReader.java");
         File file = path.toFile();
         try {
             if (file.exists()) {
