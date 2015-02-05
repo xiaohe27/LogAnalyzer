@@ -15,11 +15,16 @@ import java.util.List;
  * Created by xiaohe on 2/2/15.
  */
 public class InvokerGenerator {
-    private static JCodeModel CodeModel;
-    private static String MonitorName;
-    private static String RawMonitorName;
+    private JCodeModel CodeModel;
+    private String MonitorName;
+    private String RawMonitorName;
 
-    public static void generateCustomizedInvoker(String monitorClassPath, HashMap<String, int[]> tableSchema) {
+    private String outputDir;
+    public InvokerGenerator(String outputDir) {
+        this.outputDir = outputDir;
+    }
+
+    public void generateCustomizedInvoker(String monitorClassPath, HashMap<String, int[]> tableSchema) {
         CodeModel = new JCodeModel();
         MonitorName = monitorClassPath;
 
@@ -35,7 +40,7 @@ public class InvokerGenerator {
             SingleStreamCodeWriter sscw = new SingleStreamCodeWriter(System.out);
 
             buildInvocationMethod(definedClass, tableSchema);
-            File outputDir = new File("./target/generated-sources/CodeModel");
+            File outputDir = new File(this.outputDir);
             if (!outputDir.exists())
                 outputDir.mkdirs();
 
@@ -52,7 +57,7 @@ public class InvokerGenerator {
         }
     }
 
-    private static void initLogReaderClass(JDefinedClass definedClass) {
+    private void initLogReaderClass(JDefinedClass definedClass) {
         definedClass.direct("\n    private static String outputPathStr = \"./test-out/violation.txt\";\n" +
                 "    public static Path outputPath = Paths.get(outputPathStr);\n" +
                 "\n" +
@@ -100,13 +105,13 @@ public class InvokerGenerator {
                 "    }");
     }
 
-    private static String inferRawMonitorNameFromMonitorName(String monitorName) {
+    private String inferRawMonitorNameFromMonitorName(String monitorName) {
         int index = monitorName.lastIndexOf("RuntimeMonitor");
         return monitorName.substring(0, index) + "RawMonitor";
     }
 
 
-    private static void buildInvocationMethod(JDefinedClass definedClass, HashMap<String, int[]> tableSchema) {
+    private void buildInvocationMethod(JDefinedClass definedClass, HashMap<String, int[]> tableSchema) {
         JMethod method = definedClass.method(JMod.PUBLIC | JMod.STATIC, Void.TYPE, "invoke");
         String eventNameStr = "eventName";
         String methodArgsStr = "data";
@@ -171,7 +176,7 @@ public class InvokerGenerator {
         String monitorName;
         monitorName = "rvm.InsertRuntimeMonitor";
 //        monitorName = "rvm.PubRuntimeMonitor";
-
-        generateCustomizedInvoker(monitorName, SigExtractor.TableCol);
+        InvokerGenerator ig = new InvokerGenerator("./target/generated-sources/CodeModel");
+        ig.generateCustomizedInvoker(monitorName, SigExtractor.TableCol);
     }
 }
