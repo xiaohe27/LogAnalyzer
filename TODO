@@ -1,8 +1,5 @@
+Try more complicated formulas with eq test.
 
-2. test the time for reading all events (use a fake one for Monpoly)
+Ensure My log Analyzer can generate exactly the same output as Monpoly.
 
-
-
- try the little insert log.
-
- try the huge log on the insert property, record the time.
+Then compare the perf
