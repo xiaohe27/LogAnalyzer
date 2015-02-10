@@ -3,7 +3,8 @@ package fsl.uiuc;
 import formula.FormulaExtractor;
 import gen.InvokerGenerator;
 import org.apache.commons.io.FileUtils;
-import sig.SigExtractor;
+import sig.SignatureFormulaExtractor;
+import sig.SignatureFormulaExtractor;
 import util.Utils;
 
 import java.io.*;
@@ -11,6 +12,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 
 public class Main {
     public static Path genLogReaderPath;
@@ -44,7 +46,9 @@ public class Main {
         Path path2SigFile = Paths.get(args[0]);
         String tmpFolder = "./CodeModel_tmp";
         InvokerGenerator invokerGenerator = new InvokerGenerator(tmpFolder);
-        invokerGenerator.generateCustomizedInvoker(FormulaExtractor.monitorName, SigExtractor.extractMethoArgsMappingFromSigFile(path2SigFile.toFile()));
+        HashMap<String, int[]> methodSig =  SignatureFormulaExtractor.SigExtractor.
+                                                extractMethoArgsMappingFromSigFile(path2SigFile);
+        invokerGenerator.generateCustomizedInvoker(FormulaExtractor.monitorName, methodSig);
         String imports = getContentFromResource("import.code");
         String mainBody = getContentFromResource("main.code");
 
