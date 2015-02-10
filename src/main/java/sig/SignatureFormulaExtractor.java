@@ -36,6 +36,19 @@ public class SignatureFormulaExtractor {
      */
     private HashMap<String, boolean[]> specMonitoredEventsMap;
 
+    /**
+     * The mappings between spec name and spec level params.
+     */
+    private HashMap<String, String> specLangParamsMap;
+
+    /**
+     * Map from the event's name to the action performed when encountering that event.
+     */
+    private HashMap<String, String> eventActionsMap;
+
+    /**
+     * The table schema which contains the info about event name and event args.
+     */
     private HashMap<String, int[]> TableCol;
 
 
@@ -43,6 +56,10 @@ public class SignatureFormulaExtractor {
         this.specEventsMap=new HashMap<>();
         this.specPropertiesMap = new HashMap<>();
         this.specMonitoredEventsMap = new HashMap<>();
+        this.specLangParamsMap = new HashMap<>();
+
+        this.eventActionsMap = new HashMap<>();
+
         this.TableCol = new HashMap<>();
     }
 
@@ -53,6 +70,7 @@ public class SignatureFormulaExtractor {
     }
 
     public HashMap<String, int[]> extractMethoArgsMappingFromSigFile(Path file) throws IOException {
+
         String fileContent = new String(Files.readAllBytes(file));
         final Reader source = new StringReader(fileContent);
         final MonitorFile monitorFile = RVParser.parse(source);
@@ -62,19 +80,27 @@ public class SignatureFormulaExtractor {
         for (int i = 0; i < specifications.size(); i++) {
             Specification spec = specifications.get(i);
 
-            System.out.println("Name of the spec is " + spec.getName());
+            System.out.println("Spec's name is "+spec.getName());
             System.out.println("Param of the spec is " + spec.getLanguageParameters());
 
             String specName = spec.getName();
 
+
+            assert (!this.specEventsMap.containsKey(specName)) : "The specification should not be duplicated!";
+
             List<Event> eventsInCurSpec = spec.getEvents();
+            List<Property> propsInCurSpec = spec.getProperties();
+
+
+            this.specEventsMap.put(specName, eventsInCurSpec);
+            this.specPropertiesMap.put(specName, propsInCurSpec);
+
 
             for (int j = 0; j < eventsInCurSpec.size(); j++) {
                 Event event = eventsInCurSpec.get(j);
                 System.out.println("Event "+j+" is "+event.getName());
             }
 
-            List<Property> propsInCurSpec = spec.getProperties();
             for (int j = 0; j < propsInCurSpec.size(); j++) {
                 Property prop = propsInCurSpec.get(j);
 
