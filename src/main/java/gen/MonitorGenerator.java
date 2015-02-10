@@ -94,7 +94,7 @@ public class MonitorGenerator {
     }
 
     public HashMap<String, int[]> getMethoArgsMappingFromSigFile() {
-        return SigExtractor.extractMethoArgsMappingFromSigFile(sigFile);
+        return SigExtractor.extractMethodArgsMappingFromSigFile(sigFile);
     }
 
 }

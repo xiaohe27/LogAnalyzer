@@ -95,7 +95,7 @@ public class InvokerGenerator {
                 "        }\n" +
                 "\n" +
                 "\n" +
-                "        LogEntryExtractor lee = new LogEntryExtractor(EventSigExtractor.extractMethoArgsMappingFromSigFile(path2SigFile.toFile()), path2Log, 6);\n" +
+                "        LogEntryExtractor lee = new LogEntryExtractor(EventSigExtractor.extractMethodArgsMappingFromSigFile(path2SigFile.toFile()), path2Log, 6);\n" +
                 "\n" +
                 "        lee.startReadingEventsByteByByte();\n" +
                 "    }\n" +

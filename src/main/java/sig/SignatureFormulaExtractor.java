@@ -3,14 +3,16 @@ package sig;
 import com.runtimeverification.rvmonitor.core.ast.Event;
 import com.runtimeverification.rvmonitor.core.ast.MonitorFile;
 import com.runtimeverification.rvmonitor.core.ast.Property;
+import com.runtimeverification.rvmonitor.core.ast.Specification;
 import com.runtimeverification.rvmonitor.core.parser.RVParser;
+import reg.RegHelper;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,14 +30,20 @@ public class SignatureFormulaExtractor {
      */
     private HashMap<String, List<Event>> specEventsMap;
     private HashMap<String, List<Property>> specPropertiesMap;
+
     /**
      * E.G. boolean array's No. 5 element is true indicates the No.5'event in that spec is monitored.
      */
     private HashMap<String, boolean[]> specMonitoredEventsMap;
+
+    private HashMap<String, int[]> TableCol;
+
+
     private SignatureFormulaExtractor() {
         this.specEventsMap=new HashMap<>();
         this.specPropertiesMap = new HashMap<>();
         this.specMonitoredEventsMap = new HashMap<>();
+        this.TableCol = new HashMap<>();
     }
 
     public static final SignatureFormulaExtractor SigExtractor =  InitSigExtractor();
@@ -47,9 +55,85 @@ public class SignatureFormulaExtractor {
     public HashMap<String, int[]> extractMethoArgsMappingFromSigFile(Path file) throws IOException {
         String fileContent = new String(Files.readAllBytes(file));
         final Reader source = new StringReader(fileContent);
-        final MonitorFile spec = RVParser.parse(source);
+        final MonitorFile monitorFile = RVParser.parse(source);
+
+        List<Specification> specifications = monitorFile.getSpecifications();
+
+        for (int i = 0; i < specifications.size(); i++) {
+            Specification spec = specifications.get(i);
+
+            System.out.println("Name of the spec is " + spec.getName());
+            System.out.println("Param of the spec is " + spec.getLanguageParameters());
+
+            String specName = spec.getName();
+
+            List<Event> eventsInCurSpec = spec.getEvents();
+
+            for (int j = 0; j < eventsInCurSpec.size(); j++) {
+                Event event = eventsInCurSpec.get(j);
+                System.out.println("Event "+j+" is "+event.getName());
+            }
+
+            List<Property> propsInCurSpec = spec.getProperties();
+            for (int j = 0; j < propsInCurSpec.size(); j++) {
+                Property prop = propsInCurSpec.get(j);
+
+                System.out.println("Prop "+j+"'s name is "+prop.getName());
+                System.out.println("Prop "+j+"'s syntax is "+prop.getSyntax());
+            }
+        }
+
 
 
         return null;
+    }
+
+    public static void main(String[] args) throws IOException {
+        Path logPath = Paths.get("/home/xiaohe/Projects/LogAnalyzer/test/pub-approve/rvm/Pub.rvm");
+        HashMap<String, int[]> tableCol = SigExtractor.extractMethoArgsMappingFromSigFile(logPath);
+
+        printMethodSig(tableCol);
+    }
+
+    private static void printMethodSig(HashMap<String, int[]> tableCol) {
+        if (tableCol == null)
+            return;
+
+        for (String s : tableCol.keySet()) {
+            System.out.print("Event " + s + "'s sig: (");
+            int[] typesOfArgs = tableCol.get(s);
+            for (int i = 0; i < typesOfArgs.length - 1; i++) {
+                switch (typesOfArgs[i]){
+                    case RegHelper.INT_TYPE :
+                        System.out.print("int, ");
+                        break;
+
+                    case RegHelper.FLOAT_TYPE :
+                        System.out.print("double, ");
+                        break;
+
+                    case RegHelper.STRING_TYPE :
+                        System.out.print("string, ");
+                        break;
+                }
+            }
+
+            if (typesOfArgs.length > 0) {
+                switch (typesOfArgs[typesOfArgs[typesOfArgs.length - 1]]){
+                    case RegHelper.INT_TYPE :
+                        System.out.print("int)");
+                        break;
+
+                    case RegHelper.FLOAT_TYPE :
+                        System.out.print("double)");
+                        break;
+
+                    case RegHelper.STRING_TYPE :
+                        System.out.print("string)");
+                        break;
+                }
+            }
+
+        }
     }
 }

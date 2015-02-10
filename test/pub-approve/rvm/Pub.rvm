@@ -15,3 +15,19 @@ Pub(Integer report) {
   @violation { System.out.println("pub without approve");}
  
 }
+
+Pub2(Integer report, String publisher) {
+
+  event publish (Integer report, String publisher) {
+
+	}
+
+  event approve (Integer report, String manager) {
+
+	}
+
+  ltl: [](publish => (*) approve)
+
+  @violation { System.out.println("pub without approve");}
+
+}

@@ -57,7 +57,7 @@ public class SigExtractor {
     }
 
 
-    public static HashMap<String, int[]> extractMethoArgsMappingFromSigFile(File f) {
+    public static HashMap<String, int[]> extractMethodArgsMappingFromSigFile(File f) {
         //fake method at the moment, needs to be implemented.
         return TableCol;
     }
