@@ -1,9 +1,7 @@
 package fsl.uiuc;
 
-import formula.FormulaExtractor;
 import gen.InvokerGenerator;
 import org.apache.commons.io.FileUtils;
-import sig.SignatureFormulaExtractor;
 import sig.SignatureFormulaExtractor;
 import util.Utils;
 
@@ -12,7 +10,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
     public static Path genLogReaderPath;
@@ -46,9 +45,14 @@ public class Main {
         Path path2SigFile = Paths.get(args[0]);
         String tmpFolder = "./CodeModel_tmp";
         InvokerGenerator invokerGenerator = new InvokerGenerator(tmpFolder);
-        HashMap<String, int[]> methodSig =  SignatureFormulaExtractor.SigExtractor.
-                                                extractMethodArgsMappingFromSigFile(path2SigFile);
-        invokerGenerator.generateCustomizedInvoker(path2SigFile.toFile().getName(), methodSig);
+        SignatureFormulaExtractor.EventsInfo eventsInfo =  SignatureFormulaExtractor.SigExtractor.
+                extractEventsInfoFromSigFile(path2SigFile);
+
+        String monitorName = "rvm." + path2SigFile.toFile().getName().replaceAll(".rvm", "") + "RuntimeMonitor";
+        List<String> specNameList = new ArrayList<>();
+        specNameList.addAll(eventsInfo.getSpecSkippedEventsMap().keySet());
+        invokerGenerator.generateCustomizedInvoker(monitorName, specNameList, eventsInfo.getTableCol());
+
         String imports = getContentFromResource("import.code");
         String mainBody = getContentFromResource("main.code");
 

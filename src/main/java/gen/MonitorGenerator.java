@@ -1,14 +1,14 @@
 package gen;
 
 import formula.FormulaExtractor;
-import static sig.SignatureFormulaExtractor.SigExtractor;
 import util.Utils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
+
+import static sig.SignatureFormulaExtractor.SigExtractor;
 
 /**
  * Created by xiaohe on 12/3/14.
@@ -95,7 +95,7 @@ public class MonitorGenerator {
     }
 
     public HashMap<String, int[]> getMethoArgsMappingFromSigFile() throws IOException {
-        return SigExtractor.extractMethodArgsMappingFromSigFile(sigFile);
+        return SigExtractor.extractEventsInfoFromSigFile(sigFile).getTableCol();
     }
 
 }

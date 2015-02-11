@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -19,20 +20,25 @@ import java.util.List;
 public class InvokerGenerator {
     private JCodeModel CodeModel;
     private String MonitorName;
-    private String RawMonitorName;
+    private List<String> RawMonitorNames;
 
     private String outputDir;
     public InvokerGenerator(String outputDir) {
         this.outputDir = outputDir;
     }
 
-    public void generateCustomizedInvoker(String monitorClassPath, HashMap<String, int[]> tableSchema) {
+    public void generateCustomizedInvoker(String monitorClassPath, List<String> specNames, HashMap<String, int[]> tableSchema) {
         CodeModel = new JCodeModel();
-        MonitorName = monitorClassPath;
+        this.MonitorName = monitorClassPath;
 
         assert MonitorName != null;
 
-        RawMonitorName = inferRawMonitorNameFromMonitorName(MonitorName);
+//        this.RawMonitorName = specName + "RawMonitor";
+        this.RawMonitorNames = new ArrayList<>();
+        String packageName = "rvm.";
+        for (int i = 0; i < specNames.size(); i++) {
+            this.RawMonitorNames.add(packageName + specNames.get(i) + "RawMonitor");
+        }
 
         try {
             JDefinedClass logReaderClass = CodeModel._class("LogReader");
@@ -97,7 +103,7 @@ public class InvokerGenerator {
                 "        }\n" +
                 "\n" +
                 "\n" +
-                "        LogEntryExtractor lee = new LogEntryExtractor(EventSigExtractor.extractMethodArgsMappingFromSigFile(path2SigFile.toFile()), path2Log, 6);\n" +
+                "        LogEntryExtractor lee = new LogEntryExtractor(EventSigExtractor.extractEventsInfoFromSigFile(path2SigFile.toFile()), path2Log, 6);\n" +
                 "\n" +
                 "        lee.startReadingEventsByteByByte();\n" +
                 "    }\n" +
@@ -105,11 +111,6 @@ public class InvokerGenerator {
                 "    public static interface LogExtractor {\n" +
                 "        public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException;\n" +
                 "    }");
-    }
-
-    private String inferRawMonitorNameFromMonitorName(String monitorName) {
-        int index = monitorName.lastIndexOf("RuntimeMonitor");
-        return monitorName.substring(0, index) + "RawMonitor";
     }
 
 
@@ -127,8 +128,14 @@ public class InvokerGenerator {
 
         //gen the body of the method
         JBlock body = method.body();
-        JFieldRef hasViolation = CodeModel.ref(RawMonitorName).staticRef("hasViolation");
-        body.assign(hasViolation, JExpr.lit(false));
+
+        JFieldRef[] hasViolation = new JFieldRef[this.RawMonitorNames.size()];
+
+        for (int i = 0; i < this.RawMonitorNames.size(); i++) {
+            String RawMonitorNameI = this.RawMonitorNames.get(i);
+            hasViolation[i] = CodeModel.ref(RawMonitorNameI).staticRef("hasViolation");
+            body.assign(hasViolation[i], JExpr.lit(false));
+        }
 
         JSwitch jSwitch = body._switch(eventNameParam);
 
@@ -167,10 +174,12 @@ public class InvokerGenerator {
             jCase.body()._break();
         }
 
-        JConditional ifBlock = body._if(hasViolation);
-        JInvocation addViolationStmt = violationsInCurLogEntry.invoke("add");
-        addViolationStmt.arg(tupleData);
-        ifBlock._then().add(addViolationStmt);
+        for (int i = 0; i < this.RawMonitorNames.size(); i++) {
+            JConditional ifBlock = body._if(hasViolation[i]);
+            JInvocation addViolationStmt = violationsInCurLogEntry.invoke("add");
+            addViolationStmt.arg(tupleData);
+            ifBlock._then().add(addViolationStmt);
+        }
     }
 
 
@@ -180,8 +189,11 @@ public class InvokerGenerator {
 //        monitorName = "rvm.PubRuntimeMonitor";
         InvokerGenerator ig = new InvokerGenerator("./target/generated-sources/CodeModel");
         Path path2SigFile = Paths.get("./test/pub-approve/rvm/Pub.rvm");
-        HashMap<String, int[]> methodSig =  SignatureFormulaExtractor.SigExtractor.
-                extractMethodArgsMappingFromSigFile(path2SigFile);
-        ig.generateCustomizedInvoker(monitorName, methodSig);
+        SignatureFormulaExtractor.EventsInfo eventsInfo =  SignatureFormulaExtractor.SigExtractor.
+                extractEventsInfoFromSigFile(path2SigFile);
+
+        ArrayList<String> specList = new ArrayList<>();
+        specList.add("Insert");
+        ig.generateCustomizedInvoker(monitorName, specList, eventsInfo.getTableCol());
     }
 }
