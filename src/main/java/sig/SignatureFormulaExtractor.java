@@ -13,6 +13,7 @@ import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class SignatureFormulaExtractor {
      *   An event with the same signature can appear in multiple specs, however, it is also possible that the same event
      *   is monitored in one spec while NOT monitored in another.
      */
-    private HashMap<String, List<Event>> specEventsMap;
+    private HashMap<String, List<String>> specEventsMap;
     private HashMap<String, List<Property>> specPropertiesMap;
 
     /**
@@ -87,18 +88,43 @@ public class SignatureFormulaExtractor {
 
 
             assert (!this.specEventsMap.containsKey(specName)) : "The specification should not be duplicated!";
+            this.specLangParamsMap.put(specName, spec.getLanguageParameters());
 
             List<Event> eventsInCurSpec = spec.getEvents();
             List<Property> propsInCurSpec = spec.getProperties();
 
 
-            this.specEventsMap.put(specName, eventsInCurSpec);
+            //the list contains all the valid events' names
+            List<String> validEventNameList = new ArrayList<>();
+            this.specEventsMap.put(specName, validEventNameList);
             this.specPropertiesMap.put(specName, propsInCurSpec);
 
 
             for (int j = 0; j < eventsInCurSpec.size(); j++) {
                 Event event = eventsInCurSpec.get(j);
-                System.out.println("Event "+j+" is "+event.getName());
+                String eventName = event.getName();
+                String eventArgs = event.getDefinition();
+                String eventAction = event.getAction();
+
+                System.out.println("Event "+eventName+": ");
+                System.out.println("Args: "+eventArgs);
+                System.out.println("Action: "+eventAction);
+
+                assert !validEventNameList.contains(eventName) : "Does not support duplicate event";
+
+                validEventNameList.add(eventName);
+
+                //only a single sig is allowed for each event, multiple different sig for the same event will be caught
+                String existingAction4CurEvent = this.eventActionsMap.get(eventName);
+                if (existingAction4CurEvent == null) {
+                    this.eventActionsMap.put(eventName, eventAction);
+                } else if (!existingAction4CurEvent.equals(eventAction)){
+                    assert false : eventName + " should have consistent event action in different places.";
+                } else {
+                    //no need to overwrite.
+                }
+
+
             }
 
             for (int j = 0; j < propsInCurSpec.size(); j++) {

@@ -18,13 +18,15 @@ Pub(Integer report) {
 
 Pub2(Integer report, String publisher) {
 
-  event publish (Integer report, String publisher) {
+  event publish (Integer report, String str) {
 
-	}
+  	}
 
   event approve (Integer report, String manager) {
 
 	}
+
+//	event publish () {}
 
   ltl: [](publish => (*) approve)
 
