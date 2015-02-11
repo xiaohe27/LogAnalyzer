@@ -1,10 +1,11 @@
 package gen;
 
 import formula.FormulaExtractor;
-import sig.SigExtractor;
+import static sig.SignatureFormulaExtractor.SigExtractor;
 import util.Utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
@@ -37,13 +38,13 @@ import java.util.List;
  */
 public class MonitorGenerator {
 
-    private File sigFile;
+    private Path sigFile;
     private FormulaExtractor formulaExtractor;
 
     private StringBuilder sb = new StringBuilder();
 
     public MonitorGenerator(Path sigFilePath, Path formulaFilePath) {
-        this.sigFile = sigFilePath.toFile();
+        this.sigFile = sigFilePath;
         this.formulaExtractor = new FormulaExtractor(formulaFilePath);
 
         this.genMonitorLib();
@@ -93,7 +94,7 @@ public class MonitorGenerator {
         return this.formulaExtractor.getMonitoredEventList();
     }
 
-    public HashMap<String, int[]> getMethoArgsMappingFromSigFile() {
+    public HashMap<String, int[]> getMethoArgsMappingFromSigFile() throws IOException {
         return SigExtractor.extractMethodArgsMappingFromSigFile(sigFile);
     }
 

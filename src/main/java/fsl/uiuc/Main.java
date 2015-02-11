@@ -47,8 +47,8 @@ public class Main {
         String tmpFolder = "./CodeModel_tmp";
         InvokerGenerator invokerGenerator = new InvokerGenerator(tmpFolder);
         HashMap<String, int[]> methodSig =  SignatureFormulaExtractor.SigExtractor.
-                                                extractMethoArgsMappingFromSigFile(path2SigFile);
-        invokerGenerator.generateCustomizedInvoker(FormulaExtractor.monitorName, methodSig);
+                                                extractMethodArgsMappingFromSigFile(path2SigFile);
+        invokerGenerator.generateCustomizedInvoker(path2SigFile.toFile().getName(), methodSig);
         String imports = getContentFromResource("import.code");
         String mainBody = getContentFromResource("main.code");
 

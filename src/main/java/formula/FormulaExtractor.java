@@ -1,6 +1,6 @@
 package formula;
 
-import sig.SigExtractor;
+import static sig.SignatureFormulaExtractor.SigExtractor;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -25,7 +25,7 @@ public class FormulaExtractor {
         HashMap<String, boolean[]> tmp = new HashMap<>();
         boolean[] skipList = new boolean[SigExtractor.maxNumOfParams];
         skipList[1] = true;
-        tmp.put(SigExtractor.INSERT, skipList);
+        tmp.put("insert", skipList);
 //        tmp.put(SigExtractor.APPROVE, skipList);
 //        tmp.put(SigExtractor.PUBLISH, skipList);
         return tmp;
@@ -39,7 +39,7 @@ public class FormulaExtractor {
 
         tmp = new ArrayList<>();
 
-        tmp.add(SigExtractor.INSERT);
+        tmp.add("insert");
 //        tmp.add(SigExtractor.SCRIPT_SVN);
 //        tmp.add(SigExtractor.COMMIT);
 //        tmp.add(SigExtractor.SCRIPT_MD5);

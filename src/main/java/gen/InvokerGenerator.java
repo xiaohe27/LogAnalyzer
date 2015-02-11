@@ -4,10 +4,12 @@ import com.sun.codemodel.*;
 import com.sun.codemodel.writer.SingleStreamCodeWriter;
 import formula.FormulaExtractor;
 import reg.RegHelper;
-import sig.SigExtractor;
+import sig.SignatureFormulaExtractor;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 
@@ -172,11 +174,14 @@ public class InvokerGenerator {
     }
 
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         String monitorName;
         monitorName = "rvm.InsertRuntimeMonitor";
 //        monitorName = "rvm.PubRuntimeMonitor";
         InvokerGenerator ig = new InvokerGenerator("./target/generated-sources/CodeModel");
-        ig.generateCustomizedInvoker(monitorName, SigExtractor.TableCol);
+        Path path2SigFile = Paths.get("./test/pub-approve/rvm/Pub.rvm");
+        HashMap<String, int[]> methodSig =  SignatureFormulaExtractor.SigExtractor.
+                extractMethodArgsMappingFromSigFile(path2SigFile);
+        ig.generateCustomizedInvoker(monitorName, methodSig);
     }
 }

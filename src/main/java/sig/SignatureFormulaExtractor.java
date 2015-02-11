@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -21,32 +22,30 @@ import java.util.List;
  * Created by hx312 on 10/02/2015.
  */
 public class SignatureFormulaExtractor {
+    public static final SignatureFormulaExtractor SigExtractor = InitSigExtractor();
+    public static int maxNumOfParams;
     /**
-     *   Maybe there are multiple specs, each of which contains some events and properties.
-     *   For the events that do not appear in the corresponding property section, they are valid events, but NOT monitored.
-     *   It is NOT allowed to have events with same name but different sig.
-     *   Events and Properties are indexed by spec name because we want to distinguish events in different specs.
-     *   An event with the same signature can appear in multiple specs, however, it is also possible that the same event
-     *   is monitored in one spec while NOT monitored in another.
+     * Maybe there are multiple specs, each of which contains some events and properties.
+     * For the events that do not appear in the corresponding property section, they are valid events, but NOT monitored.
+     * It is NOT allowed to have events with same name but different sig.
+     * Events and Properties are indexed by spec name because we want to distinguish events in different specs.
+     * An event with the same signature can appear in multiple specs, however, it is also possible that the same event
+     * is monitored in one spec while NOT monitored in another.
      */
     private HashMap<String, List<String>> specEventsMap;
     private HashMap<String, List<Property>> specPropertiesMap;
-
     /**
      * E.G. boolean array's No. 5 element is true indicates the No.5'event in that spec is monitored.
      */
     private HashMap<String, boolean[]> specMonitoredEventsMap;
-
     /**
      * The mappings between spec name and spec level params.
      */
     private HashMap<String, String> specLangParamsMap;
-
     /**
      * Map from the event's name to the action performed when encountering that event.
      */
     private HashMap<String, String> eventActionsMap;
-
     /**
      * The table schema which contains the info about event name and event args.
      */
@@ -54,7 +53,7 @@ public class SignatureFormulaExtractor {
 
 
     private SignatureFormulaExtractor() {
-        this.specEventsMap=new HashMap<>();
+        this.specEventsMap = new HashMap<>();
         this.specPropertiesMap = new HashMap<>();
         this.specMonitoredEventsMap = new HashMap<>();
         this.specLangParamsMap = new HashMap<>();
@@ -64,13 +63,105 @@ public class SignatureFormulaExtractor {
         this.TableCol = new HashMap<>();
     }
 
-    public static final SignatureFormulaExtractor SigExtractor =  InitSigExtractor();
-
     private static SignatureFormulaExtractor InitSigExtractor() {
         return new SignatureFormulaExtractor();
     }
 
-    public HashMap<String, int[]> extractMethoArgsMappingFromSigFile(Path file) throws IOException {
+    private static int[] GetArgsTypeFromStr(String eventArgs) {
+        String[] argsStrArr = eventArgs.substring(1, eventArgs.length() - 1).split(",");
+        int[] argTypes = new int[argsStrArr.length];
+
+        if (argTypes.length > maxNumOfParams) {
+            maxNumOfParams = argTypes.length;
+        }
+
+        for (int i = 0; i < argsStrArr.length; i++) {
+            String argI = argsStrArr[i].substring(0, argsStrArr[i].indexOf(' '));
+            switch (argI) {
+                case "Integer":
+                    argTypes[i] = RegHelper.INT_TYPE;
+                    break;
+
+                case "int":
+                    argTypes[i] = RegHelper.INT_TYPE;
+                    break;
+
+                case "Float":
+                    argTypes[i] = RegHelper.FLOAT_TYPE;
+                    break;
+
+                case "float":
+                    argTypes[i] = RegHelper.FLOAT_TYPE;
+                    break;
+
+                case "Double":
+                    argTypes[i] = RegHelper.FLOAT_TYPE;
+                    break;
+
+                case "double":
+                    argTypes[i] = RegHelper.FLOAT_TYPE;
+                    break;
+
+                case "String":
+                    argTypes[i] = RegHelper.STRING_TYPE;
+                    break;
+            }
+        }
+        return argTypes;
+    }
+
+    public static void main(String[] args) throws IOException {
+        Path logPath = Paths.get("./test/pub-approve/rvm/Pub.rvm");
+        HashMap<String, int[]> tableCol = SigExtractor.extractMethodArgsMappingFromSigFile(logPath);
+
+        printMethodSig(tableCol);
+        System.out.println("The max num of params in the spec is " + SigExtractor.maxNumOfParams);
+    }
+
+    private static void printMethodSig(HashMap<String, int[]> tableCol) {
+        if (tableCol == null)
+            return;
+
+        for (String s : tableCol.keySet()) {
+            System.out.print("Event " + s + "'s sig: (");
+            int[] typesOfArgs = tableCol.get(s);
+            for (int i = 0; i < typesOfArgs.length - 1; i++) {
+                switch (typesOfArgs[i]) {
+                    case RegHelper.INT_TYPE:
+                        System.out.print("int, ");
+                        break;
+
+                    case RegHelper.FLOAT_TYPE:
+                        System.out.print("double, ");
+                        break;
+
+                    case RegHelper.STRING_TYPE:
+                        System.out.print("string, ");
+                        break;
+                }
+            }
+
+            if (typesOfArgs.length > 0) {
+                switch (typesOfArgs[typesOfArgs[typesOfArgs.length - 1]]) {
+                    case RegHelper.INT_TYPE:
+                        System.out.print("int)");
+                        break;
+
+                    case RegHelper.FLOAT_TYPE:
+                        System.out.print("double)");
+                        break;
+
+                    case RegHelper.STRING_TYPE:
+                        System.out.print("string)");
+                        break;
+                }
+            }
+            System.out.println();
+        }
+        System.out.println();
+    }
+
+    public HashMap<String, int[]> extractMethodArgsMappingFromSigFile(Path file) throws IOException {
 
         String fileContent = new String(Files.readAllBytes(file));
         final Reader source = new StringReader(fileContent);
@@ -81,8 +172,8 @@ public class SignatureFormulaExtractor {
         for (int i = 0; i < specifications.size(); i++) {
             Specification spec = specifications.get(i);
 
-            System.out.println("Spec's name is "+spec.getName());
-            System.out.println("Param of the spec is " + spec.getLanguageParameters());
+//            System.out.println("Spec's name is " + spec.getName());
+//            System.out.println("Param of the spec is " + spec.getLanguageParameters());
 
             String specName = spec.getName();
 
@@ -106,9 +197,8 @@ public class SignatureFormulaExtractor {
                 String eventArgs = event.getDefinition();
                 String eventAction = event.getAction();
 
-                System.out.println("Event "+eventName+": ");
-                System.out.println("Args: "+eventArgs);
-                System.out.println("Action: "+eventAction);
+//                System.out.println("Event " + eventName + ": ");
+//                System.out.println("Args: " + eventArgs);
 
                 assert !validEventNameList.contains(eventName) : "Does not support duplicate event";
 
@@ -116,76 +206,28 @@ public class SignatureFormulaExtractor {
 
                 //only a single sig is allowed for each event, multiple different sig for the same event will be caught
                 String existingAction4CurEvent = this.eventActionsMap.get(eventName);
+
                 if (existingAction4CurEvent == null) {
                     this.eventActionsMap.put(eventName, eventAction);
-                } else if (!existingAction4CurEvent.equals(eventAction)){
+                } else if (!existingAction4CurEvent.replaceAll("\\W", "").equals(eventAction.replaceAll("\\W", ""))) {
                     assert false : eventName + " should have consistent event action in different places.";
                 } else {
                     //no need to overwrite.
                 }
 
+                //going to analyze the types of the event args.
+                int[] eventArgsTypes = GetArgsTypeFromStr(eventArgs);
+                int[] existingEventArgsInfo = this.TableCol.get(eventName);
 
-            }
-
-            for (int j = 0; j < propsInCurSpec.size(); j++) {
-                Property prop = propsInCurSpec.get(j);
-
-                System.out.println("Prop "+j+"'s name is "+prop.getName());
-                System.out.println("Prop "+j+"'s syntax is "+prop.getSyntax());
-            }
-        }
-
-
-
-        return null;
-    }
-
-    public static void main(String[] args) throws IOException {
-        Path logPath = Paths.get("/home/xiaohe/Projects/LogAnalyzer/test/pub-approve/rvm/Pub.rvm");
-        HashMap<String, int[]> tableCol = SigExtractor.extractMethoArgsMappingFromSigFile(logPath);
-
-        printMethodSig(tableCol);
-    }
-
-    private static void printMethodSig(HashMap<String, int[]> tableCol) {
-        if (tableCol == null)
-            return;
-
-        for (String s : tableCol.keySet()) {
-            System.out.print("Event " + s + "'s sig: (");
-            int[] typesOfArgs = tableCol.get(s);
-            for (int i = 0; i < typesOfArgs.length - 1; i++) {
-                switch (typesOfArgs[i]){
-                    case RegHelper.INT_TYPE :
-                        System.out.print("int, ");
-                        break;
-
-                    case RegHelper.FLOAT_TYPE :
-                        System.out.print("double, ");
-                        break;
-
-                    case RegHelper.STRING_TYPE :
-                        System.out.print("string, ");
-                        break;
+                if (existingEventArgsInfo == null) {
+                    this.TableCol.put(eventName, eventArgsTypes);
+                } else if (!Arrays.equals(eventArgsTypes, existingEventArgsInfo)) {
+                    assert false : eventName + " should have consistent argument types!";
+                } else {
+                    //do nothing here
                 }
             }
-
-            if (typesOfArgs.length > 0) {
-                switch (typesOfArgs[typesOfArgs[typesOfArgs.length - 1]]){
-                    case RegHelper.INT_TYPE :
-                        System.out.print("int)");
-                        break;
-
-                    case RegHelper.FLOAT_TYPE :
-                        System.out.print("double)");
-                        break;
-
-                    case RegHelper.STRING_TYPE :
-                        System.out.print("string)");
-                        break;
-                }
-            }
-
         }
+        return this.TableCol;
     }
 }
