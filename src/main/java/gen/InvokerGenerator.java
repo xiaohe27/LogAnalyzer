@@ -2,7 +2,6 @@ package gen;
 
 import com.sun.codemodel.*;
 import com.sun.codemodel.writer.SingleStreamCodeWriter;
-import formula.FormulaExtractor;
 import reg.RegHelper;
 import sig.SignatureFormulaExtractor;
 
@@ -53,7 +52,7 @@ public class InvokerGenerator {
                 outputDir.mkdirs();
 
 
-//            CodeModel.build(sscw);
+            CodeModel.build(sscw);
             CodeModel.build(outputDir);
 
         } catch (JClassAlreadyExistsException e) {
@@ -141,7 +140,7 @@ public class InvokerGenerator {
 
         JClass monitorClass = CodeModel.ref(MonitorName);
 
-        for (String eventName : FormulaExtractor.monitoredEventList) {
+        for (String eventName : tableSchema.keySet()) {
             JCase jCase = jSwitch._case(JExpr.lit(eventName));
             JInvocation eventMethodInvok = monitorClass.staticInvoke(eventName + "Event");
             jCase.body().add(eventMethodInvok);
@@ -194,6 +193,9 @@ public class InvokerGenerator {
 
         ArrayList<String> specList = new ArrayList<>();
         specList.add("Insert");
+
+        SignatureFormulaExtractor.printMethodSig(eventsInfo.getTableCol());
+
         ig.generateCustomizedInvoker(monitorName, specList, eventsInfo.getTableCol());
     }
 }

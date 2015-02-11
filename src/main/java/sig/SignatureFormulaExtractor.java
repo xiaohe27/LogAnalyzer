@@ -137,7 +137,7 @@ public class SignatureFormulaExtractor {
     }
 
 
-    private static void printMethodSig(HashMap<String, int[]> tableCol) {
+    public static void printMethodSig(HashMap<String, int[]> tableCol) {
         if (tableCol == null)
             return;
 
