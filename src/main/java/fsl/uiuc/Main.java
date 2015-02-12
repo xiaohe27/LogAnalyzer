@@ -48,10 +48,9 @@ public class Main {
         SignatureFormulaExtractor.EventsInfo eventsInfo =  SignatureFormulaExtractor.SigExtractor.
                 extractEventsInfoFromSigFile(path2SigFile);
 
-        String monitorName = "rvm." + path2SigFile.toFile().getName().replaceAll(".rvm", "") + "RuntimeMonitor";
-        List<String> specNameList = new ArrayList<>();
-        specNameList.addAll(eventsInfo.getSpecSkippedEventsMap().keySet());
-        invokerGenerator.generateCustomizedInvoker(monitorName, specNameList, eventsInfo.getTableCol());
+        String runtimeMonitorName = "rvm." + path2SigFile.toFile().getName().replaceAll(".rvm", "") + "RuntimeMonitor";
+
+        invokerGenerator.generateCustomizedInvoker(runtimeMonitorName, eventsInfo);
 
         String imports = getContentFromResource("import.code");
         String mainBody = getContentFromResource("main.code");

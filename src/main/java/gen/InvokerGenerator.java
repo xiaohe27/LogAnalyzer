@@ -1,5 +1,6 @@
 package gen;
 
+import com.runtimeverification.rvmonitor.core.ast.Property;
 import com.sun.codemodel.*;
 import com.sun.codemodel.writer.SingleStreamCodeWriter;
 import reg.RegHelper;
@@ -19,24 +20,51 @@ import java.util.List;
 public class InvokerGenerator {
     private JCodeModel CodeModel;
     private String MonitorName;
-    private List<String> RawMonitorNames;
+    private List<String> ActualMonitorNames;
 
     private String outputDir;
+
     public InvokerGenerator(String outputDir) {
         this.outputDir = outputDir;
     }
 
-    public void generateCustomizedInvoker(String monitorClassPath, List<String> specNames, HashMap<String, int[]> tableSchema) {
+    public static void main(String[] args) throws IOException {
+        String monitorName;
+        monitorName = "rvm.InsertRuntimeMonitor";
+//        monitorName = "rvm.PubRuntimeMonitor";
+        InvokerGenerator ig = new InvokerGenerator("./target/generated-sources/CodeModel");
+        Path path2SigFile = Paths.get("./test/pub-approve/rvm/Pub.rvm");
+        SignatureFormulaExtractor.EventsInfo eventsInfo = SignatureFormulaExtractor.SigExtractor.
+                extractEventsInfoFromSigFile(path2SigFile);
+
+        ArrayList<String> specList = new ArrayList<>();
+        specList.add("Insert");
+
+        SignatureFormulaExtractor.printMethodSig(eventsInfo.getTableCol());
+
+        ig.generateCustomizedInvoker(monitorName, eventsInfo);
+    }
+
+    public void generateCustomizedInvoker(String monitorClassPath, SignatureFormulaExtractor.EventsInfo eventsInfo) {
+        List<String> specNames = new ArrayList<>();
+        specNames.addAll(eventsInfo.getSpecSkippedEventsMap().keySet());
+        HashMap<String, int[]> tableSchema = eventsInfo.getTableCol();
+
         CodeModel = new JCodeModel();
         this.MonitorName = monitorClassPath;
 
         assert MonitorName != null;
 
 //        this.RawMonitorName = specName + "RawMonitor";
-        this.RawMonitorNames = new ArrayList<>();
+        this.ActualMonitorNames = new ArrayList<>();
         String packageName = "rvm.";
         for (int i = 0; i < specNames.size(); i++) {
-            this.RawMonitorNames.add(packageName + specNames.get(i) + "RawMonitor");
+            String curSpecName = specNames.get(i);
+            List<Property> propsInCurSpec = eventsInfo.getSpecPropsMap().get(curSpecName);
+            if (propsInCurSpec == null || propsInCurSpec.size() == 0)
+                this.ActualMonitorNames.add(packageName + curSpecName + "RawMonitor");
+            else
+                this.ActualMonitorNames.add(packageName + curSpecName + "Monitor");
         }
 
         try {
@@ -98,38 +126,37 @@ public class InvokerGenerator {
     private void initLogReaderClass(JDefinedClass definedClass) {
         definedClass.direct(
                 "    private static String outputPathStr = \"./test-out/violation.txt\";\n" +
-                "    public static Path outputPath = Paths.get(outputPathStr);\n" +
-                "\n" +
-                "    private static void initOutputFile() throws IOException {\n" +
-                "        File file = outputPath.toFile();\n" +
-                "        if (file.exists()) {\n" +
-                "            new PrintWriter(file).close();\n" +
-                "        } else {\n" +
-                "            if (outputPath.getParent().toFile().exists()) {\n" +
-                "                file.createNewFile();\n" +
-                "            } else {\n" +
-                "                outputPath.getParent().toFile().mkdirs();\n" +
-                "                file.createNewFile();\n" +
-                "            }\n" +
-                "        }\n" +
-                "    }\n" +
-                "\n" +
-                "    public static void main(String[] args) throws IOException {\n" +
-                "        assert args.length == 1 && args[0].endsWith(\".log\") :\n" +
-                "                \"The only argument needed is the log file (with .log suffix).\";\n" +
-                "\n" +
-                "        initOutputFile();\n" +
-                "\n" +
-                "        Path path2Log = path2Log = Paths.get(args[0]);\n" +
-                "        LogEntryExtractor lee = new LogEntryExtractor(methodInfo, path2Log, 6);\n" +
-                "        lee.startReadingEventsByteByByte();\n" +
-                "    }\n" +
-                "\n" +
-                "    public static interface LogExtractor {\n" +
-                "        public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException;\n" +
-                "    }");
+                        "    public static Path outputPath = Paths.get(outputPathStr);\n" +
+                        "\n" +
+                        "    private static void initOutputFile() throws IOException {\n" +
+                        "        File file = outputPath.toFile();\n" +
+                        "        if (file.exists()) {\n" +
+                        "            new PrintWriter(file).close();\n" +
+                        "        } else {\n" +
+                        "            if (outputPath.getParent().toFile().exists()) {\n" +
+                        "                file.createNewFile();\n" +
+                        "            } else {\n" +
+                        "                outputPath.getParent().toFile().mkdirs();\n" +
+                        "                file.createNewFile();\n" +
+                        "            }\n" +
+                        "        }\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static void main(String[] args) throws IOException {\n" +
+                        "        assert args.length == 1 && args[0].endsWith(\".log\") :\n" +
+                        "                \"The only argument needed is the log file (with .log suffix).\";\n" +
+                        "\n" +
+                        "        initOutputFile();\n" +
+                        "\n" +
+                        "        Path path2Log = path2Log = Paths.get(args[0]);\n" +
+                        "        LogEntryExtractor lee = new LogEntryExtractor(methodInfo, path2Log, 6);\n" +
+                        "        lee.startReadingEventsByteByByte();\n" +
+                        "    }\n" +
+                        "\n" +
+                        "    public static interface LogExtractor {\n" +
+                        "        public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException;\n" +
+                        "    }");
     }
-
 
     private void buildInvocationMethod(JDefinedClass definedClass, HashMap<String, int[]> tableSchema) {
         JMethod method = definedClass.method(JMod.PUBLIC | JMod.STATIC, Void.TYPE, "invoke");
@@ -146,10 +173,10 @@ public class InvokerGenerator {
         //gen the body of the method
         JBlock body = method.body();
 
-        JFieldRef[] hasViolation = new JFieldRef[this.RawMonitorNames.size()];
+        JFieldRef[] hasViolation = new JFieldRef[this.ActualMonitorNames.size()];
 
-        for (int i = 0; i < this.RawMonitorNames.size(); i++) {
-            String RawMonitorNameI = this.RawMonitorNames.get(i);
+        for (int i = 0; i < this.ActualMonitorNames.size(); i++) {
+            String RawMonitorNameI = this.ActualMonitorNames.get(i);
             hasViolation[i] = CodeModel.ref(RawMonitorNameI).staticRef("hasViolation");
             body.assign(hasViolation[i], JExpr.lit(false));
         }
@@ -191,29 +218,11 @@ public class InvokerGenerator {
             jCase.body()._break();
         }
 
-        for (int i = 0; i < this.RawMonitorNames.size(); i++) {
+        for (int i = 0; i < this.ActualMonitorNames.size(); i++) {
             JConditional ifBlock = body._if(hasViolation[i]);
             JInvocation addViolationStmt = violationsInCurLogEntry.invoke("add");
             addViolationStmt.arg(tupleData);
             ifBlock._then().add(addViolationStmt);
         }
-    }
-
-
-    public static void main(String[] args) throws IOException {
-        String monitorName;
-        monitorName = "rvm.InsertRuntimeMonitor";
-//        monitorName = "rvm.PubRuntimeMonitor";
-        InvokerGenerator ig = new InvokerGenerator("./target/generated-sources/CodeModel");
-        Path path2SigFile = Paths.get("./test/pub-approve/rvm/Pub.rvm");
-        SignatureFormulaExtractor.EventsInfo eventsInfo =  SignatureFormulaExtractor.SigExtractor.
-                extractEventsInfoFromSigFile(path2SigFile);
-
-        ArrayList<String> specList = new ArrayList<>();
-        specList.add("Insert");
-
-        SignatureFormulaExtractor.printMethodSig(eventsInfo.getTableCol());
-
-        ig.generateCustomizedInvoker(monitorName, specList, eventsInfo.getTableCol());
     }
 }

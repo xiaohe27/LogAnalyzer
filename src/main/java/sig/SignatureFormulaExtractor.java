@@ -22,26 +22,6 @@ import java.util.List;
  * Created by hx312 on 10/02/2015.
  */
 public class SignatureFormulaExtractor {
-    public static final class EventsInfo {
-        private HashMap<String, int[]> tableCol;
-        private HashMap<String, boolean[]> specSkippedEventsMap;
-
-        public EventsInfo(HashMap<String, int[]> tableCol, HashMap<String, boolean[]> specSkippedEventsMap) {
-            this.tableCol = tableCol;
-            this.specSkippedEventsMap = specSkippedEventsMap;
-        }
-
-        public HashMap<String, int[]> getTableCol() {
-            return tableCol;
-        }
-
-        public HashMap<String, boolean[]> getSpecSkippedEventsMap() {
-            return specSkippedEventsMap;
-        }
-
-    }
-
-
     public static final SignatureFormulaExtractor SigExtractor = InitSigExtractor();
     public static int maxNumOfParams;
     /**
@@ -71,8 +51,6 @@ public class SignatureFormulaExtractor {
      */
     private HashMap<String, int[]> TableCol = new HashMap<>();
 
-
-
     /**
      * Make the constructor invisible to outside world.
      */
@@ -82,15 +60,6 @@ public class SignatureFormulaExtractor {
 
     private static SignatureFormulaExtractor InitSigExtractor() {
         return new SignatureFormulaExtractor();
-    }
-
-    private void reset() {
-        this.specEventsMap.clear();
-        this.specPropertiesMap.clear();
-        this.specSkippedEventsMap.clear();
-        this.specLangParamsMap.clear();
-        this.eventActionsMap.clear();
-        this.TableCol.clear();
     }
 
     private static int[] GetArgsTypeFromStr(String eventArgs) {
@@ -136,7 +105,6 @@ public class SignatureFormulaExtractor {
         return argTypes;
     }
 
-
     public static void printMethodSig(HashMap<String, int[]> tableCol) {
         if (tableCol == null)
             return;
@@ -178,6 +146,29 @@ public class SignatureFormulaExtractor {
             System.out.println();
         }
         System.out.println();
+    }
+
+    public static void main(String[] args) throws IOException {
+        Path logPath = Paths.get("./test/pub-approve/rvm/Pub.rvm");
+        EventsInfo eventsInfo = SigExtractor.extractEventsInfoFromSigFile(logPath);
+
+        printMethodSig(eventsInfo.getTableCol());
+        System.out.println("The max num of params in the spec is " + SigExtractor.maxNumOfParams);
+
+        System.out.println("The specs are ");
+        HashMap<String, boolean[]> skipList = eventsInfo.getSpecSkippedEventsMap();
+        for (String s : skipList.keySet()) {
+            System.out.println("Spec: " + s);
+        }
+    }
+
+    private void reset() {
+        this.specEventsMap.clear();
+        this.specPropertiesMap.clear();
+        this.specSkippedEventsMap.clear();
+        this.specLangParamsMap.clear();
+        this.eventActionsMap.clear();
+        this.TableCol.clear();
     }
 
     public EventsInfo extractEventsInfoFromSigFile(Path file) throws IOException {
@@ -252,22 +243,30 @@ public class SignatureFormulaExtractor {
                 }
             }
         }
-        return new EventsInfo(this.TableCol, this.specSkippedEventsMap);
+        return new EventsInfo(this.TableCol, this.specSkippedEventsMap, this.specPropertiesMap);
     }
 
+    public static final class EventsInfo {
+        private HashMap<String, int[]> tableCol;
+        private HashMap<String, boolean[]> specSkippedEventsMap;
+        private HashMap<String, List<Property>> specPropsMap;
 
+        public EventsInfo(HashMap<String, int[]> tableCol, HashMap<String, boolean[]> specSkippedEventsMap, HashMap<String, List<Property>> specPropsMap) {
+            this.tableCol = tableCol;
+            this.specSkippedEventsMap = specSkippedEventsMap;
+            this.specPropsMap = specPropsMap;
+        }
 
-    public static void main(String[] args) throws IOException {
-        Path logPath = Paths.get("./test/pub-approve/rvm/Pub.rvm");
-        EventsInfo eventsInfo = SigExtractor.extractEventsInfoFromSigFile(logPath);
+        public HashMap<String, int[]> getTableCol() {
+            return tableCol;
+        }
 
-        printMethodSig(eventsInfo.getTableCol());
-        System.out.println("The max num of params in the spec is " + SigExtractor.maxNumOfParams);
+        public HashMap<String, boolean[]> getSpecSkippedEventsMap() {
+            return specSkippedEventsMap;
+        }
 
-        System.out.println("The specs are ");
-        HashMap<String, boolean[]> skipList = eventsInfo.getSpecSkippedEventsMap();
-        for (String s : skipList.keySet()) {
-            System.out.println("Spec: "+s);
+        public HashMap<String, List<Property>> getSpecPropsMap() {
+            return specPropsMap;
         }
     }
 }

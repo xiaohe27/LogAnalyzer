@@ -9,6 +9,7 @@ public static boolean hasViolation;
 		hasViolation = true;
 	}
 	}
+	 
 }
 
 Pub(Integer report) {
@@ -22,10 +23,12 @@ public static boolean hasViolation;
 
 	}
 
+ 
   ltl: [](publish => (*) approve)
 
-  @violation {hasViolation = true;}
- 
+  @violation {
+  System.out.println("pub without approve!");
+  hasViolation = true;}
 }
 
 More(String user) {
