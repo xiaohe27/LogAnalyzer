@@ -58,8 +58,7 @@ class LogEntryExtractor implements LogReader.LogExtractor {
     private int posInArr;
     private byte[] oldByteArr;
     //if the ending index is less than the starting one, then the starting index comes from the old byte array
-//    private int TimeStampStartIndex;  //starting: [
-//    private int TimeStampLen;    //ending )
+
     private int EventNameStartIndex;
 
     private int paramStartIndex;
@@ -72,7 +71,8 @@ class LogEntryExtractor implements LogReader.LogExtractor {
     private long curNumOfReads;
     private FileChannel inChannel;
 
-    private boolean[] unPrintedFields = new boolean[EventSigExtractor.maxNumOfParams];
+    private boolean printAll = true; //by default, print all the info of the event if a violation has been found
+    private boolean[] unPrintedFields = new boolean[LogReader.maxNumOfParams];
 
     private ArrayList<Object[]> violationsInCurLogEntry = new ArrayList<>();
 
@@ -532,10 +532,10 @@ class LogEntryExtractor implements LogReader.LogExtractor {
                             throw new IOException("Unknown event " + EventName);
                         }
 
-                        if (EventSigExtractor.isMonitoredEvent(EventName)) {
+                        if (LogReader.isMonitoredEvent(EventName)) {
                             this.isAMonitoredEvent = true;
-                            //the boolean list contains info about how to skip certain fields when output the violations
-                            this.unPrintedFields = EventSigExtractor.skippedFieldsMap.get(EventName);
+//                        the boolean list contains info about how to skip certain fields when output the violations
+//                            this.unPrintedFields = EventSigExtractor.skippedFieldsMap.get(EventName);
                         } else {
                             this.isAMonitoredEvent = false;
                         }
@@ -673,17 +673,28 @@ class LogEntryExtractor implements LogReader.LogExtractor {
 
     public void printEvent(Object[] data) throws IOException {
         StringBuilder sb = new StringBuilder();
-
+        sb.append(EventName + " : ");
         sb.append(" (");
-        boolean isFirst = true;
+        if (this.printAll) {
+            for (int i = 0; i < data.length - 1; i++) {
+                sb.append(data[i] + ",");
+            }
 
-        for (int i = 0; i < data.length; i++) {
-            if (!unPrintedFields[i]) {
-                if (isFirst) {
-                    isFirst = false;
-                    sb.append(data[i]);
-                } else {
-                    sb.append("," + data[i]);
+            if (data.length > 0) {
+                sb.append(data[data.length - 1]);
+            }
+
+        } else {
+            boolean isFirst = true;
+
+            for (int i = 0; i < data.length; i++) {
+                if (!unPrintedFields[i]) {
+                    if (isFirst) {
+                        isFirst = false;
+                        sb.append(data[i]);
+                    } else {
+                        sb.append("," + data[i]);
+                    }
                 }
             }
         }
@@ -703,15 +714,25 @@ class LogEntryExtractor implements LogReader.LogExtractor {
         for (int i = 0; i < this.violationsInCurLogEntry.size(); i++) {
             Object[] data = this.violationsInCurLogEntry.get(i);
             sb.append(" (");
-            boolean isFirst = true;
+            if (this.printAll) {
+                for (int j = 0; j < data.length - 1; j++) {
+                    sb.append(data[j] + ",");
+                }
 
-            for (int j = 0; j < data.length; j++) {
-                if (!unPrintedFields[j]) {
-                    if (isFirst) {
-                        isFirst = false;
-                        sb.append(data[j]);
-                    } else {
-                        sb.append("," + data[j]);
+                if (data.length > 0) {
+                    sb.append(data[data.length - 1]);
+                }
+            } else {
+                boolean isFirst = true;
+
+                for (int j = 0; j < data.length; j++) {
+                    if (!unPrintedFields[j]) {
+                        if (isFirst) {
+                            isFirst = false;
+                            sb.append(data[j]);
+                        } else {
+                            sb.append("," + data[j]);
+                        }
                     }
                 }
             }
@@ -784,100 +805,6 @@ class LogEntryExtractor implements LogReader.LogExtractor {
 
 }
 
-class EventSigExtractor {
-    public static final String SELECT = "select";
-    public static final String INSERT = "insert";
-    public static final String UPDATE = "update";
-    public static final String DELETE = "delete";
-    public static final String SCRIPT_START = "script_start";
-    public static final String SCRIPT_END = "script_end";
-    public static final String SCRIPT_SVN = "script_svn";
-    public static final String SCRIPT_MD5 = "script_md5";
-    public static final String COMMIT = "commit";
-
-    public static final String PUBLISH = "publish";
-    public static final String APPROVE = "approve";
-
-    public static final int maxNumOfParams = 5;
-
-    public static List<String> monitoredEventList = init();
-    public static HashMap<String, boolean[]> skippedFieldsMap = init2();
-    public static String monitorName;
-    private static HashMap<String, int[]> TableCol = initTableCol();
-
-    private static HashMap<String, int[]> initTableCol() {
-        HashMap<String, int[]> tmp = new HashMap<>();
-        //the arg types can be inferred from the signature file
-        int[] argTy4Insert = new int[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE,
-                RegHelper.STRING_TYPE, RegHelper.STRING_TYPE};
-        int[] argTy4Script = new int[]{RegHelper.STRING_TYPE};
-        int[] argTy4ScriptSVN = new int[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE,
-                RegHelper.STRING_TYPE, RegHelper.INT_TYPE, RegHelper.INT_TYPE};
-        int[] argTy4ScriptMD5 = new int[]{RegHelper.STRING_TYPE, RegHelper.STRING_TYPE};
-        int[] argTy4Commit = new int[]{RegHelper.STRING_TYPE, RegHelper.INT_TYPE};
-
-        int[] argTy4Pub = new int[]{RegHelper.INT_TYPE};
-
-        tmp.put(SELECT, argTy4Insert);
-        tmp.put(INSERT, argTy4Insert);
-        tmp.put(UPDATE, argTy4Insert);
-        tmp.put(DELETE, argTy4Insert);
-        tmp.put(SCRIPT_START, argTy4Script);
-        tmp.put(SCRIPT_END, argTy4Script);
-        tmp.put(SCRIPT_SVN, argTy4ScriptSVN);
-        tmp.put(SCRIPT_MD5, argTy4ScriptMD5);
-        tmp.put(COMMIT, argTy4Commit);
-
-        tmp.put(APPROVE, argTy4Pub);
-        tmp.put(PUBLISH, argTy4Pub);
-        return tmp;
-    }
-
-    public static HashMap<String, int[]> extractMethoArgsMappingFromSigFile(File f) {
-        //fake method at the moment, needs to be implemented.
-        return TableCol;
-    }
-
-    private static HashMap<String, boolean[]> init2() {
-        HashMap<String, boolean[]> tmp = new HashMap<>();
-        boolean[] skipList = new boolean[maxNumOfParams];
-        skipList[1] = true;
-        tmp.put(INSERT, skipList);
-//        tmp.put(SigExtractor.APPROVE, skipList);
-//        tmp.put(SigExtractor.PUBLISH, skipList);
-        return tmp;
-    }
-
-    private static List<String> init() {
-        List<String> tmp = new ArrayList<>();
-        //needs real impl. it is fake method here
-        monitorName = "rvm.InsertRuntimeMonitor";
-//        monitorName = "rvm.PubRuntimeMonitor";
-
-        tmp = new ArrayList<>();
-
-        tmp.add(INSERT);
-//        tmp.add(SigExtractor.SCRIPT_SVN);
-//        tmp.add(SigExtractor.COMMIT);
-//        tmp.add(SigExtractor.SCRIPT_MD5);
-//        tmp.add(SigExtractor.APPROVE);
-//        tmp.add(SigExtractor.PUBLISH);
-        return tmp;
-    }
-
-
-    public static String getMonitorName() {
-        return monitorName;
-    }
-
-    public static List<String> getMonitoredEventList() {
-        return monitoredEventList;
-    }
-
-    public static boolean isMonitoredEvent(String eventName) {
-        return monitoredEventList.contains(eventName);
-    }
-}
 
 class Utils {
     public static final String lineSeparator = System.getProperty("line.separator");

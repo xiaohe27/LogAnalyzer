@@ -34,10 +34,7 @@ public class SignatureFormulaExtractor {
      */
     private HashMap<String, List<String>> specEventsMap = new HashMap<>();
     private HashMap<String, List<Property>> specPropertiesMap = new HashMap<>();
-    /**
-     * E.G. boolean array's No. 5 element is true indicates the No.5'event in that spec is monitored.
-     */
-    private HashMap<String, boolean[]> specSkippedEventsMap = new HashMap<>();
+
     /**
      * The mappings between spec name and spec level params.
      */
@@ -156,7 +153,7 @@ public class SignatureFormulaExtractor {
         System.out.println("The max num of params in the spec is " + SigExtractor.maxNumOfParams);
 
         System.out.println("The specs are ");
-        HashMap<String, boolean[]> skipList = eventsInfo.getSpecSkippedEventsMap();
+        HashMap<String, List<Property>> skipList = eventsInfo.getSpecPropsMap();
         for (String s : skipList.keySet()) {
             System.out.println("Spec: " + s);
         }
@@ -165,7 +162,6 @@ public class SignatureFormulaExtractor {
     private void reset() {
         this.specEventsMap.clear();
         this.specPropertiesMap.clear();
-        this.specSkippedEventsMap.clear();
         this.specLangParamsMap.clear();
         this.eventActionsMap.clear();
         this.TableCol.clear();
@@ -195,9 +191,6 @@ public class SignatureFormulaExtractor {
             List<Event> eventsInCurSpec = spec.getEvents();
             List<Property> propsInCurSpec = spec.getProperties();
 
-            boolean[] skippedEventsList = new boolean[eventsInCurSpec.size()];
-            this.specSkippedEventsMap.put(specName, skippedEventsList);
-            //when each of the events is inspected, we can decide whether that event is allowed to be skipped.
 
 
             //the list contains all the valid events' names
@@ -243,30 +236,30 @@ public class SignatureFormulaExtractor {
                 }
             }
         }
-        return new EventsInfo(this.TableCol, this.specSkippedEventsMap, this.specPropertiesMap);
+        return new EventsInfo(this.TableCol, this.specPropertiesMap, this.eventActionsMap);
     }
 
     public static final class EventsInfo {
         private HashMap<String, int[]> tableCol;
-        private HashMap<String, boolean[]> specSkippedEventsMap;
         private HashMap<String, List<Property>> specPropsMap;
+        private HashMap<String, String> eventAndActionsMap;
 
-        public EventsInfo(HashMap<String, int[]> tableCol, HashMap<String, boolean[]> specSkippedEventsMap, HashMap<String, List<Property>> specPropsMap) {
+        public EventsInfo(HashMap<String, int[]> tableCol, HashMap<String, List<Property>> specPropsMap, HashMap<String, String> eventAndActionsMap) {
             this.tableCol = tableCol;
-            this.specSkippedEventsMap = specSkippedEventsMap;
             this.specPropsMap = specPropsMap;
+            this.eventAndActionsMap = eventAndActionsMap;
         }
 
         public HashMap<String, int[]> getTableCol() {
             return tableCol;
         }
 
-        public HashMap<String, boolean[]> getSpecSkippedEventsMap() {
-            return specSkippedEventsMap;
-        }
-
         public HashMap<String, List<Property>> getSpecPropsMap() {
             return specPropsMap;
+        }
+
+        public HashMap<String, String> getEventAndActionsMap() {
+            return eventAndActionsMap;
         }
     }
 }

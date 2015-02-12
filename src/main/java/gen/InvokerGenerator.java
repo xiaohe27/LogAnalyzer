@@ -10,9 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by xiaohe on 2/2/15.
@@ -21,55 +19,40 @@ public class InvokerGenerator {
     private JCodeModel CodeModel;
     private String MonitorName;
     private List<String> ActualMonitorNames;
-
+    private SignatureFormulaExtractor.EventsInfo eventsInfo;
     private String outputDir;
 
     public InvokerGenerator(String outputDir) {
         this.outputDir = outputDir;
     }
 
-    public static void main(String[] args) throws IOException {
-        String monitorName;
-        monitorName = "rvm.InsertRuntimeMonitor";
-//        monitorName = "rvm.PubRuntimeMonitor";
-        InvokerGenerator ig = new InvokerGenerator("./target/generated-sources/CodeModel");
-        Path path2SigFile = Paths.get("./test/pub-approve/rvm/Pub.rvm");
-        SignatureFormulaExtractor.EventsInfo eventsInfo = SignatureFormulaExtractor.SigExtractor.
-                extractEventsInfoFromSigFile(path2SigFile);
-
-        ArrayList<String> specList = new ArrayList<>();
-        specList.add("Insert");
-
-        SignatureFormulaExtractor.printMethodSig(eventsInfo.getTableCol());
-
-        ig.generateCustomizedInvoker(monitorName, eventsInfo);
-    }
-
     public void generateCustomizedInvoker(String monitorClassPath, SignatureFormulaExtractor.EventsInfo eventsInfo) {
         List<String> specNames = new ArrayList<>();
-        specNames.addAll(eventsInfo.getSpecSkippedEventsMap().keySet());
+        specNames.addAll(eventsInfo.getSpecPropsMap().keySet());
         HashMap<String, int[]> tableSchema = eventsInfo.getTableCol();
+        this.eventsInfo = eventsInfo;
 
         CodeModel = new JCodeModel();
         this.MonitorName = monitorClassPath;
 
         assert MonitorName != null;
 
-//        this.RawMonitorName = specName + "RawMonitor";
         this.ActualMonitorNames = new ArrayList<>();
-        String packageName = "rvm.";
         for (int i = 0; i < specNames.size(); i++) {
             String curSpecName = specNames.get(i);
             List<Property> propsInCurSpec = eventsInfo.getSpecPropsMap().get(curSpecName);
             if (propsInCurSpec == null || propsInCurSpec.size() == 0)
-                this.ActualMonitorNames.add(packageName + curSpecName + "RawMonitor");
+                this.ActualMonitorNames.add(curSpecName + "RawMonitor");
             else
-                this.ActualMonitorNames.add(packageName + curSpecName + "Monitor");
+                this.ActualMonitorNames.add(curSpecName + "Monitor");
         }
 
         try {
             JDefinedClass logReaderClass = CodeModel._class("LogReader");
+            initMonitoredEventsList(logReaderClass);
+
             initFields(logReaderClass);
+
             initLogReaderClass(logReaderClass);
             initTableInfoMethod(logReaderClass, tableSchema);
 
@@ -94,7 +77,40 @@ public class InvokerGenerator {
         }
     }
 
+    private void initMonitoredEventsList(JDefinedClass logReaderClass) {
+        String methodName = "initMonitoredEventsSet";
+        int accessModifier = JMod.PRIVATE | JMod.STATIC;
+        JType fieldTy = CodeModel.ref(HashSet.class).narrow(String.class);
+        String fieldName = "monitoredEventSet";
+
+        logReaderClass.field(accessModifier, fieldTy,
+                fieldName, logReaderClass.staticInvoke(methodName));
+
+        JBlock initMonitorMethodBody = logReaderClass.method(accessModifier, fieldTy, methodName).body();
+        initMonitorMethodBody.decl(fieldTy, "setOfEvents", JExpr._new(fieldTy));
+
+        List<Property> allProperties = new ArrayList<>();
+        for (List<Property> c : this.eventsInfo.getSpecPropsMap().values()) {
+            allProperties.addAll(c);
+        }
+
+        Set<String> eventList = this.eventsInfo.getTableCol().keySet();
+        for (String eventName : eventList) {
+            if (this.eventsInfo.getEventAndActionsMap().get(eventName) == null ||)
+        }
+    }
+
+    private boolean insideProp(Property p, String eventName) {
+        return p.getSyntax().contains(eventName);
+    }
+
     private void initFields(JDefinedClass logReaderClass) {
+        JInvocation getPathFromStrInvok = CodeModel.ref(Paths.class).staticInvoke("get");
+        getPathFromStrInvok.arg(JExpr.lit("./test-out/violation.txt"));
+        logReaderClass.field(JMod.PUBLIC | JMod.STATIC, Path.class, "outputPath", getPathFromStrInvok);
+
+        logReaderClass.field(JMod.PROTECTED | JMod.STATIC, int.class, "maxNumOfParams",
+                JExpr.lit(SignatureFormulaExtractor.maxNumOfParams));
 
     }
 
@@ -224,5 +240,23 @@ public class InvokerGenerator {
             addViolationStmt.arg(tupleData);
             ifBlock._then().add(addViolationStmt);
         }
+    }
+
+
+    public static void main(String[] args) throws IOException {
+        String monitorName;
+        monitorName = "rvm.InsertRuntimeMonitor";
+//        monitorName = "rvm.PubRuntimeMonitor";
+        InvokerGenerator ig = new InvokerGenerator("./target/generated-sources/CodeModel");
+        Path path2SigFile = Paths.get("./test/pub-approve/rvm/Pub.rvm");
+        SignatureFormulaExtractor.EventsInfo eventsInfo = SignatureFormulaExtractor.SigExtractor.
+                extractEventsInfoFromSigFile(path2SigFile);
+
+        ArrayList<String> specList = new ArrayList<>();
+        specList.add("Insert");
+
+        SignatureFormulaExtractor.printMethodSig(eventsInfo.getTableCol());
+
+        ig.generateCustomizedInvoker(monitorName, eventsInfo);
     }
 }
