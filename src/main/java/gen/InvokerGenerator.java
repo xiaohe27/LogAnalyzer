@@ -41,7 +41,9 @@ public class InvokerGenerator {
 
         try {
             JDefinedClass logReaderClass = CodeModel._class("LogReader");
+            initFields(logReaderClass);
             initLogReaderClass(logReaderClass);
+            initTableInfoMethod(logReaderClass, tableSchema);
 
             JDefinedClass definedClass = logReaderClass._class(JMod.NONE | JMod.STATIC, "MonitorMethodsInvoker");
             SingleStreamCodeWriter sscw = new SingleStreamCodeWriter(System.out);
@@ -64,8 +66,38 @@ public class InvokerGenerator {
         }
     }
 
+    private void initFields(JDefinedClass logReaderClass) {
+
+    }
+
+    private void initTableInfoMethod(JDefinedClass logReaderClass, HashMap<String, int[]> tableSchema) {
+        JType tableSchemaType = CodeModel.ref(HashMap.class).narrow(String.class, int[].class);
+        JMethod initTableColMethod = logReaderClass.method(JMod.PRIVATE | JMod.STATIC, tableSchemaType, "initMethodInfo");
+
+        JInvocation initMethodInvok = logReaderClass.staticInvoke(initTableColMethod);
+        logReaderClass.field(JMod.PRIVATE | JMod.STATIC, tableSchemaType, "methodInfo", initMethodInvok);
+
+        JBlock body = initTableColMethod.body();
+        JExpression initTableExpr = JExpr._new(tableSchemaType);
+        JVar tmpTable = body.decl(tableSchemaType, "methodInfoTable", initTableExpr);
+
+        for (String eventName : tableSchema.keySet()) {
+            int[] colTypes = tableSchema.get(eventName);
+            JArray typeArrExp = JExpr.newArray(CodeModel.INT);
+            for (int i = 0; i < colTypes.length; i++) {
+                typeArrExp.add(JExpr.lit(colTypes[i]));
+            }
+
+            JInvocation putMethodInvok = body.invoke(tmpTable, "put");
+            putMethodInvok.arg(eventName);
+            putMethodInvok.arg(typeArrExp);
+        }
+        body._return(tmpTable);
+    }
+
     private void initLogReaderClass(JDefinedClass definedClass) {
-        definedClass.direct("\n    private static String outputPathStr = \"./test-out/violation.txt\";\n" +
+        definedClass.direct(
+                "    private static String outputPathStr = \"./test-out/violation.txt\";\n" +
                 "    public static Path outputPath = Paths.get(outputPathStr);\n" +
                 "\n" +
                 "    private static void initOutputFile() throws IOException {\n" +
@@ -83,27 +115,13 @@ public class InvokerGenerator {
                 "    }\n" +
                 "\n" +
                 "    public static void main(String[] args) throws IOException {\n" +
-                "        if (args.length > 2 || args.length < 1) {\n" +
-                "            System.err.println(\"Two args should be provided in this order: <path to rvm spec file>\" +\n" +
-                "                    \" <path to log file> \\nOr omit the path to log file,\"\n" +
-                "                    + \" in which case the contents of log file will be read from the System.in\");\n" +
-                "        }\n" +
+                "        assert args.length == 1 && args[0].endsWith(\".log\") :\n" +
+                "                \"The only argument needed is the log file (with .log suffix).\";\n" +
                 "\n" +
                 "        initOutputFile();\n" +
                 "\n" +
-                "        Path path2SigFile = Paths.get(args[0]);\n" +
-                "\n" +
-                "        //if there is no log file's path is given, then the log will be read from stdin\n" +
-                "        Path path2Log = null;\n" +
-                "        if (args.length == 2) {\n" +
-                "            path2Log = Paths.get(args[1]);\n" +
-                "        } else {\n" +
-                "            throw new IOException(\"Does not support reading form std input yet.\");\n" +
-                "        }\n" +
-                "\n" +
-                "\n" +
-                "        LogEntryExtractor lee = new LogEntryExtractor(EventSigExtractor.extractEventsInfoFromSigFile(path2SigFile.toFile()), path2Log, 6);\n" +
-                "\n" +
+                "        Path path2Log = path2Log = Paths.get(args[0]);\n" +
+                "        LogEntryExtractor lee = new LogEntryExtractor(methodInfo, path2Log, 6);\n" +
                 "        lee.startReadingEventsByteByByte();\n" +
                 "    }\n" +
                 "\n" +

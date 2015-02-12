@@ -16,7 +16,7 @@ import java.util.List;
 public class Main {
     public static Path genLogReaderPath;
     private static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    private static String OutPutFilePath = "./CustomizedLogReader/log/LogReader.java";
+    private static String OutPutFilePath = "./CustomizedLogReader/rvm/LogReader.java";
 
     private static String getContentFromResource(String resourceName) throws IOException {
         BufferedReader br = new BufferedReader(new InputStreamReader(classLoader.getResourceAsStream(resourceName)));
