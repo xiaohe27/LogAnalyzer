@@ -3,6 +3,7 @@ package gen;
 import com.runtimeverification.rvmonitor.core.ast.Property;
 import com.sun.codemodel.*;
 import com.sun.codemodel.writer.SingleStreamCodeWriter;
+import fsl.uiuc.Main;
 import reg.RegHelper;
 import sig.SignatureFormulaExtractor;
 
@@ -50,6 +51,7 @@ public class InvokerGenerator {
         try {
             JDefinedClass logReaderClass = CodeModel._class("LogReader");
             initMonitoredEventsList(logReaderClass);
+            genIsMonitoredMethod(logReaderClass);
 
             initFields(logReaderClass);
 
@@ -77,6 +79,15 @@ public class InvokerGenerator {
         }
     }
 
+    private void genIsMonitoredMethod(JDefinedClass logReaderClass) {
+        JMethod isMonitoredEventMethod = logReaderClass.method(JMod.PUBLIC | JMod.STATIC, boolean.class, "isMonitoredEvent");
+        JVar eventName = isMonitoredEventMethod.param(String.class, "event");
+        JInvocation invok = logReaderClass.staticRef("monitoredEventSet").invoke("contains");
+        invok.arg(eventName);
+
+        isMonitoredEventMethod.body()._return(invok);
+    }
+
     private void initMonitoredEventsList(JDefinedClass logReaderClass) {
         String methodName = "initMonitoredEventsSet";
         int accessModifier = JMod.PRIVATE | JMod.STATIC;
@@ -87,7 +98,7 @@ public class InvokerGenerator {
                 fieldName, logReaderClass.staticInvoke(methodName));
 
         JBlock initMonitorMethodBody = logReaderClass.method(accessModifier, fieldTy, methodName).body();
-        initMonitorMethodBody.decl(fieldTy, "setOfEvents", JExpr._new(fieldTy));
+        JVar setOfEvents = initMonitorMethodBody.decl(fieldTy, "setOfEvents", JExpr._new(fieldTy));
 
         List<Property> allProperties = new ArrayList<>();
         for (List<Property> c : this.eventsInfo.getSpecPropsMap().values()) {
@@ -96,8 +107,26 @@ public class InvokerGenerator {
 
         Set<String> eventList = this.eventsInfo.getTableCol().keySet();
         for (String eventName : eventList) {
-            if (this.eventsInfo.getEventAndActionsMap().get(eventName) == null ||)
+            String eventAction = this.eventsInfo.getEventAndActionsMap().get(eventName);
+            if (eventAction != null && !eventAction.replaceAll("\\W", "").equals(""))
+            {
+                //if the event action is not empty, then add the event to the monitored list
+                JInvocation invocation = initMonitorMethodBody.invoke(setOfEvents, "add");
+                invocation.arg(eventName);
+            } else {
+                for (int i = 0; i < allProperties.size(); i++) {
+                    if (this.insideProp(allProperties.get(i), eventName)){
+                        //if the event occurs inside some property, then it should be monitored
+                        JInvocation invocation = initMonitorMethodBody.invoke(setOfEvents, "add");
+                        invocation.arg(eventName);
+                        break;
+                    }
+                }
+            }
+
         }
+
+        initMonitorMethodBody._return(setOfEvents);
     }
 
     private boolean insideProp(Property p, String eventName) {
@@ -139,39 +168,8 @@ public class InvokerGenerator {
         body._return(tmpTable);
     }
 
-    private void initLogReaderClass(JDefinedClass definedClass) {
-        definedClass.direct(
-                "    private static String outputPathStr = \"./test-out/violation.txt\";\n" +
-                        "    public static Path outputPath = Paths.get(outputPathStr);\n" +
-                        "\n" +
-                        "    private static void initOutputFile() throws IOException {\n" +
-                        "        File file = outputPath.toFile();\n" +
-                        "        if (file.exists()) {\n" +
-                        "            new PrintWriter(file).close();\n" +
-                        "        } else {\n" +
-                        "            if (outputPath.getParent().toFile().exists()) {\n" +
-                        "                file.createNewFile();\n" +
-                        "            } else {\n" +
-                        "                outputPath.getParent().toFile().mkdirs();\n" +
-                        "                file.createNewFile();\n" +
-                        "            }\n" +
-                        "        }\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    public static void main(String[] args) throws IOException {\n" +
-                        "        assert args.length == 1 && args[0].endsWith(\".log\") :\n" +
-                        "                \"The only argument needed is the log file (with .log suffix).\";\n" +
-                        "\n" +
-                        "        initOutputFile();\n" +
-                        "\n" +
-                        "        Path path2Log = path2Log = Paths.get(args[0]);\n" +
-                        "        LogEntryExtractor lee = new LogEntryExtractor(methodInfo, path2Log, 6);\n" +
-                        "        lee.startReadingEventsByteByByte();\n" +
-                        "    }\n" +
-                        "\n" +
-                        "    public static interface LogExtractor {\n" +
-                        "        public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException;\n" +
-                        "    }");
+    private void initLogReaderClass(JDefinedClass definedClass) throws IOException {
+        definedClass.direct(Main.getContentFromResource("entryPoint.code"));
     }
 
     private void buildInvocationMethod(JDefinedClass definedClass, HashMap<String, int[]> tableSchema) {
