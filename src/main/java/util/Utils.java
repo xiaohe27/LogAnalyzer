@@ -54,7 +54,7 @@ public class Utils {
 
     private BufferedWriter init() {
         try {
-            return newBufferedWriter(Main.outputPath, charset, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
+            return newBufferedWriter(Main.genLogReaderPath, charset, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
         } catch (IOException e) {
             e.printStackTrace();
             System.exit(2);

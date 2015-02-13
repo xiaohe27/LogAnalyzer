@@ -1,0 +1,10 @@
+Names:
+For spec without any property, it is raw monitor?
+
+If there are some property associated with the spec, 
+then the generated monitor does not have the "Raw" label.
+
+Index:
+If the indexing var of monitor's name is "v",
+then the param of event methods should contain the var with the 
+same name "v"

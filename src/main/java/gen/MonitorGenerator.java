@@ -1,49 +1,50 @@
 package gen;
 
 import formula.FormulaExtractor;
-import sig.SigExtractor;
 import util.Utils;
 
-import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 
+import static sig.SignatureFormulaExtractor.SigExtractor;
+
 /**
  * Created by xiaohe on 12/3/14.
  * Generate a monitor lib according to the template below and instantiation parameters.
- * <p/>
+ * <p>
  * package rvm;
- * <p/>
+ * <p>
  * Pub(Integer report) {
  * Integer report;
  * long time;
- * <p/>
+ * <p>
  * event publish (Integer report, long time) {
  * this.report=report;
  * this.time=time;
  * }
- * <p/>
+ * <p>
  * event approve (Integer report, long time) {
  * this.report=report;
  * this.time=time;
  * }
- * <p/>
+ * <p>
  * ltl: [](publish => (*) approve)
  *
  * @violation { System.out.println("should not publish financial report "+this.report+" without pre-approval");}
- * <p/>
+ * <p>
  * }
  */
 public class MonitorGenerator {
 
-    private File sigFile;
+    private Path sigFile;
     private FormulaExtractor formulaExtractor;
 
     private StringBuilder sb = new StringBuilder();
 
     public MonitorGenerator(Path sigFilePath, Path formulaFilePath) {
-        this.sigFile = sigFilePath.toFile();
+        this.sigFile = sigFilePath;
         this.formulaExtractor = new FormulaExtractor(formulaFilePath);
 
         this.genMonitorLib();
@@ -93,8 +94,8 @@ public class MonitorGenerator {
         return this.formulaExtractor.getMonitoredEventList();
     }
 
-    public HashMap<String, int[]> getMethoArgsMappingFromSigFile() {
-        return SigExtractor.extractMethoArgsMappingFromSigFile(sigFile);
+    public HashMap<String, int[]> getMethoArgsMappingFromSigFile() throws IOException {
+        return SigExtractor.extractEventsInfoFromSigFile(sigFile).getTableCol();
     }
 
 }

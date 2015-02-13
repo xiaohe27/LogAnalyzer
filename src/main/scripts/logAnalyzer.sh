@@ -1,1 +1,1 @@
-java -jar LogAnalyzer-1.0-SNAPSHOT.jar $1 $2 $3
+java -jar -ea LogAnalyzer-1.0-SNAPSHOT.jar $1

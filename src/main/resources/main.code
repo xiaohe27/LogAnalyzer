@@ -1,26 +1,7 @@
-package log;
-
-import formula.FormulaExtractor;
-import reg.RegHelper;
-import sig.SigExtractor;
-import util.Utils;
-
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.nio.BufferUnderflowException;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-
 /**
  * Serves as lexer and parser for log file.
  */
-public class LogEntryExtractor implements LogExtractor {
+class LogEntryExtractor implements LogReader.LogExtractor {
     /**
      * Use a byte to denote different tokens in the log.
      * -1: init state, or NULL.
@@ -55,7 +36,6 @@ public class LogEntryExtractor implements LogExtractor {
     static final byte minus = (byte) '-';
 
     private final Charset asciiCharSet = Charset.forName("ISO-8859-1");
-    private HashMap<String, Method> EventNameMethodMap = new HashMap<>();
     private long TimeStamp; //we can add the @ symbol when it is ready to be printed
     private String EventName;
     private byte prevToken = NULL_TOKEN;
@@ -78,8 +58,7 @@ public class LogEntryExtractor implements LogExtractor {
     private int posInArr;
     private byte[] oldByteArr;
     //if the ending index is less than the starting one, then the starting index comes from the old byte array
-//    private int TimeStampStartIndex;  //starting: [
-//    private int TimeStampLen;    //ending )
+
     private int EventNameStartIndex;
 
     private int paramStartIndex;
@@ -92,7 +71,8 @@ public class LogEntryExtractor implements LogExtractor {
     private long curNumOfReads;
     private FileChannel inChannel;
 
-    private boolean[] unPrintedFields = new boolean[SigExtractor.maxNumOfParams];
+    private boolean printAll = true; //by default, print all the info of the event if a violation has been found
+    private boolean[] unPrintedFields = new boolean[LogReader.maxNumOfParams];
 
     private ArrayList<Object[]> violationsInCurLogEntry = new ArrayList<>();
 
@@ -104,19 +84,18 @@ public class LogEntryExtractor implements LogExtractor {
      * @param powOf2TimesKB Multiple of 1024.
      * @throws IOException
      */
-    public LogEntryExtractor(HashMap<String, int[]> tableCol, Path logFile, int powOf2TimesKB, HashMap<String, Method> map)
+    public LogEntryExtractor(HashMap<String, int[]> tableCol, Path logFile, int powOf2TimesKB)
             throws IOException {
         this.TableCol = tableCol;
         this.logFilePath = logFile.toString();
         this.BufSize = (int) (Math.pow(2, powOf2TimesKB)) * 1024;
         this.byteArr = new byte[this.BufSize];
         this.oldByteArr = new byte[this.BufSize];
-        this.EventNameMethodMap = map;
     }
 
 
-    public LogEntryExtractor(HashMap<String, int[]> tableCol, Path logFile, HashMap<String, Method> map) throws IOException {
-        this(tableCol, logFile, 5, map);
+    public LogEntryExtractor(HashMap<String, int[]> tableCol, Path logFile) throws IOException {
+        this(tableCol, logFile, 5);
     }
 
     private boolean isWhiteSpace(byte b) {
@@ -415,10 +394,6 @@ public class LogEntryExtractor implements LogExtractor {
 
     }
 
-    private void checkAround(int start, int len) {
-        System.out.println(new String(this.byteArr, start, len, this.asciiCharSet));
-    }
-
     private void looseCheckingEventArgs() throws IOException {
         boolean isCurFieldEmpty = true;
         boolean canSeeComma = false;
@@ -477,7 +452,7 @@ public class LogEntryExtractor implements LogExtractor {
         }
     }
 
-    public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    public void startReadingEventsByteByByte() throws IOException {
 
         RandomAccessFile aFile = new RandomAccessFile
                 (this.logFilePath, "r");
@@ -557,10 +532,10 @@ public class LogEntryExtractor implements LogExtractor {
                             throw new IOException("Unknown event " + EventName);
                         }
 
-                        if (FormulaExtractor.monitoredEventList.contains(EventName)) {
+                        if (LogReader.isMonitoredEvent(EventName)) {
                             this.isAMonitoredEvent = true;
-                            //the boolean list contains info about how to skip certain fields when output the violations
-                            this.unPrintedFields = FormulaExtractor.skippedFieldsMap.get(EventName);
+//                        the boolean list contains info about how to skip certain fields when output the violations
+//                            this.unPrintedFields = EventSigExtractor.skippedFieldsMap.get(EventName);
                         } else {
                             this.isAMonitoredEvent = false;
                         }
@@ -620,7 +595,7 @@ public class LogEntryExtractor implements LogExtractor {
      *
      * @throws IOException
      */
-    private void readEvent() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    private void readEvent() throws IOException {
         Object[] tupleData = new Object[typesInTuple.length];
         int i = 0;
         for (; i < typesInTuple.length - 1; i++) {
@@ -663,27 +638,16 @@ public class LogEntryExtractor implements LogExtractor {
         }
 
 
-//        InsertRawMonitor.hasViolation = false;
+        LogReader.MonitorMethodsInvoker.invoke(EventName, tupleData, this.violationsInCurLogEntry);
+        // the customized method invoker will call the method as well as update the violation list
+
 
 //        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
 //
-//        switch (this.EventName) {
-//            case SigExtractor.APPROVE :
-//                PubRuntimeMonitor.approveEvent((Integer) tupleData[0]);
-//                break;
-//
-//            case SigExtractor.PUBLISH :
-//                PubRuntimeMonitor.publishEvent((Integer) tupleData[0]);
-//                break;
-//        }
 
-//        InsertRawMonitor.hasViolation = false;
-        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
+
 //        InsertRuntimeMonitor.insertEvent((String) tupleData[0], (String) tupleData[1], (String) tupleData[2], (String) tupleData[3]);
 
-//        if (InsertRawMonitor.hasViolation) { // the result true indicates the detection of violation in the tuple
-//            this.violationsInCurLogEntry.add(tupleData);
-//        }
 
 //        this.printEvent(tupleData);
 
@@ -709,17 +673,28 @@ public class LogEntryExtractor implements LogExtractor {
 
     public void printEvent(Object[] data) throws IOException {
         StringBuilder sb = new StringBuilder();
-
+        sb.append(EventName + " : ");
         sb.append(" (");
-        boolean isFirst = true;
+        if (this.printAll) {
+            for (int i = 0; i < data.length - 1; i++) {
+                sb.append(data[i] + ",");
+            }
 
-        for (int i = 0; i < data.length; i++) {
-            if (!unPrintedFields[i]) {
-                if (isFirst) {
-                    isFirst = false;
-                    sb.append(data[i]);
-                } else {
-                    sb.append("," + data[i]);
+            if (data.length > 0) {
+                sb.append(data[data.length - 1]);
+            }
+
+        } else {
+            boolean isFirst = true;
+
+            for (int i = 0; i < data.length; i++) {
+                if (!unPrintedFields[i]) {
+                    if (isFirst) {
+                        isFirst = false;
+                        sb.append(data[i]);
+                    } else {
+                        sb.append("," + data[i]);
+                    }
                 }
             }
         }
@@ -739,15 +714,25 @@ public class LogEntryExtractor implements LogExtractor {
         for (int i = 0; i < this.violationsInCurLogEntry.size(); i++) {
             Object[] data = this.violationsInCurLogEntry.get(i);
             sb.append(" (");
-            boolean isFirst = true;
+            if (this.printAll) {
+                for (int j = 0; j < data.length - 1; j++) {
+                    sb.append(data[j] + ",");
+                }
 
-            for (int j = 0; j < data.length; j++) {
-                if (!unPrintedFields[j]) {
-                    if (isFirst) {
-                        isFirst = false;
-                        sb.append(data[j]);
-                    } else {
-                        sb.append("," + data[j]);
+                if (data.length > 0) {
+                    sb.append(data[data.length - 1]);
+                }
+            } else {
+                boolean isFirst = true;
+
+                for (int j = 0; j < data.length; j++) {
+                    if (!unPrintedFields[j]) {
+                        if (isFirst) {
+                            isFirst = false;
+                            sb.append(data[j]);
+                        } else {
+                            sb.append("," + data[j]);
+                        }
                     }
                 }
             }
@@ -818,4 +803,138 @@ public class LogEntryExtractor implements LogExtractor {
         }
     }
 
+}
+
+
+class Utils {
+    public static final String lineSeparator = System.getProperty("line.separator");
+    public static Utils MyUtils = new Utils();
+    //    private Charset charset = StandardCharsets.ISO_8859_1;
+    private Charset charset = StandardCharsets.US_ASCII;
+    private BufferedWriter bufferedWriter;
+
+    private Utils() {
+        this.bufferedWriter = init();
+    }
+
+
+    public static void writeToFile(String contents, String fileName) {
+        Path p = Paths.get(fileName);
+        byte[] bytes = contents.getBytes();
+        try {
+            Files.write(p, bytes, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            try {
+                p.getParent().toFile().mkdirs();
+
+                Files.write(p, bytes, StandardOpenOption.CREATE_NEW);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+    }
+
+    public void writeToOutputFileUsingBW(String contents) throws IOException {
+        this.bufferedWriter.write(contents);
+    }
+
+    public void flushOutput() throws IOException {
+        this.bufferedWriter.flush();
+    }
+
+    private BufferedWriter init() {
+        try {
+            return newBufferedWriter(LogReader.outputPath, charset, StandardOpenOption.APPEND, StandardOpenOption.WRITE);
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.exit(2);
+        }
+        return null;
+    }
+}
+
+class RegHelper {
+    public static final int INT_TYPE = 0;
+    public static final int FLOAT_TYPE = 1;
+    public static final int STRING_TYPE = 4;
+
+    // '_' | '[' | ']' | '/' | ':' | '-' | '.' | '!')* | '"'[^'"']*'"'
+
+    public static final String IntReg = "(\\d+)";
+    public static final String FloatReg = "(\\d*.\\d+)";
+    public static final String DoubleQuotesRegEx = "\"[^\"]+\"";
+    public static final String StringRegEx = "(" + "[\\w\\[\\]\\/\\:\\-\\.\\!]+|" + DoubleQuotesRegEx + ")";
+    public static final String TimeStamp = "(@\\d+)";
+
+
+    public final HashMap<String, Pattern> eventTupleRegEx;
+
+
+    public RegHelper(HashMap<String, Integer[]> tableCol) {
+        this.eventTupleRegEx = this.init(tableCol);
+    }
+
+
+    private HashMap<String, Pattern> init(HashMap<String, Integer[]> tableCol) {
+        HashMap<String, Pattern> eventNameAndTupleRegexMap = new HashMap<>();
+
+        for (String eventName : tableCol.keySet()) {
+            Integer[] types = tableCol.get(eventName);
+
+            String regex = "";
+
+            if (types.length == 0) {
+                regex = "\\s*\\(\\s*\\s)";
+            } else {
+                switch (types[0]) {
+                    case INT_TYPE:
+                        regex = IntReg;
+                        break;
+
+                    case FLOAT_TYPE:
+                        regex = FloatReg;
+                        break;
+
+                    case STRING_TYPE:
+                        regex = StringRegEx;
+                        break;
+                }
+
+                regex = "\\s*" + regex; //the first field
+
+                for (int i = 1; i < types.length; i++) {
+                    String tmp = "";
+
+                    switch (types[i]) {
+                        case INT_TYPE:
+                            tmp = IntReg;
+                            break;
+
+                        case FLOAT_TYPE:
+                            tmp = FloatReg;
+                            break;
+
+                        case STRING_TYPE:
+                            tmp = StringRegEx;
+                            break;
+                    }
+
+                    regex += "\\s*,\\s*" + tmp;
+                }
+                regex = "\\s*\\(" + regex + "\\s*\\)";
+            }
+
+            //gen the event name and corresponding tuple's reg ex.
+            eventNameAndTupleRegexMap.put(eventName, Pattern.compile(regex));
+
+        }
+
+        return eventNameAndTupleRegexMap;
+    }
+
+    public void showEventTupleRegEx() {
+        for (String eventName : this.eventTupleRegEx.keySet()) {
+            System.out.println(eventName + "'s tuple's reg ex is: " + this.eventTupleRegEx.get(eventName));
+        }
+    }
 }

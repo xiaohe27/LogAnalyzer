@@ -1,6 +1,6 @@
 package formula;
 
-import sig.SigExtractor;
+import static sig.SignatureFormulaExtractor.SigExtractor;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -14,40 +14,38 @@ public class FormulaExtractor {
 
     public static List<String> monitoredEventList = init();
     public static HashMap<String, boolean[]> skippedFieldsMap = init2();
-    private static String monitorName;
+    public static String monitorName;
 
     public FormulaExtractor(Path formulaPath) {
         //analyze the formula file and set the fields accordingly.
 
     }
 
-    ;
-
     private static HashMap<String, boolean[]> init2() {
         HashMap<String, boolean[]> tmp = new HashMap<>();
         boolean[] skipList = new boolean[SigExtractor.maxNumOfParams];
-//        skipList[1] = true;
-//        tmp.put(SigExtractor.INSERT, skipList);
-        tmp.put(SigExtractor.APPROVE, skipList);
-        tmp.put(SigExtractor.PUBLISH, skipList);
+        skipList[1] = true;
+        tmp.put("insert", skipList);
+//        tmp.put(SigExtractor.APPROVE, skipList);
+//        tmp.put(SigExtractor.PUBLISH, skipList);
         return tmp;
     }
 
     private static List<String> init() {
         List<String> tmp = new ArrayList<>();
         //needs real impl. it is fake method here
-//        monitorName = "rvm.InsertRuntimeMonitor";
-        monitorName = "rvm.PubRuntimeMonitor";
+        monitorName = "rvm.InsertRuntimeMonitor";
+//        monitorName = "rvm.PubRuntimeMonitor";
 
         tmp = new ArrayList<>();
 
-//        tmp.add(SigExtractor.INSERT);
-
+        tmp.add("insert");
+//        tmp.add(SigExtractor.SCRIPT_SVN);
+//        tmp.add(SigExtractor.COMMIT);
 //        tmp.add(SigExtractor.SCRIPT_MD5);
-        tmp.add(SigExtractor.APPROVE);
-        tmp.add(SigExtractor.PUBLISH);
+//        tmp.add(SigExtractor.APPROVE);
+//        tmp.add(SigExtractor.PUBLISH);
         return tmp;
-
     }
 
 

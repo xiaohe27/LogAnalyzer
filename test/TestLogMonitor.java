@@ -1,12 +1,8 @@
 import fsl.uiuc.Main;
-import log.LogEntryExtractor_ByteBuffer_AllocateDirect;
 import org.junit.Test;
-import sig.SigExtractor;
 
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 /**
  * Created by xiaohe on 14-11-24.
@@ -51,7 +47,7 @@ public class TestLogMonitor {
         Main.main(args);
     }
 
-    //    @Test
+//        @Test
     public void test9MLog_singleViolation_HP() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
         String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
                 "A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly_BaseExecTime"};
@@ -61,17 +57,16 @@ public class TestLogMonitor {
     @Test
     public void test9MLog_Siebel_SingleRun() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
 
-//        String logPath_base = "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy";
+        String logPath_base = "/home/xiaohe/workspace/DATA/MeasureBaseTime/ldcc4Monpoly_buggy";
 //            String logPath_base = "./test/pub-approve/Pub.log";
-        String logPath_base = "/home/xiaohe/workspace/DATA/FakeData4TestingPerf/Pub_fake.log";
+//        String logPath_base = "/home/xiaohe/workspace/DATA/FakeData4TestingPerf/Pub_fake.log";
 //        Common.testLog_multiTimes(logPath_base, 5, true); //eager eval
 
 //        Common.testLog_multiTimes(logPath_base, 1, false); //lazy eval
 
 //        String logPath_base = "/home/xiaohe/workspace/DATA/ldccComplete_MonpolyStyle";
 
-        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl", logPath_base};
-        Main.main(args);
+        Common.testLog_multiTimes(logPath_base, 1);
 
     }
 
@@ -96,20 +91,6 @@ public class TestLogMonitor {
         Common.testLogBuffSize("A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly");
     }
 
-    //    @Test
-    public void parseLogByDirectByteBuffer() throws IOException {
-        String logFile = "A:\\DATA\\ldcc4Monpoly.tar\\ldcc4Monpoly";
-        Path logPath = Paths.get(logFile);
-        LogEntryExtractor_ByteBuffer_AllocateDirect lee = new LogEntryExtractor_ByteBuffer_AllocateDirect(SigExtractor.TableCol, logPath);
-
-        long startT = System.currentTimeMillis();
-        lee.startReadingEventsByteByByte();
-        long timeDiff = System.currentTimeMillis() - startT;
-
-        System.out.println("It takes my log analyzer " + timeDiff +
-                " ms to count all the events in the log file after running ");
-
-    }
 
     //    @Test
     public void testMain() throws Exception {

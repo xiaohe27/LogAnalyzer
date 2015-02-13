@@ -1,4 +1,4 @@
-import fsl.uiuc.Main;
+import log.LogReader;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -10,29 +10,29 @@ import java.lang.reflect.InvocationTargetException;
 public class ShouldPassTest {
     @Test
     public void test1() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
+        String[] args = new String[]{"./test/count/insert.sig",
                 "./test/shouldPass/good1.log"};
-        Main.main(args);
+        LogReader.main(args);
     }
 
     @Test
     public void test2() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
+        String[] args = new String[]{"./test/count/insert.sig",
                 "./test/shouldPass/good2.log"};
-        Main.main(args);
+        LogReader.main(args);
     }
 
     @Test
     public void test3() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
+        String[] args = new String[]{"./test/count/insert.sig",
                 "./test/shouldPass/good3.log"};
-        Main.main(args);
+        LogReader.main(args);
     }
 
     @Test
     public void test4() throws ClassNotFoundException, NoSuchMethodException, InvocationTargetException, IOException, IllegalAccessException {
-        String[] args = new String[]{"./test/count/insert.sig", "./test/count/insert.fl",
+        String[] args = new String[]{"./test/count/insert.sig",
                 "./test/shouldPass/good4.log"};
-        Main.main(args);
+        LogReader.main(args);
     }
 }
