@@ -1,0 +1,20 @@
+package rvm;
+
+Delete12() {
+    private List<String> observedData = new ArrayList<>();
+    private List<String> cond2HasHopeDataList = new LinkedList<>();
+    private Set<String> db1InsertedData = new HashSet<>();
+    //db2InsertedData is eq to cond2 is not satisfiable
+	private Set<String> db2InsertedData = new HashSet<>();
+
+
+
+event delete (String user,String db,String p,String data) {
+	
+}
+
+event insert (String user,String db,String p,String data) {
+
+}
+
+}

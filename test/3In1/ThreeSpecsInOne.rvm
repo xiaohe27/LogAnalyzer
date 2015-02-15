@@ -24,10 +24,9 @@ public static boolean hasViolation;
 	}
 
  
-  ltl: [](publish => (*) approve)
+  ltl: [](publish => <*> approve)
 
   @violation {
-  System.out.println("pub without approve!");
   hasViolation = true;}
 }
 
