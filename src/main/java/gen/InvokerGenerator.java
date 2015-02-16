@@ -67,7 +67,7 @@ public class InvokerGenerator {
                 outputDir.mkdirs();
 
 
-            CodeModel.build(sscw);
+//            CodeModel.build(sscw);
             CodeModel.build(outputDir);
 
         } catch (JClassAlreadyExistsException e) {

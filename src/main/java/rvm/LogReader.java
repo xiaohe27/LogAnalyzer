@@ -1,3 +1,96 @@
+package rvm;
+import java.io.*;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.BufferUnderflowException;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
+import java.util.ArrayList;
+import java.util.regex.Pattern;
+
+import static java.nio.file.Files.newBufferedWriter;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import rvm.Delete12RuntimeMonitor;
+
+public class LogReader {
+
+    private static HashSet<String> monitoredEventSet = LogReader.initMonitoredEventsSet();
+    public static Path outputPath = Paths.get("./test-out/violation.txt");
+    protected static int maxNumOfParams = 4;
+    private static HashMap<String, int[]> methodInfo = LogReader.initMethodInfo();
+
+    private static HashSet<String> initMonitoredEventsSet() {
+        HashSet<String> setOfEvents = new HashSet<String>();
+        return setOfEvents;
+    }
+
+    public static boolean isMonitoredEvent(String event) {
+        return LogReader.monitoredEventSet.contains(event);
+    }
+
+    private static HashMap<String, int[]> initMethodInfo() {
+        HashMap<String, int[]> methodInfoTable = new HashMap<String, int[]>();
+        methodInfoTable.put("insert", new int[] { 4, 4, 4, 4 });
+        methodInfoTable.put("delete", new int[] { 4, 4, 4, 4 });
+        return methodInfoTable;
+    }
+
+    static class MonitorMethodsInvoker {
+
+
+        public static void invoke(String eventName, Object[] data, List<Object[]> violationsInCurLogEntry) {
+            Delete12RawMonitor.hasViolation = false;
+            switch (eventName) {
+                case "insert":
+                    Delete12RuntimeMonitor.insertEvent(((String) data[ 0 ]), ((String) data[ 1 ]), ((String) data[ 2 ]), ((String) data[ 3 ]));
+                    break;
+                case "delete":
+                    Delete12RuntimeMonitor.deleteEvent(((String) data[ 0 ]), ((String) data[ 1 ]), ((String) data[ 2 ]), ((String) data[ 3 ]));
+                    break;
+            }
+            if (Delete12RawMonitor.hasViolation) {
+                violationsInCurLogEntry.add(data);
+            }
+        }
+
+    }
+        private static void initOutputFile() throws IOException {
+        File file = outputPath.toFile();
+        if (file.exists()) {
+            new PrintWriter(file).close();
+        } else {
+            if (outputPath.getParent().toFile().exists()) {
+                file.createNewFile();
+            } else {
+                outputPath.getParent().toFile().mkdirs();
+                file.createNewFile();
+            }
+        }
+    }
+
+    public static void main(String[] args) throws IOException {
+        assert args.length == 1 && args[0].endsWith(".log") :
+                "The only argument needed is the log file (with .log suffix).";
+
+        initOutputFile();
+
+        Path path2Log = path2Log = Paths.get(args[0]);
+        LogEntryExtractor lee = new LogEntryExtractor(methodInfo, path2Log, 6);
+        lee.startReadingEventsByteByByte();
+    }
+
+    public static interface LogExtractor {
+        public void startReadingEventsByteByByte() throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException;
+    }
+
+}
 /**
  * Serves as lexer and parser for log file.
  */
@@ -82,7 +175,7 @@ class LogEntryExtractor implements LogReader.LogExtractor {
      * @param tableCol
      * @param logFile
      * @param powOf2TimesKB Multiple of 1024.
-     * @throws IOException
+     * @throws java.io.IOException
      */
     public LogEntryExtractor(HashMap<String, int[]> tableCol, Path logFile, int powOf2TimesKB)
             throws IOException {
@@ -170,7 +263,7 @@ class LogEntryExtractor implements LogReader.LogExtractor {
      *
      * @param delim
      * @return
-     * @throws IOException
+     * @throws java.io.IOException
      */
     private String getQuotedStringFromBuf(byte delim) throws IOException {
         int len = 0;
@@ -313,7 +406,7 @@ class LogEntryExtractor implements LogReader.LogExtractor {
      * Get an int number from byte byteArr (not check thoroughly, assume white spaces).
      *
      * @return
-     * @throws IOException
+     * @throws java.io.IOException
      */
     private int getIntFromBuf(byte delim) throws IOException {
         int result = 0;
@@ -593,7 +686,7 @@ class LogEntryExtractor implements LogReader.LogExtractor {
      * Only parse the event arg if we know we will invoke the method;
      * Even if the args are not parsed, the data types are checked against the event arg types specified in sig.
      *
-     * @throws IOException
+     * @throws java.io.IOException
      */
     private void readEvent() throws IOException {
         Object[] tupleData = new Object[typesInTuple.length];
