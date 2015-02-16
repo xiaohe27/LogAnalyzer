@@ -36,11 +36,13 @@ Delete12() {
     private static Set<String> db2InsertedData = new HashSet<>();
 
     private void removeValidatedRecords(String data) {
+        List<DeleteRecord> removedRecords = new ArrayList<>();
         for (DeleteRecord deleteRecord : suspiciousRecords) {
             if (deleteRecord.deleteData.equals(data)) {
-                suspiciousRecords.remove(deleteRecord);
+                removedRecords.add(deleteRecord);
             }
         }
+        suspiciousRecords.removeAll(removedRecords);
     }
 
     public static void printAllViolations() {

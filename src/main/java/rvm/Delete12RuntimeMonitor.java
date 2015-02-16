@@ -3,9 +3,7 @@ package rvm;
 import com.runtimeverification.rvmonitor.java.rt.RuntimeOption;
 import com.runtimeverification.rvmonitor.java.rt.tablebase.TerminatedMonitorCleaner;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -136,11 +134,13 @@ class Delete12RawMonitor extends com.runtimeverification.rvmonitor.java.rt.table
     }
 
     private void removeValidatedRecords(String data) {
+        List<DeleteRecord> removedRecords = new ArrayList<>();
         for (DeleteRecord deleteRecord : suspiciousRecords) {
             if (deleteRecord.deleteData.equals(data)) {
-                suspiciousRecords.remove(deleteRecord);
+                removedRecords.add(deleteRecord);
             }
         }
+        suspiciousRecords.removeAll(removedRecords);
     }
 
     public static void printAllViolations() {
