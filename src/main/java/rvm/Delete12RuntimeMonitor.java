@@ -89,11 +89,11 @@ class Delete12RawMonitor extends com.runtimeverification.rvmonitor.java.rt.table
 
     public static boolean hasViolation;
     //the suspiciousRecords is the list of suspicious records.
-    private Set<DeleteRecord> suspiciousRecords = new HashSet<>();
-    private HashMap<Long, Set<String>> cond2HasHopeDataList = new HashMap<>();
-    private Set<String> db1InsertedData = new HashSet<>();
+    private static Set<DeleteRecord> suspiciousRecords = new HashSet<>();
+    private static HashMap<Long, Set<String>> cond2HasHopeDataList = new HashMap<>();
+    private static Set<String> db1InsertedData = new HashSet<>();
     //db2InsertedData is eq to cond2 is not satisfiable
-    private Set<String> db2InsertedData = new HashSet<>();
+    private static Set<String> db2InsertedData = new HashSet<>();
 
 
     @Override
@@ -102,12 +102,14 @@ class Delete12RawMonitor extends com.runtimeverification.rvmonitor.java.rt.table
     }
 
     final boolean event_delete(String user, String db, String p, String data) {
+        System.out.println("Find delete event "+user+", db:"+db+", data:"+data);
         RVM_lastevent = 0;
         {
             if (data.equals("unknown"))
                 return true;
 
             if (db.equals("db1")) {
+                System.out.println("Find delete event which delete data in db1");
                 this.suspiciousRecords.add(new DeleteRecord(LogEntryExtractor.TimeStamp, user, data));
 
                 if (db2InsertedData.contains(data))
@@ -141,13 +143,17 @@ class Delete12RawMonitor extends com.runtimeverification.rvmonitor.java.rt.table
         }
     }
 
-    public void printAllViolations() {
+    public static void printAllViolations() {
+        System.out.println("There are "+suspiciousRecords.size()+" tuples in the suspicious list");
         for (DeleteRecord suspiciousRecord : suspiciousRecords) {
-            if (this.db2InsertedData.contains(suspiciousRecord.deleteData)) {
+            if (db2InsertedData.contains(suspiciousRecord.deleteData)) {
                 System.out.println("Violation: " + suspiciousRecord.print());
             } else {
-                Set<String> hopefulDataList = this.cond2HasHopeDataList.get(suspiciousRecord.ts);
-                if (hopefulDataList.contains(suspiciousRecord.deleteData)) {
+                Set<String> hopefulDataList = cond2HasHopeDataList.get(suspiciousRecord.ts);
+                if (hopefulDataList == null)
+                    System.out.println("Violation: " + suspiciousRecord.print());
+
+                else if (hopefulDataList.contains(suspiciousRecord.deleteData)) {
                     System.out.println("Satisfy the second condition of the disjunctive formula");
                 } else {
                     System.out.println("Violation: " + suspiciousRecord.print());
@@ -229,6 +235,8 @@ public final class Delete12RuntimeMonitor implements com.runtimeverification.rvm
     }
 
     public static final void deleteEvent(String user, String db, String p, String data) {
+        System.out.println("Find delete event "+user+", db:"+db+", data:"+data);
+
         Delete12_activated = true;
         while (!Delete12_RVMLock.tryLock()) {
             Thread.yield();
@@ -246,6 +254,7 @@ public final class Delete12RuntimeMonitor implements com.runtimeverification.rvm
             matchedEntry = created;
         }
         // D(X) main:8--9
+        System.out.println("Going to exec raw monitor's event method");
         matchedEntry.event_delete(user, db, p, data);
 
         Delete12_RVMLock.unlock();

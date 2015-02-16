@@ -84,6 +84,7 @@ public class LogReader {
         Path path2Log = path2Log = Paths.get(args[0]);
         LogEntryExtractor lee = new LogEntryExtractor(methodInfo, path2Log, 6);
         lee.startReadingEventsByteByByte();
+        Delete12RawMonitor.printAllViolations();
     }
 
     public static interface LogExtractor {

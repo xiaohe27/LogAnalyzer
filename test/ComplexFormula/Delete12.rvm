@@ -29,14 +29,13 @@ Delete12() {
 
     public static boolean hasViolation;
     //the suspiciousRecords is the list of suspicious records.
-    private Set<DeleteRecord> suspiciousRecords = new HashSet<>();
-    private HashMap<Long, Set<String>> cond2HasHopeDataList = new HashMap<>();
-    private Set<String> db1InsertedData = new HashSet<>();
+    private static Set<DeleteRecord> suspiciousRecords = new HashSet<>();
+    private static HashMap<Long, Set<String>> cond2HasHopeDataList = new HashMap<>();
+    private static Set<String> db1InsertedData = new HashSet<>();
     //db2InsertedData is eq to cond2 is not satisfiable
-    private Set<String> db2InsertedData = new HashSet<>();
+    private static Set<String> db2InsertedData = new HashSet<>();
 
-
- private void removeValidatedRecords(String data) {
+    private void removeValidatedRecords(String data) {
         for (DeleteRecord deleteRecord : suspiciousRecords) {
             if (deleteRecord.deleteData.equals(data)) {
                 suspiciousRecords.remove(deleteRecord);
@@ -44,13 +43,16 @@ Delete12() {
         }
     }
 
-    public void printAllViolations() {
+    public static void printAllViolations() {
         for (DeleteRecord suspiciousRecord : suspiciousRecords) {
-            if (this.db2InsertedData.contains(suspiciousRecord.deleteData)) {
+            if (db2InsertedData.contains(suspiciousRecord.deleteData)) {
                 System.out.println("Violation: " + suspiciousRecord.print());
             } else {
-                Set<String> hopefulDataList = this.cond2HasHopeDataList.get(suspiciousRecord.ts);
-                if (hopefulDataList.contains(suspiciousRecord.deleteData)) {
+                Set<String> hopefulDataList = cond2HasHopeDataList.get(suspiciousRecord.ts);
+                if (hopefulDataList == null)
+                    System.out.println("Violation: " + suspiciousRecord.print());
+
+                else if (hopefulDataList.contains(suspiciousRecord.deleteData)) {
                     System.out.println("Satisfy the second condition of the disjunctive formula");
                 } else {
                     System.out.println("Violation: " + suspiciousRecord.print());
@@ -97,7 +99,6 @@ event insert (String user,String db,String p,String data) {
             } else if (db.equals("db2")) {
                 this.db2InsertedData.add(data);
             }
-
 }
 
 }
