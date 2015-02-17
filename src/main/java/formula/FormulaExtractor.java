@@ -12,13 +12,10 @@ import static sig.SignatureFormulaExtractor.SigExtractor;
  */
 public class FormulaExtractor {
 
-    public static List<String> monitoredEventList = init();
     public static HashMap<String, boolean[]> skippedFieldsMap = init2();
-    public static String monitorName;
 
     public FormulaExtractor(Path formulaPath) {
         //analyze the formula file and set the fields accordingly.
-
     }
 
     private static HashMap<String, boolean[]> init2() {
@@ -29,35 +26,5 @@ public class FormulaExtractor {
 //        tmp.put(SigExtractor.APPROVE, skipList);
 //        tmp.put(SigExtractor.PUBLISH, skipList);
         return tmp;
-    }
-
-    private static List<String> init() {
-        List<String> tmp = new ArrayList<>();
-        //needs real impl. it is fake method here
-        monitorName = "rvm.InsertRuntimeMonitor";
-//        monitorName = "rvm.PubRuntimeMonitor";
-
-        tmp = new ArrayList<>();
-
-        tmp.add("insert");
-//        tmp.add(SigExtractor.SCRIPT_SVN);
-//        tmp.add(SigExtractor.COMMIT);
-//        tmp.add(SigExtractor.SCRIPT_MD5);
-//        tmp.add(SigExtractor.APPROVE);
-//        tmp.add(SigExtractor.PUBLISH);
-        return tmp;
-    }
-
-
-    public String getMonitorName() {
-        return monitorName;
-    }
-
-    public List<String> getMonitoredEventList() {
-        return monitoredEventList;
-    }
-
-    public boolean isMonitoredEvent(String eventName) {
-        return this.monitoredEventList.contains(eventName);
     }
 }
