@@ -1,8 +1,0 @@
-Methods for getting the AST from the spec:
-
-
-
-AST:
-package com.runtimeverification.rvmonitor.core.ast.MonitorFile;
-package com.runtimeverification.rvmonitor.core.ast.Specification;
-Event, Property, etc...

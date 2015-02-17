@@ -1,0 +1,34 @@
+Currently, the events happened on different objects can be related if they have some certain relationships.
+E.G. ITER => <*> CREATE 
+Can express the property that when we encounter the event 'ITER' (the invocation of .iterator() method), 
+there must be some create event happened before to create the collection from which we generate the iterator.
+
+Program may be sth looks like this:
+
+HashMap m = new HashMap();
+Collection c1 = m.keySet(); // CREATE event: CREATE(m,c1)
+Iterator i1 = c1.iterator(); //ITER event: ITER(c1,i1)
+m.put(a,b); //UPDATE event: UPDATE(m)
+i1.next(); //NEXT event: NEXT(i1)
+...
+
+Here, the relationships among events happened on different objects are natural: 
+Map creates collection, and collection creates iterator where iterator can invoke hasNext, next method etc.
+
+Therefore, spec like SafeMapIterator(Map m, Collection c, Iterator i) captures this natural relationship between those objects easily,
+and the monitors generated can monitor the properties among these objects.
+
+====================
+But...
+what if I have a property like this:
+CREATE(m,c1) => <*> CREATE(m,c2)
+They have conflicts in the second argument, therefore after slicing, the un-parametized events will NOT be
+dispatched to the same monitor.
+Monitoring such property need to consider the relationships between different monitors.
+Triggering some events inside one monitor requires us to inspect the status of some other monitor.
+
+For this problem, when we encounter event CREATE(m,c1), besides the action of dispatching it to monitor labelled by (m,c1), 
+
+we will also need to check whether the monitor indexed by (m,c2) has already experienced the state CREATE in the past.
+
+

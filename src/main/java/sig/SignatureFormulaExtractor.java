@@ -192,7 +192,6 @@ public class SignatureFormulaExtractor {
             List<Property> propsInCurSpec = spec.getProperties();
 
 
-
             //the list contains all the valid events' names
             List<String> validEventNameList = new ArrayList<>();
             this.specEventsMap.put(specName, validEventNameList);

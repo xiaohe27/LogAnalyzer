@@ -13,27 +13,27 @@ import static sig.SignatureFormulaExtractor.SigExtractor;
 /**
  * Created by xiaohe on 12/3/14.
  * Generate a monitor lib according to the template below and instantiation parameters.
- * <p>
+ * <p/>
  * package rvm;
- * <p>
+ * <p/>
  * Pub(Integer report) {
  * Integer report;
  * long time;
- * <p>
+ * <p/>
  * event publish (Integer report, long time) {
  * this.report=report;
  * this.time=time;
  * }
- * <p>
+ * <p/>
  * event approve (Integer report, long time) {
  * this.report=report;
  * this.time=time;
  * }
- * <p>
- * ltl: [](publish => (*) approve)
+ * <p/>
+ * ltl: [](publish => <*> approve)
  *
  * @violation { System.out.println("should not publish financial report "+this.report+" without pre-approval");}
- * <p>
+ * <p/>
  * }
  */
 public class MonitorGenerator {
@@ -56,7 +56,7 @@ public class MonitorGenerator {
 
         genPackage();
 
-        genMonitorMain();
+//        genMonitorMain();
 
         genPhysicalFile();
     }
@@ -66,11 +66,6 @@ public class MonitorGenerator {
         String monitorLibPath = "./test/rvm/PubTest.rvm";
 
         Utils.writeToFile(this.sb.toString(), monitorLibPath);
-    }
-
-    private void genMonitorMain() {
-        String monitorName = this.getMonitorClassPath();
-
     }
 
     private void genPackage() {
@@ -83,15 +78,6 @@ public class MonitorGenerator {
                 "import java.nio.file.Path;\n" +
                 "import java.nio.file.Paths;\n" +
                 "import java.nio.file.StandardOpenOption;\n");
-    }
-
-
-    public String getMonitorClassPath() {
-        return this.formulaExtractor.getMonitorName();
-    }
-
-    public List<String> getMethodNameList() {
-        return this.formulaExtractor.getMonitoredEventList();
     }
 
     public HashMap<String, int[]> getMethoArgsMappingFromSigFile() throws IOException {

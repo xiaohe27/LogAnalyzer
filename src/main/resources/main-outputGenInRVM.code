@@ -637,37 +637,9 @@ class LogEntryExtractor implements LogReader.LogExtractor {
             }
         }
 
+        //all the violations' output will be taken care of inside rvm-lib
+        LogReader.MonitorMethodsInvoker.invoke(EventName, tupleData);
 
-        LogReader.MonitorMethodsInvoker.invoke(EventName, tupleData, this.violationsInCurLogEntry);
-        // the customized method invoker will call the method as well as update the violation list
-
-
-//        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
-//
-
-
-//        InsertRuntimeMonitor.insertEvent((String) tupleData[0], (String) tupleData[1], (String) tupleData[2], (String) tupleData[3]);
-
-
-//        this.printEvent(tupleData);
-
-//        if (EventName.equals(SigExtractor.INSERT)) {
-//            if (tupleData[1].equals("MYDB") && !tupleData[0].equals("notARealUserInTheDB"))
-//                this.printEvent(tupleData);
-//        }
-
-//        if (EventName.equals(SigExtractor.INSERT)) {
-//            if (tupleData[1].equals("db2") && !tupleData[0].equals("script1")) {
-//                this.violationsInCurLogEntry.add(tupleData);
-//            }
-//        }
-
-
-//        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
-//            //script_md5 (MY_Script,myMD5)
-//            if (tupleData[0].equals("MY_Script") && !tupleData[1].equals("ItsMD5"))
-//                this.printEvent(tupleData);
-//        }
     }
 
 
