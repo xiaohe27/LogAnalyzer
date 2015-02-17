@@ -1,0 +1,8 @@
+E.G.
+p /\ arg1 = val1 => q /\ arg2 = val2
+
+where arg1 is an argument occurs inside formula p
+and arg2 is an argument inside formula q
+
+Idea:
+Embed some structure for checking constraints.
