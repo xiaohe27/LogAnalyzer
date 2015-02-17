@@ -169,7 +169,21 @@ public class InvokerGenerator {
     }
 
     private void initLogReaderClass(JDefinedClass definedClass) throws IOException {
-        definedClass.direct(Main.getContentFromResource("entryPoint.code"));
+        String entryPointCode = Main.getContentFromResource("entryPoint.code");
+        if (Main.IsMonitoringLivenessProperty) {
+            String insertedPrintedMethods = "";
+            String tab = "\t\t";
+            for (int i = 0; i < this.ActualMonitorNames.size(); i++) {
+                insertedPrintedMethods += tab;
+                insertedPrintedMethods += this.ActualMonitorNames.get(i) + ".printAllViolations();\n";
+            }
+
+            insertedPrintedMethods += "\t}";
+            entryPointCode = entryPointCode.substring(0, entryPointCode.lastIndexOf('}')) + insertedPrintedMethods;
+        }
+
+        definedClass.direct(entryPointCode);
+
     }
 
     private void buildInvocationMethod(JDefinedClass definedClass, HashMap<String, int[]> tableSchema) {
