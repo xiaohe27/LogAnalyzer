@@ -4,6 +4,7 @@ based on the provided property specification.
 
 
 ## Prerequisites
+
 1. [JDK](http://www.oracle.com/technetwork/java/javase/downloads/index.html)
 v.7 or higher
  * Check Java is installed properly: run `java -version` from a
@@ -19,16 +20,20 @@ v.1.8 or higher
 
 
 ## Install
+
 Currently, the only option for setting up the tool is building from source.
-1. In the whatever directory you like, execute:
+
+1. Clone Repository: In the whatever directory you like, execute:
 ```git clone https://github.com/xiaohe27/LogAnalyzer.git```
-2. In the top directory of the LogAnalyzer project, execute the command:
+
+2. Build: In the top directory of the LogAnalyzer project, execute the command:
  ```mvn package```
 
 3. The application will be built in `<Directory You did the git clone command>/LogAnalyzer/target/release/LogAnalyzer/LogAnalyzer`
 
 
 ## Test
+
 1. Inside the directory which contains the built application, execute the command: 
 ```sh logAnalyzer.sh YourRVM-Spec.rvm [-liveness]```
 
