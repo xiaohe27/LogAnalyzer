@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 
 /**
-* Created by xiaohe on 15-1-18.
-*/
+ * Created by xiaohe on 15-1-18.
+ */
 public class Common {
     public static void testLog_multiTimes(String path, int num) throws ClassNotFoundException, NoSuchMethodException, IOException, IllegalAccessException, InvocationTargetException {
         testLog_multiTimes(path, num, false); //by default, use lazy eval

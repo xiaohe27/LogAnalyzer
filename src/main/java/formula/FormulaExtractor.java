@@ -1,11 +1,11 @@
 package formula;
 
-import static sig.SignatureFormulaExtractor.SigExtractor;
-
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+
+import static sig.SignatureFormulaExtractor.SigExtractor;
 
 /**
  * Created by hx312 on 03/12/2014.

@@ -100,7 +100,7 @@ class Delete12RawMonitor extends com.runtimeverification.rvmonitor.java.rt.table
     }
 
     final boolean event_delete(String user, String db, String p, String data) {
-        System.out.println("Find delete event "+user+", db:"+db+", data:"+data);
+        System.out.println("Find delete event " + user + ", db:" + db + ", data:" + data);
         RVM_lastevent = 0;
         {
             if (data.equals("unknown"))
@@ -144,7 +144,7 @@ class Delete12RawMonitor extends com.runtimeverification.rvmonitor.java.rt.table
     }
 
     public static void printAllViolations() {
-        System.out.println("There are "+suspiciousRecords.size()+" tuples in the suspicious list");
+        System.out.println("There are " + suspiciousRecords.size() + " tuples in the suspicious list");
         for (DeleteRecord suspiciousRecord : suspiciousRecords) {
             if (db2InsertedData.contains(suspiciousRecord.deleteData)) {
                 System.out.println("Violation: " + suspiciousRecord.print());
@@ -235,7 +235,7 @@ public final class Delete12RuntimeMonitor implements com.runtimeverification.rvm
     }
 
     public static final void deleteEvent(String user, String db, String p, String data) {
-        System.out.println("Find delete event "+user+", db:"+db+", data:"+data);
+        System.out.println("Find delete event " + user + ", db:" + db + ", data:" + data);
 
         Delete12_activated = true;
         while (!Delete12_RVMLock.tryLock()) {

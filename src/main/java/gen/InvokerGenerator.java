@@ -108,14 +108,13 @@ public class InvokerGenerator {
         Set<String> eventList = this.eventsInfo.getTableCol().keySet();
         for (String eventName : eventList) {
             String eventAction = this.eventsInfo.getEventAndActionsMap().get(eventName);
-            if (eventAction != null && !eventAction.replaceAll("\\W", "").equals(""))
-            {
+            if (eventAction != null && !eventAction.replaceAll("\\W", "").equals("")) {
                 //if the event action is not empty, then add the event to the monitored list
                 JInvocation invocation = initMonitorMethodBody.invoke(setOfEvents, "add");
                 invocation.arg(eventName);
             } else {
                 for (int i = 0; i < allProperties.size(); i++) {
-                    if (this.insideProp(allProperties.get(i), eventName)){
+                    if (this.insideProp(allProperties.get(i), eventName)) {
                         //if the event occurs inside some property, then it should be monitored
                         JInvocation invocation = initMonitorMethodBody.invoke(setOfEvents, "add");
                         invocation.arg(eventName);
@@ -174,7 +173,7 @@ public class InvokerGenerator {
             String insertedPrintedMethods = "";
             String tab = "\t\t";
             for (int i = 0; i < this.ActualMonitorNames.size(); i++) {
-                insertedPrintedMethods += tab;
+                insertedPrintedMethods += i == 0 ? '\t' : tab;
                 insertedPrintedMethods += this.ActualMonitorNames.get(i) + ".printAllViolations();\n";
             }
 
@@ -196,17 +195,20 @@ public class InvokerGenerator {
         JVar tupleData = method.param(Object[].class, methodArgsStr);
 
         JType objArrListTy = CodeModel.ref(List.class).narrow(Object[].class);
-        JVar violationsInCurLogEntry = method.param(objArrListTy, "violationsInCurLogEntry");
+        JVar violationsInCurLogEntry = Main.IsMonitoringLivenessProperty
+                                    ? null : method.param(objArrListTy, objArrListStr);
 
         //gen the body of the method
         JBlock body = method.body();
 
         JFieldRef[] hasViolation = new JFieldRef[this.ActualMonitorNames.size()];
 
-        for (int i = 0; i < this.ActualMonitorNames.size(); i++) {
-            String RawMonitorNameI = this.ActualMonitorNames.get(i);
-            hasViolation[i] = CodeModel.ref(RawMonitorNameI).staticRef("hasViolation");
-            body.assign(hasViolation[i], JExpr.lit(false));
+        if (!Main.IsMonitoringLivenessProperty) {
+            for (int i = 0; i < this.ActualMonitorNames.size(); i++) {
+                String RawMonitorNameI = this.ActualMonitorNames.get(i);
+                hasViolation[i] = CodeModel.ref(RawMonitorNameI).staticRef("hasViolation");
+                body.assign(hasViolation[i], JExpr.lit(false));
+            }
         }
 
         JSwitch jSwitch = body._switch(eventNameParam);
@@ -246,11 +248,13 @@ public class InvokerGenerator {
             jCase.body()._break();
         }
 
-        for (int i = 0; i < this.ActualMonitorNames.size(); i++) {
-            JConditional ifBlock = body._if(hasViolation[i]);
-            JInvocation addViolationStmt = violationsInCurLogEntry.invoke("add");
-            addViolationStmt.arg(tupleData);
-            ifBlock._then().add(addViolationStmt);
+        if (!Main.IsMonitoringLivenessProperty) {
+            for (int i = 0; i < this.ActualMonitorNames.size(); i++) {
+                JConditional ifBlock = body._if(hasViolation[i]);
+                JInvocation addViolationStmt = violationsInCurLogEntry.invoke("add");
+                addViolationStmt.arg(tupleData);
+                ifBlock._then().add(addViolationStmt);
+            }
         }
     }
 

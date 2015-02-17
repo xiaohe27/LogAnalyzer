@@ -47,7 +47,7 @@ public class Main {
         Path path2SigFile = Paths.get(args[0]);
         String tmpFolder = "./CodeModel_tmp";
         InvokerGenerator invokerGenerator = new InvokerGenerator(tmpFolder);
-        SignatureFormulaExtractor.EventsInfo eventsInfo =  SignatureFormulaExtractor.SigExtractor.
+        SignatureFormulaExtractor.EventsInfo eventsInfo = SignatureFormulaExtractor.SigExtractor.
                 extractEventsInfoFromSigFile(path2SigFile);
 
         String runtimeMonitorName = "rvm." + path2SigFile.toFile().getName().replaceAll(".rvm", "") + "RuntimeMonitor";
@@ -55,7 +55,8 @@ public class Main {
         invokerGenerator.generateCustomizedInvoker(runtimeMonitorName, eventsInfo);
 
         String imports = getContentFromResource("import.code");
-        String mainBody = getContentFromResource("main.code");
+        String mainBody = (IsMonitoringLivenessProperty) ? getContentFromResource("main-outputGenInRVM.code")
+                : getContentFromResource("main.code");
 
         Path tmpFolderPath = Paths.get(tmpFolder + "/LogReader.java");
         String logReader = new String(Files.readAllBytes(tmpFolderPath));
