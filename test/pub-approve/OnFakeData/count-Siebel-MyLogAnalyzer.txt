@@ -1,5 +1,0 @@
-Start time : 1422390016
-
-Finish time : 1422390055
-
-It took my log analyzer 39 seconds to find the violations among the events in the fake log at Siebel using reading byte by byte approach

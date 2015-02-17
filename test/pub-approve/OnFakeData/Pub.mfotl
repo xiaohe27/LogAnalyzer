@@ -1,1 +1,0 @@
-FORALL ?r. (publish(?r) IMPLIES ONCE (approve(?r)) )

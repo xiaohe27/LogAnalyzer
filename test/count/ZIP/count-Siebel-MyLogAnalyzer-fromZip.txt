@@ -1,7 +1,0 @@
-Start time : 1421689004112
-There are 93149 log entries in the .tar.gz log file!!!
-It took my log analyzer 3188 ms to count all the log entries in the log file in the format of tar.gz
-
-Finish time : 1421689007391
-
-It took my log analyzer 3279 seconds to find the single violation among the events in 9M log ldcc4Monpoly in the format of .tar.gz at Siebel
