@@ -17,15 +17,15 @@ Map creates collection, and collection creates iterator where iterator can invok
 
 Therefore, spec like SafeMapIterator(Map m, Collection c, Iterator i) captures this natural relationship between those objects easily,
 and the monitors generated can monitor the properties among these objects.
+The property can be monitored inside each monitor.
 
 ====================
 But...
 what if I have a property like this:
 CREATE(m,c1) => <*> CREATE(m,c2)
-They have conflicts in the second argument, therefore after slicing, the un-parametized events will NOT be
-dispatched to the same monitor.
+They have conflicts in the second argument, therefore after slicing, the un-parametized events will NOT be dispatched to the same monitor.
 Monitoring such property need to consider the relationships between different monitors.
-Triggering some events inside one monitor requires us to inspect the status of some other monitor.
+Triggering some events inside one monitor requires us to inspect the status of some other monitor. Therefore, we need to model the relationships between the states of different monitors.
 
 For this problem, when we encounter event CREATE(m,c1), besides the action of dispatching it to monitor labelled by (m,c1), 
 
