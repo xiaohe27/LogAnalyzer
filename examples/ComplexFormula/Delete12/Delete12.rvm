@@ -27,7 +27,6 @@ Delete12() {
         }
     }
 
-    public static boolean hasViolation;
     //the suspiciousRecords is the list of suspicious records.
     private static Set<DeleteRecord> suspiciousRecords = new HashSet<>();
     private static HashMap<Long, Set<String>> cond2HasHopeDataList = new HashMap<>();
