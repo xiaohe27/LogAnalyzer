@@ -35,12 +35,18 @@ Currently, the only option for setting up the tool is building from source.
 
  `<Directory You did the git clone command>/LogAnalyzer/target/release/LogAnalyzer/LogAnalyzer`
 
+   For convenience, it is recommended to add the above directory to the 
+   environment variable `PATH`.
 
 ## Test
 
-1. Inside the directory which contains the built application, execute the command: 
+1. Inside the directory which contains the rvm specification, execute the command: 
 
-```sh logAnalyzer.sh YourRVM-Spec.rvm [-liveness]```
+```logreaderGen YourRVM-Spec.rvm [-liveness]```
+   
+   The option `-liveness` is used when the user want to monitor liveness property, in
+   which case the mechanism for handling violations need to be defined in rvm specification;
+   and the method `printAllViolations()` needs to be defined in the specification.
 
 2. The specialized log reader which is able to monitor the log file with pre-defined events will be generated in folder
 
