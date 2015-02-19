@@ -1,4 +1,6 @@
-The Monpoly style formula:
+The formula below is derived from the Monpoly style delete-1-2 formula by ignoring 
+the fine-grained interval of temporal operator.
+
 FORALL ?user . FORALL ?data . (delete(?user, db1, ?p, ?data) AND NOT(?data = "unknown")) IMPLIES 
 (EVENTUALLY[0,*] EXISTS ?u2 . delete(?u2, db2, ?p, ?data)) OR 
 ( ONCE (EXISTS ?u2 . insert(?u2, db1, ?p, ?data)) AND
