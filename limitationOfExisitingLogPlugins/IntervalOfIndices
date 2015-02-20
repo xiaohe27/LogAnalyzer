@@ -1,0 +1,54 @@
+Dear all,
+
+After discussing with Grigore, we think it is desired to modify the syntax of mop specification
+to allow the programmers to decide whether to index monitors by references or values.
+
+*****************************************YOU CAN SKIP BELOW***********************************************************************************************************************
+Indexing monitors by references are essential to distinguish multiple objects that have the same name but coexist.
+
+However, in the domain of offline log analysis, we just have strings in the log files. We decide which monitor to dispatch the non-parameterized
+event to by checking string values of the specification parameter(s). Therefore, two parameterized events should be sent to update the same monitor
+if their specification parameters have the same VALUE. However, only indexing by references is supported in current rv-monitor.
+During the process of reading logs, when a new event is encountered, its arguments will be parsed to objects and then the corresponding event method
+will be invoked. Here comes the problem: rv-monitor will create two distinct indices for two specification parameters even if they have the same contents 
+because their parsed objects have different references. Although this problem can be fixed by caching indices at client application, it is more 
+elegant and easier for future optimization if this issue can be solved at the rv-monitor.
+
+*****************************************YOU CAN SKIP ABOVE***********************************************************************************************************************
+
+Grigore came up with an idea of using hashcode for indexing purposes:
+we can insert special symbol at proper position to indicate which specification parameter is going to be indexed by hashcode of argument.
+For example:
+
+SpecA (Integer #report) {...}
+
+The hash symbol implies that this specification parameter needs to be indexed by hashcode of the argument.
+(The special symbol can also be inserted before the type Integer, it's just a design choice).
+
+==
+My concern is that in Java, there is no way to build a map using primitive values like int.
+
+The autoboxing mechanism will impact the performance.
+
+It is also not feasible to use structure like array in most of cases: the indexing of array is primitive int,
+but the range of hashcode is 2^32, create such a huge array is either impossible or not cost-effective (the distribution of data is too sparse).  
+
+My idea is: in the situation where it is desired to have values as indexes,
+
+we can provide an option to the users so that they can specify the range of the specification parameter which will be used as
+
+indexes of monitors. Based on that interval, the total number of needed monitors can be estimated, and if it is affordable (or cost-effective enough),
+
+we can create an array of that size. And using some crazy hash function to map each parameter to an integer in that range (*The idea is similar to the
+
+one Grigore proposed month ago, but I would argue that creating array with size of positive integer is not affordable by most small machines; on the other hand,
+
+using map requires Integer instead of 'int' *). If the parameter is of type int, the access of monitors should be quite quick: just taking away the 
+
+offset from the number, and we can get the index of monitor in the array.
+
+Any kind of suggestion is more than welcome.
+
+Thanks, 
+He Xiao
+
