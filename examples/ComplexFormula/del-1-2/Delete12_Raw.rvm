@@ -1,0 +1,245 @@
+package rvm;
+
+import rvm.LogEntryExtractor;
+import rvm.LogReader;
+
+import java.lang.Comparable;
+import java.lang.Override;
+import java.util.ArrayList;
+import java.util.HashSet;
+
+Delete12_Raw(String data){
+
+// in order to traverse the remaining monitors at the end, keep a strong ref (temporal fix)
+protected static HashMap<String,String> indexMap = new HashMap<>();
+
+private static enum State {
+    //C1 is the first condition on the r.h.s of the implication
+    //C2_1, C2_2 refer the two sub-formulas inside the second condition
+    Start, Check, Unsafe, Safe,
+    C1Fail, C2_1Pass, C2_2Pass,
+    C2Fail, C1Fail_AND_C2_1Pass, C1Fail_AND_C2_2Pass
+}
+
+    private State curState = State.Start;
+    private long ts;
+    private String user;
+
+/**
+ * Base on the values of the events' arguments, the monitor's state may be updated to different
+ * new states. To represent this process using fsm, we can first analyze the event arguments,
+ * then we can summarize a list of more accurate events, with which we can build the full
+ * transition functions.
+ * <p/>
+ * Different accurate events are described here:
+ * 0: the event that makes monitor enter Check state.
+ * 1: the event that makes C1 hold.
+ * 2: the event that makes C1 NOT hold.
+ * 3: the event that makes C2_1 hold.
+ * 4: the event that makes C2_1 NOT hold.
+ * 5: the event that makes C2_2 hold.
+ * 6: the event that makes C2_2 NOT hold.
+ */
+private boolean[] accurateEvents = new boolean[7];
+
+
+    private void resetState() {
+        this.curState = State.Start;
+        for (int i = 0; i < accurateEvents.length; i++) {
+            if (i == 3 || i == 6)
+                continue;
+
+            this.accurateEvents[i] = false;
+        }
+    }
+
+
+/**
+ * This data structure represents a record that describes which user deletes what data at what time.
+ */
+public static class DeleteRecord implements Comparable<DeleteRecord> {
+    public final long ts;
+    public final String user;
+    public final String deleteData;
+
+    public DeleteRecord(long ts, String user, String deleteData) {
+        this.ts = ts;
+        this.user = user;
+        this.deleteData = deleteData;
+    }
+
+    public boolean equals(DeleteRecord other) {
+        if (other == null)
+            return false;
+        if (this.ts != other.ts)
+            return false;
+
+        return (this.user.equals(other.user) &&
+                this.deleteData.equals(other.deleteData));
+    }
+
+    public String print() {
+        return "@" + ts + " delete (" + user + ", db1, " + deleteData + ")\n";
+    }
+
+    @Override
+    public int compareTo(DeleteRecord other) {
+        return (int) (this.ts - other.ts);
+    }
+}
+
+
+    public static void printAllViolations() {
+        ArrayList<DeleteRecord> listOfViolations = new ArrayList<>();
+
+        for (String ref :  indexMap.keySet()) {
+            Delete12_RawRawMonitor monitor = Delete12_RawRuntimeMonitor.Delete12_Raw_data_Map.getNodeWithStrongRef(ref);
+            if (monitor != null && monitor.curState != State.Start) {
+                listOfViolations.add(new DeleteRecord(monitor.ts, monitor.user, ref));
+            }
+        }
+
+        listOfViolations.sort(new Comparator<DeleteRecord>() {
+            @Override
+            public int compare(DeleteRecord o1, DeleteRecord o2) {
+                return (int) (o1.ts - o2.ts);
+            }
+        });
+
+        for (int i = 0; i < listOfViolations.size(); i++) {
+            System.out.println(listOfViolations.get(i).print());
+        }
+    }
+
+    event delete(String user,String db,String p,String data) {
+        if (data.equals("unknown")) //Unknown data does not affect the state of monitor at all
+            return true;
+
+
+        if (db.equals("db1")) {
+            accurateEvents[0] = true;
+
+            this.ts = LogEntryExtractor.TimeStamp;
+            this.user = user;
+
+        } else if (db.equals("db2")) {
+            accurateEvents[1] = true;
+        } else {
+        }
+
+    }
+
+
+    event insert(String user,String db,String p,String data) {
+        if (data.equals("unknown"))
+            return true;
+
+        if (db.equals("db1")) {
+            accurateEvents[3] = true; //cond 2-1 begins to hold
+        } else if (db.equals("db2")) {
+            accurateEvents[6] = true; //cond 2-2 does not hold now
+        }
+
+    }
+
+raw:
+    switch(this.curState){
+        case Start:
+        if(this.accurateEvents[0]){ //enter check state and check the past conditions
+        this.curState=State.Check;
+
+        if(this.accurateEvents[3])
+        this.curState=State.C2_1Pass;
+
+        else if(this.accurateEvents[4])
+        this.curState=State.C2Fail;
+
+        else if(this.accurateEvents[5])
+        this.curState=State.C2_2Pass;
+
+        else if(this.accurateEvents[6])
+        this.curState=State.C2Fail;
+        }
+
+        break;
+
+        case Check:
+        if(this.accurateEvents[1])
+        this.curState=State.Safe;
+
+        else if(this.accurateEvents[2])
+        this.curState=State.C1Fail;
+
+        break;
+
+        case C1Fail:
+        if(this.accurateEvents[3])
+        this.curState=State.C1Fail_AND_C2_1Pass;
+
+        else if(this.accurateEvents[5])
+        this.curState=State.C1Fail_AND_C2_2Pass;
+
+        else if(this.accurateEvents[4]||this.accurateEvents[6])
+        // C2_1 or C2_2 fails implies C2 fails
+        this.curState=State.Unsafe;
+        break;
+
+        case C2_1Pass:
+        if(this.accurateEvents[5])
+        this.curState=State.Safe;
+
+        else if(this.accurateEvents[6])
+        this.curState=State.C2Fail;
+        break;
+
+        case C2_2Pass:
+        if(this.accurateEvents[3])
+        this.curState=State.Safe;
+
+        else if(this.accurateEvents[4])
+        this.curState=State.C2Fail;
+
+        break;
+
+        case C2Fail:
+        if(this.accurateEvents[2])
+        this.curState=State.Unsafe;
+
+        else if(this.accurateEvents[1])
+        this.curState=State.Safe;
+
+        break;
+
+        case C1Fail_AND_C2_1Pass:
+        if(this.accurateEvents[5])
+        this.curState=State.Safe;
+
+        else if(this.accurateEvents[6])
+        this.curState=State.Unsafe;
+
+        break;
+
+        case C1Fail_AND_C2_2Pass:
+        if(this.accurateEvents[3])
+        this.curState=State.Safe;
+
+        else if(this.accurateEvents[4])
+        this.curState=State.Unsafe;
+        break;
+    }
+
+        // record the violation entry
+        if (this.curState == State.Unsafe)
+            System.out.println("@" + LogEntryExtractor.TimeStamp + " delete (" + user + ", db1, " +
+            data + ")");
+
+
+        if (this.curState == State.Unsafe || this.curState == State.Safe){
+            this.resetState();
+            indexMap.remove(data);
+        }
+
+
+}
+
+
