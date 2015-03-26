@@ -1,0 +1,5 @@
+Start time : 1422234086
+@1309390741 (time-point 5282762): true
+Finish time : 1422234504
+
+It took Monpoly (opt) 418 seconds to find the single violation of Pub Property in the 7.6 GB log file!

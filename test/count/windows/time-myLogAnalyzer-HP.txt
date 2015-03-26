@@ -1,0 +1,1 @@
+It took my log analyzer 1604 ms to count all the log entries in the log file in the format of plain txt

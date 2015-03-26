@@ -1,5 +1,7 @@
 package util;
 
+import sig.SigExtractor;
+
 /**
  * Created by xiaohe on 1/27/15.
  */
@@ -9,8 +11,8 @@ public class TestCaseGen {
 
         for (int i = 0; i < numOfLogEntries; i++) {
             sb.append("@" + i);
-            sb.append(" approve(" + i + ") ");
-            sb.append("publish (" + i + ")\n");
+            sb.append(" " + SigExtractor.APPROVE + "(" + i + ") ");
+            sb.append(SigExtractor.PUBLISH + "(" + i + ")\n");
         }
 
         Utils.writeToFile(sb.toString(), "A:\\DATA\\Gen\\" + nameOfGeneratedDataFile);

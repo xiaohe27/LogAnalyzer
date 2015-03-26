@@ -1,0 +1,4 @@
+Start time : 1422385833
+Finish time : 1422385845
+
+It took Monpoly (opt) 12 seconds to find all violations of Pub Property in the 82.7 MB fake pub log file!

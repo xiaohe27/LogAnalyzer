@@ -1,0 +1,8 @@
+Start time : 1421617697
+Please get ready to profile the app, input a line with `enter` please.
+response is g
+It took my log analyzer 6170 ms to count all the log entries in the log file.
+
+Finish time : 1421617746
+
+It took my log analyzer 49 seconds to count all the events in the 9M log ldcc4Monpoly at Idea-Pad using reading byte by byte approach

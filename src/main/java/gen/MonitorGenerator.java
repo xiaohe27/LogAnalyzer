@@ -1,14 +1,13 @@
 package gen;
 
 import formula.FormulaExtractor;
+import sig.SigExtractor;
 import util.Utils;
 
-import java.io.IOException;
+import java.io.File;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
-
-import static sig.SignatureFormulaExtractor.SigExtractor;
 
 /**
  * Created by xiaohe on 12/3/14.
@@ -30,7 +29,7 @@ import static sig.SignatureFormulaExtractor.SigExtractor;
  * this.time=time;
  * }
  * <p/>
- * ltl: [](publish => <*> approve)
+ * ltl: [](publish => (*) approve)
  *
  * @violation { System.out.println("should not publish financial report "+this.report+" without pre-approval");}
  * <p/>
@@ -38,13 +37,13 @@ import static sig.SignatureFormulaExtractor.SigExtractor;
  */
 public class MonitorGenerator {
 
-    private Path sigFile;
+    private File sigFile;
     private FormulaExtractor formulaExtractor;
 
     private StringBuilder sb = new StringBuilder();
 
     public MonitorGenerator(Path sigFilePath, Path formulaFilePath) {
-        this.sigFile = sigFilePath;
+        this.sigFile = sigFilePath.toFile();
         this.formulaExtractor = new FormulaExtractor(formulaFilePath);
 
         this.genMonitorLib();
@@ -56,7 +55,7 @@ public class MonitorGenerator {
 
         genPackage();
 
-//        genMonitorMain();
+        genMonitorMain();
 
         genPhysicalFile();
     }
@@ -66,6 +65,11 @@ public class MonitorGenerator {
         String monitorLibPath = "./test/rvm/PubTest.rvm";
 
         Utils.writeToFile(this.sb.toString(), monitorLibPath);
+    }
+
+    private void genMonitorMain() {
+        String monitorName = this.getMonitorClassPath();
+
     }
 
     private void genPackage() {
@@ -80,8 +84,17 @@ public class MonitorGenerator {
                 "import java.nio.file.StandardOpenOption;\n");
     }
 
-    public HashMap<String, int[]> getMethoArgsMappingFromSigFile() throws IOException {
-        return SigExtractor.extractEventsInfoFromSigFile(sigFile).getTableCol();
+
+    public String getMonitorClassPath() {
+        return this.formulaExtractor.getMonitorName();
+    }
+
+    public List<String> getMethodNameList() {
+        return this.formulaExtractor.getMonitoredEventList();
+    }
+
+    public HashMap<String, int[]> getMethoArgsMappingFromSigFile() {
+        return SigExtractor.extractMethoArgsMappingFromSigFile(sigFile);
     }
 
 }

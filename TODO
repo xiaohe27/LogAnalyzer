@@ -1,0 +1,8 @@
+
+2. test the time for reading all events (use a fake one for Monpoly)
+
+
+
+ try the little insert log.
+
+ try the huge log on the insert property, record the time.

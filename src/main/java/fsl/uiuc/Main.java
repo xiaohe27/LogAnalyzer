@@ -1,32 +1,27 @@
 package fsl.uiuc;
 
-import gen.InvokerGenerator;
-import org.apache.commons.io.FileUtils;
-import sig.SignatureFormulaExtractor;
-import util.Utils;
+import analysis.LogMonitor;
+import gen.MonitorGenerator;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 public class Main {
-    public static boolean IsMonitoringLivenessProperty;
-    public static Path genLogReaderPath;
-    private static ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-    private static String OutPutFilePath = "./CustomizedLogReader/rvm/LogReader.java";
+    private static String outputPathStr = "./test-out/violation.txt";
 
-    public static String getContentFromResource(String resourceName) throws IOException {
-        BufferedReader br = new BufferedReader(new InputStreamReader(classLoader.getResourceAsStream(resourceName)));
-        String line = null;
-        StringBuilder sb = new StringBuilder(128);
-        while ((line = br.readLine()) != null) {
-            sb.append(line + "\n");
-        }
-        br.close();
-        return sb.toString();
-    }
+    public static Path outputPath = Paths.get(outputPathStr);
+
+    private static boolean eagerEval;
+
+    /**
+     * These are the event names.
+     * Can gen them via analyzing all the events in sig file.
+     */
+
 
     /**
      * Given the path to signature file, formula file and log file, checks whether the properties stated in
@@ -38,55 +33,56 @@ public class Main {
      * @throws IllegalAccessException
      * @throws InvocationTargetException
      */
-    public static void main(String[] args) throws IOException {
-        genLogReaderPath = initOutputFile();
 
-        if (args.length > 1 && args[1].equals("-liveness")) {
-            IsMonitoringLivenessProperty = true;
+    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
+
+        if (args.length > 3 || args.length < 2) {
+            System.err.println("Three args should be provided in this order: <path to signature file>" +
+                    " <path to formula file> <path to log file> \nOr omit the path to log file,"
+                    + " in which case the contents of log file will be read from the System.in");
         }
+
+        initOutputFile();
+
         Path path2SigFile = Paths.get(args[0]);
-        String tmpFolder = "./CodeModel_tmp";
-        InvokerGenerator invokerGenerator = new InvokerGenerator(tmpFolder);
-        SignatureFormulaExtractor.EventsInfo eventsInfo = SignatureFormulaExtractor.SigExtractor.
-                extractEventsInfoFromSigFile(path2SigFile);
 
-        String runtimeMonitorName = "rvm." + path2SigFile.toFile().getName().replaceAll(".rvm", "") + "RuntimeMonitor";
+        Path path2FormulaFile = Paths.get(args[1]);
 
-        invokerGenerator.generateCustomizedInvoker(runtimeMonitorName, eventsInfo);
+        //if there is no log file's path is given, then the log will be read from stdin
+        Path path2Log = null;
+        if (args.length == 3) {
+            path2Log = Paths.get(args[2]);
+        } else {
+        }
 
-        String imports = getContentFromResource("import.code");
-        String mainBody = (IsMonitoringLivenessProperty) ? getContentFromResource("main-outputGenInRVM.code")
-                : getContentFromResource("main.code");
 
-        Path tmpFolderPath = Paths.get(tmpFolder + "/LogReader.java");
-        String logReader = new String(Files.readAllBytes(tmpFolderPath));
+        MonitorGenerator mg = new MonitorGenerator(path2SigFile, path2FormulaFile);
 
-        FileUtils.deleteDirectory(tmpFolderPath.getParent().toFile());
+        LogMonitor lm = new LogMonitor(mg.getMethoArgsMappingFromSigFile(), mg.getMonitorClassPath());
+//        lm.monitor(path2Log); //default mapped byte buffer
+//        lm.monitor_bytebuffer_allocateDirect(path2Log);
+//        eagerEval = true;
 
-        Utils.MyUtils.writeToOutputFileUsingBW(imports);
-        Utils.MyUtils.writeToOutputFileUsingBW(logReader);
-        Utils.MyUtils.writeToOutputFileUsingBW(mainBody);
-        Utils.MyUtils.flushOutput();
+        if (path2Log.toString().endsWith(".tar.gz")) {
+//            System.out.println("Going to read a .tar.gz log file: " + path2Log.toString());
+            lm.monitor(path2Log, true);
+        } else {
+//            System.out.println("Going to read a normal log file");
+            lm.monitor(path2Log, false, eagerEval); //default mapped byte buffer
+        }
     }
 
-    private static Path initOutputFile() {
-        Path path = Paths.get(OutPutFilePath);
-        File file = path.toFile();
-        try {
-            if (file.exists()) {
-                new PrintWriter(file).close();
+    private static void initOutputFile() throws IOException {
+        File file = outputPath.toFile();
+        if (file.exists()) {
+            new PrintWriter(file).close();
+        } else {
+            if (outputPath.getParent().toFile().exists()) {
+                file.createNewFile();
             } else {
-                if (path.getParent().toFile().exists()) {
-                    file.createNewFile();
-                } else {
-                    path.getParent().toFile().mkdirs();
-                    file.createNewFile();
-                }
+                outputPath.getParent().toFile().mkdirs();
+                file.createNewFile();
             }
-        } catch (IOException ioe) {
-            System.err.println(ioe.getMessage());
-            System.exit(1);
         }
-        return path;
     }
 }

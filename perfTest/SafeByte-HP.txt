@@ -1,0 +1,22 @@
+default 4kb direct alloc
+
+Random access file
+It takes my log analyzer 3382 ms to count all the events in the log file
+
+FileInputStream
+It takes my log analyzer 3317 ms to count all the events in the log file after running 5 tests
+
+
+MappedByteBuffer
+It takes my log analyzer 3050 ms to count all the events in the log file after running 15 tests
+
+In the test with buf size 1 KB, the avg time used is 4366
+In the test with buf size 2 KB, the avg time used is 3208
+In the test with buf size 4 KB, the avg time used is 3208
+In the test with buf size 8 KB, the avg time used is 3191
+In the test with buf size 16 KB, the avg time used is 3615
+In the test with buf size 32 KB, the avg time used is 3475
+In the test with buf size 64 KB, the avg time used is 3427
+In the test with buf size 128 KB, the avg time used is 3917
+In the test with buf size 256 KB, the avg time used is 3994
+In the test with buf size 512 KB, the avg time used is 3944

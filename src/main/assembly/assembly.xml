@@ -22,7 +22,8 @@
         <fileSet>
             <directory>${project.build.scriptSourceDirectory}</directory>
             <outputDirectory></outputDirectory>
-            <includes>             
+            <includes>
+                <include>*.sh</include>
             </includes>
         </fileSet>
         <!--
@@ -31,7 +32,7 @@
         -->
         <fileSet>
             <directory>${project.build.directory}</directory>
-            <outputDirectory>lib</outputDirectory>
+            <outputDirectory></outputDirectory>
             <includes>
                 <include>*.jar</include>
             </includes>

@@ -1,0 +1,24 @@
+settings: mappedbytebuffer, default buf size, 300M log
+
+===========================
+clear the disk cache
+First time:
+@1277857421 insert(ARealUserInTheDB,MYDB,104,73414889)
+It took my log analyzer 4227 ms to count all the log entries in the log file in the format of plain txt
+
+After that:
+2627 2602 2569...
+
+
++++++++++++++++++++++++
+Using lazy evaluation:
+No disk cache:
+@1277857421 insert(ARealUserInTheDB,MYDB,104,73414889)
+It took my log analyzer 4877 ms to count all the log entries in the log file in the format of plain txt
+
+After that:
+3401 3393 3328 3330
+
+*******
+Eager eval is about 30% faster than lazy eval for insert events (which occurs most frequently in the log file).
+For 
