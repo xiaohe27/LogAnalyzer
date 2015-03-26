@@ -1,7 +1,7 @@
 package fsl.uiuc;
 
-import analysis.LogMonitor;
-import gen.MonitorGenerator;
+import log.LogEntryExtractor_CSV;
+import log.LogExtractor;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,13 +9,47 @@ import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.HashSet;
 
 public class Main {
-    private static String outputPathStr = "./test-out/violation.txt";
+    private static HashSet<String> monitoredEventSet = initMonitoredEventsSet();
+    public static Path outputPath = Paths.get("./test-out/violation.txt");
+    public static int maxNumOfParams = 1;
+    private static HashMap<String, int[]> methodInfo = initMethodInfo();
 
-    public static Path outputPath = Paths.get(outputPathStr);
+    private static HashSet<String> initMonitoredEventsSet() {
+        HashSet<String> setOfEvents = new HashSet<String>();
+        setOfEvents.add("approve");
+        setOfEvents.add("publish");
+        return setOfEvents;
+    }
 
-    private static boolean eagerEval;
+    public static boolean isMonitoredEvent(String event) {
+        return monitoredEventSet.contains(event);
+    }
+
+    private static HashMap<String, int[]> initMethodInfo() {
+        HashMap<String, int[]> methodInfoTable = new HashMap<String, int[]>();
+        methodInfoTable.put("approve", new int[] { 0 });
+        methodInfoTable.put("publish", new int[] { 0 });
+        return methodInfoTable;
+    }
+
+
+    private static void initOutputFile() throws IOException {
+        File file = outputPath.toFile();
+        if (file.exists()) {
+            new PrintWriter(file).close();
+        } else {
+            if (outputPath.getParent().toFile().exists()) {
+                file.createNewFile();
+            } else {
+                outputPath.getParent().toFile().mkdirs();
+                file.createNewFile();
+            }
+        }
+    }
 
     /**
      * These are the event names.
@@ -34,55 +68,15 @@ public class Main {
      * @throws InvocationTargetException
      */
 
-    public static void main(String[] args) throws ClassNotFoundException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, IOException {
-
-        if (args.length > 3 || args.length < 2) {
-            System.err.println("Three args should be provided in this order: <path to signature file>" +
-                    " <path to formula file> <path to log file> \nOr omit the path to log file,"
-                    + " in which case the contents of log file will be read from the System.in");
-        }
+    public static void main(String[] args) throws IOException, NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+        assert args.length == 1 && args[0].endsWith(".log") :
+                "The only argument needed is the log file (with .log suffix).";
 
         initOutputFile();
 
-        Path path2SigFile = Paths.get(args[0]);
-
-        Path path2FormulaFile = Paths.get(args[1]);
-
-        //if there is no log file's path is given, then the log will be read from stdin
-        Path path2Log = null;
-        if (args.length == 3) {
-            path2Log = Paths.get(args[2]);
-        } else {
-        }
-
-
-        MonitorGenerator mg = new MonitorGenerator(path2SigFile, path2FormulaFile);
-
-        LogMonitor lm = new LogMonitor(mg.getMethoArgsMappingFromSigFile(), mg.getMonitorClassPath());
-//        lm.monitor(path2Log); //default mapped byte buffer
-//        lm.monitor_bytebuffer_allocateDirect(path2Log);
-//        eagerEval = true;
-
-        if (path2Log.toString().endsWith(".tar.gz")) {
-//            System.out.println("Going to read a .tar.gz log file: " + path2Log.toString());
-            lm.monitor(path2Log, true);
-        } else {
-//            System.out.println("Going to read a normal log file");
-            lm.monitor(path2Log, false, eagerEval); //default mapped byte buffer
-        }
+        Path path2Log = path2Log = Paths.get(args[0]);
+        LogExtractor lee = new LogEntryExtractor_CSV(methodInfo, path2Log, 6);
+        lee.startReadingEventsByteByByte();
     }
 
-    private static void initOutputFile() throws IOException {
-        File file = outputPath.toFile();
-        if (file.exists()) {
-            new PrintWriter(file).close();
-        } else {
-            if (outputPath.getParent().toFile().exists()) {
-                file.createNewFile();
-            } else {
-                outputPath.getParent().toFile().mkdirs();
-                file.createNewFile();
-            }
-        }
-    }
 }

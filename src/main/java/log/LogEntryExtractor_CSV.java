@@ -24,7 +24,7 @@ import static java.nio.file.Files.newBufferedWriter;
 /**
  * Serves as lexer and parser for log file.
  */
-class LogEntryExtractor_CSV implements LogExtractor {
+public class LogEntryExtractor_CSV implements LogExtractor {
     /**
      * Use a byte to denote different tokens in the log.
      * -1: init state, or NULL.
