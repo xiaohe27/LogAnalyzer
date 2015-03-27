@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>LogAnalysis</groupId>
-    <artifactId>LogAnalyzer</artifactId>
+    <artifactId>LogReader</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <build>
@@ -58,7 +58,7 @@
                                 <format>tar.gz</format>
                                 <format>zip</format>
                             </formats>
-                            <finalName>LogAnalyzer</finalName>
+                            <finalName>LogReader</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
                             <outputDirectory>${project.build.directory}/release</outputDirectory>
                         </configuration>

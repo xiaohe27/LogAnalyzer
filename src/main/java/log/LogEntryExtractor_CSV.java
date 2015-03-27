@@ -90,6 +90,8 @@ public class LogEntryExtractor_CSV implements LogExtractor {
 
     private ArrayList<Object[]> violationsInCurLogEntry = new ArrayList<>();
 
+    private boolean TERMINATE;
+    /**
     /**
      * Create an obj for log entry extractor.
      *
@@ -126,18 +128,26 @@ public class LogEntryExtractor_CSV implements LogExtractor {
 
     }
 
-    private void rmWhiteSpace() throws IOException {
+    private void rmWhiteSpaceAndComma(boolean mustSucceed) throws IOException {
         out:
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
-                if (!isWhiteSpace(b)) {
+                if (!isWhiteSpace(b) && b != comma) {
                     this.posInArr--;
                     break out;
                 }
             }
 
-            this.refill("Unexpected end of file while removing the white spaces");
+            if (mustSucceed)
+                this.refill("Unexpected end of file while removing the white spaces");
+            else {
+                try {
+                    this.refill("");
+                } catch (Exception e) {
+
+                }
+            }
         }
     }
 
@@ -162,12 +172,17 @@ public class LogEntryExtractor_CSV implements LogExtractor {
                     return;
                 }
             }
-            this.refill("Unexpected end of file while removing the current line.");
+
+            try {
+                this.refill("");
+            } catch (Exception e) {
+            }
+
         }
     }
 
     private String getString() throws IOException {
-        this.rmWhiteSpace();
+        this.rmWhiteSpaceAndComma(true);
         StringBuilder sb = new StringBuilder();
         while (true) {
             while (this.posInArr < this.BufSize) {
@@ -175,10 +190,30 @@ public class LogEntryExtractor_CSV implements LogExtractor {
                 if (b == comma || isWhiteSpace(b)) {
                     return sb.toString();
                 } else {
-                    sb.append(b);
+                    sb.append((char) b);
                 }
             }
             this.refill("Unexpected end of file while reading a string.");
+        }
+    }
+
+    private String getLastArg() throws IOException {
+        this.rmWhiteSpaceAndComma(true);
+        StringBuilder sb = new StringBuilder();
+        while (true) {
+            while (this.posInArr < this.BufSize) {
+                byte b = byteArr[this.posInArr++];
+                if (isWhiteSpace(b) || b == comma) {
+                    return sb.toString();
+                } else {
+                    sb.append((char) b);
+                }
+            }
+            try {
+                this.refill("");
+            } catch (Exception e) {
+                return sb.toString();
+            }
         }
     }
 
@@ -253,7 +288,7 @@ public class LogEntryExtractor_CSV implements LogExtractor {
                     if (b == delim)
                         return result;
 
-                    this.rmWhiteSpace();
+                    this.rmWhiteSpaceAndComma(true);
                     if (this.byteArr[this.posInArr++] == delim) {
                         return result;
                     } else {
@@ -310,6 +345,8 @@ public class LogEntryExtractor_CSV implements LogExtractor {
                         handleViolationsInLogEntry();
                     }
                     numOfLogEntries++;
+                    if (TERMINATE)
+                        break;
                 }
 
                 this.posInArr = 0;
@@ -317,6 +354,7 @@ public class LogEntryExtractor_CSV implements LogExtractor {
                 this.oldByteArr = this.byteArr;
                 this.byteArr = tmp;
 
+                System.out.println("Going to add new internal buf");
             }
         }
 
@@ -345,6 +383,7 @@ public class LogEntryExtractor_CSV implements LogExtractor {
      * @throws IOException
      */
     private void readLine() throws IOException {
+        System.out.println("Read line");
         EventName = this.getString();
 
         //finally we can have two version of the log reader.
@@ -355,18 +394,19 @@ public class LogEntryExtractor_CSV implements LogExtractor {
 //        }
 
         if (LogReader.isMonitoredEvent(EventName)) {
+            System.out.println("Event " + EventName + " is monitored!");
             String[] argsOfMeth = new String[this.eventArgsMap.get(EventName)];
-            for (int i = 0; i < argsOfMeth.length; i++) {
+            for (int i = 0; i < argsOfMeth.length - 1; i++) {
+            //the last arg maybe at last index, which needs to be processed separately
                 String curArg = this.getString();
-                if (curArg.equals("")) {
-                    i--;
-                } else {
-                    argsOfMeth[i] = curArg;
-                }
+                argsOfMeth[i] = curArg;
             }
+            argsOfMeth[argsOfMeth.length - 1] = this.getLastArg();
+            this.skipLine();
 
             MonitorMethodsInvoker.invoke(EventName, argsOfMeth, this.violationsInCurLogEntry);
         } else {
+            System.out.println(EventName + " is not monitored, skip it!");
             this.skipLine();
             return;
         }
@@ -474,6 +514,7 @@ public class LogEntryExtractor_CSV implements LogExtractor {
                         System.gc();
 
                     } else {
+                        TERMINATE = true;
                         throw new IOException(errInfo);
                     }
                 }

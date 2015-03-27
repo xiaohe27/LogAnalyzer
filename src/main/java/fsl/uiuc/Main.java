@@ -2,7 +2,6 @@ package fsl.uiuc;
 
 import log.LogEntryExtractor_CSV;
 import log.LogExtractor;
-import scala.Int;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,5 +1,5 @@
 <assembly>
-    <id>logAnalyzer</id>
+    <id>LogReader</id>
 
     <!-- Adds the dependencies of our application to the lib directory -->
     <dependencySets>
@@ -15,6 +15,26 @@
     </dependencySets>
 
     <fileSets>
+        <fileSet>
+            <directory>.</directory>
+            <outputDirectory>/</outputDirectory>
+
+            <excludes>
+                <exclude>%regex[.*\.bak]</exclude>
+                <exclude>%regex[.*~]</exclude>
+            </excludes>
+
+            <includes>
+                <include>LICENSE*</include>
+                <include>README*</include>
+                <include>INSTALL*</include>
+                <include>config/**</include>
+                <include>examples/**</include>
+            </includes>
+
+        </fileSet>
+
+
         <!--
             Adds startup scripts to the root directory of zip package. The startup
             scripts are copied from the src/main/scripts directory.
@@ -23,8 +43,11 @@
             <directory>${project.build.scriptSourceDirectory}</directory>
             <outputDirectory></outputDirectory>
             <includes>
-                <include>*.sh</include>
             </includes>
+			<excludes>
+                <exclude>%regex[.*\.bak]</exclude>
+                <exclude>%regex[.*~]</exclude>
+            </excludes>
         </fileSet>
         <!--
             Adds the jar file of our example application to the root directory
@@ -32,7 +55,7 @@
         -->
         <fileSet>
             <directory>${project.build.directory}</directory>
-            <outputDirectory></outputDirectory>
+            <outputDirectory>lib</outputDirectory>
             <includes>
                 <include>*.jar</include>
             </includes>

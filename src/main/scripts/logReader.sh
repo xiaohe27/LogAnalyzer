@@ -1,0 +1,1 @@
+java -jar "lib/LogReader-1.0-SNAPSHOT.jar" $1
