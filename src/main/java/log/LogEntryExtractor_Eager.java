@@ -1,8 +1,4 @@
 package log;
-
-import reg.RegHelper;
-import sig.SigExtractor;
-
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.BufferUnderflowException;
@@ -435,20 +431,6 @@ public class LogEntryExtractor_Eager implements LogExtractor {
                     break;
             }
         }
-//        this.printEvent();
-
-//        if (EventName.equals(SigExtractor.INSERT)) {
-//            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
-//                this.printEvent();
-//        }
-
-        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
-            //script_md5 (MY_Script,myMD5)
-
-            if (argsInTuple[0].equals("MY_Script") && !argsInTuple[1].equals("ItsMD5"))
-                this.printEvent();
-        }
-
     }
 
     private void printEvent() {

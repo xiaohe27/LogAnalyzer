@@ -1,7 +1,5 @@
 package log;
-
-import reg.RegHelper;
-import sig.SigExtractor;
+import rvm.LogReader;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -40,8 +38,8 @@ public class LogEntryExtractor_ByteBuffer_AllocateDirect {
 
     private String TimeStamp; //we can add the @ symbol when it is ready to be printed
     private String EventName;
-    private int[] paramStartPosArr = new int[SigExtractor.maxNumOfParams];
-    private int[] paramLenArr = new int[SigExtractor.maxNumOfParams];
+    private int[] paramStartPosArr = new int[LogReader.maxNumOfParams];
+    private int[] paramLenArr = new int[LogReader.maxNumOfParams];
     private int curParamIndex; // the current index of param in the event
     private HashMap<String, Object[]> TableData;
     /**

@@ -2,8 +2,6 @@ package log;
 
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import reg.RegHelper;
-import sig.SigExtractor;
 import util.UnZipFile;
 
 import java.io.IOException;
@@ -379,10 +377,6 @@ public class LogEntryExtractor_FromArchive implements LogExtractor {
             }
         }
 //        this.printEvent();
-        if (EventName.equals(SigExtractor.INSERT)) {
-            if (argsInTuple[1].equals("MYDB") && !argsInTuple[0].equals("notARealUserInTheDB"))
-                this.printEvent();
-        }
     }
 
     private void printEvent() {
