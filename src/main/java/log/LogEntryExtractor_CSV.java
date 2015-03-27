@@ -66,10 +66,6 @@ public class LogEntryExtractor_CSV implements LogExtractor {
 
     private long numOfLogEntries = 0;
 
-    /**
-     * Given a table name, return the list of types that represent the types for each column (table schema).
-     */
-    private HashMap<String, int[]> TableCol;
     private String logFilePath;
     //    indirect optimal 8kb
 //    private static final int DirectBufSizeOptimal4MyHP = 64 * 1024;
@@ -81,14 +77,9 @@ public class LogEntryExtractor_CSV implements LogExtractor {
     private int posInArr;
     private byte[] oldByteArr;
     //if the ending index is less than the starting one, then the starting index comes from the old byte array
-
-    private int EventNameStartIndex;
-
     private int paramStartIndex;
 
-    private int[] typesInTuple;
-    private boolean isAMonitoredEvent;
-
+    private HashMap<String, Integer> eventArgsMap;
     private long numOfReads;
     private long lastReadSize;
     private long curNumOfReads;
@@ -102,14 +93,14 @@ public class LogEntryExtractor_CSV implements LogExtractor {
     /**
      * Create an obj for log entry extractor.
      *
-     * @param tableCol
+     * @param eventArgsMap
      * @param logFile
      * @param powOf2TimesKB Multiple of 1024.
      * @throws IOException
      */
-    public LogEntryExtractor_CSV(HashMap<String, int[]> tableCol, Path logFile, int powOf2TimesKB)
+    public LogEntryExtractor_CSV(HashMap<String, Integer> eventArgsMap, Path logFile, int powOf2TimesKB)
             throws IOException {
-        this.TableCol = tableCol;
+        this.eventArgsMap = eventArgsMap;
         this.logFilePath = logFile.toString();
         this.BufSize = (int) (Math.pow(2, powOf2TimesKB)) * 1024;
         this.byteArr = new byte[this.BufSize];
@@ -117,8 +108,8 @@ public class LogEntryExtractor_CSV implements LogExtractor {
     }
 
 
-    public LogEntryExtractor_CSV(HashMap<String, int[]> tableCol, Path logFile) throws IOException {
-        this(tableCol, logFile, 5);
+    public LogEntryExtractor_CSV(HashMap<String, Integer> eventArgsMap, Path logFile) throws IOException {
+        this(eventArgsMap, logFile, 5);
     }
 
     private boolean isWhiteSpace(byte b) {
@@ -133,109 +124,6 @@ public class LogEntryExtractor_CSV implements LogExtractor {
 
         return b > 96 && b < 123 || b == underscore || b == rightBracket || b == exclamation;
 
-    }
-
-    private String getEventName() throws IOException {
-        int len = 1;
-
-        while (true) {
-            while (this.posInArr < this.BufSize) {
-                byte b = byteArr[this.posInArr++];
-                if (isStringChar(b)) {
-                    len++;
-                } else {
-                    if (b == lpa) {
-                        this.posInArr--;
-                    }
-
-                    return this.getStringFromBytes(this.EventNameStartIndex, len);
-                }
-            }
-
-            this.refill("Unexpected end of file while parsing an event name");
-        }
-
-    }
-
-    private String getStringFromBuf(byte delim) throws IOException {
-        int len = 0;
-        String output;
-        while (true) {
-            if (this.posInArr < this.BufSize && len == 0 && byteArr[this.posInArr] == doubleQuote) {
-                this.posInArr++;
-                return this.getQuotedStringFromBuf(delim);
-            }
-
-            while (this.posInArr < this.BufSize) {
-                byte b = byteArr[this.posInArr++];
-                if (isStringChar(b)) {
-                    len++;
-                } else {
-                    output = this.getStringFromBytes(this.paramStartIndex, len);
-                    if (b == delim)
-                        return output;
-
-                    this.rmWhiteSpace();
-                    if (this.byteArr[this.posInArr++] == delim) {
-                        return output;
-                    } else {
-                        throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr - 1]);
-                    }
-                }
-            }
-
-            this.refill("Unexpected end of file while parsing a string");
-        }
-    }
-
-    /**
-     * Only invoked by getStringFromBuf, and used to extract tuple's field of type String.
-     *
-     * @param delim
-     * @return
-     * @throws IOException
-     */
-    private String getQuotedStringFromBuf(byte delim) throws IOException {
-        int len = 0;
-        String output;
-
-        while (true) {
-            while (this.posInArr < this.BufSize) {
-                byte b = byteArr[this.posInArr++];
-                if (b != doubleQuote) {
-                    len++;
-                } else {
-                    output = this.getStringFromBytes(this.paramStartIndex, len);
-
-                    this.rmWhiteSpace();
-                    if (this.byteArr[this.posInArr++] == delim) {
-                        return output;
-                    } else {
-                        throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr - 1]);
-                    }
-
-                }
-            }
-
-            this.refill("Unexpected end of file while parsing a quoted string");
-        }
-    }
-
-    private String getQuotedStringFromBuf(int startIndex) throws IOException {
-        int len = 0;
-
-        while (true) {
-            while (this.posInArr < this.BufSize) {
-                byte b = byteArr[this.posInArr++];
-                if (b != doubleQuote) {
-                    len++;
-                } else {
-                    return this.getStringFromBytes(startIndex, len);
-                }
-            }
-
-            this.refill("Unexpected end of file while reading a quoted string");
-        }
     }
 
     private void rmWhiteSpace() throws IOException {
@@ -253,6 +141,7 @@ public class LogEntryExtractor_CSV implements LogExtractor {
         }
     }
 
+
     private void skipComment() throws IOException {
         while (true) {
             while (this.posInArr < this.BufSize) {
@@ -261,74 +150,35 @@ public class LogEntryExtractor_CSV implements LogExtractor {
                     return;
                 }
             }
-
             this.refill("Unexpected end of file while removing the comments");
         }
     }
 
-    private void getTSFromBuf() throws IOException {
-        int TimeStampStartIndex = this.posInArr;
-
-        int TimeStampLen = 0;
+    private void skipLine() throws IOException {
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
-                if (b > 47 && b < 58 || b == dot) {
-                    TimeStampLen++;
-                } else {
-                    String out;
-
-                    if (this.posInArr > TimeStampStartIndex) {
-                        out = new String(this.byteArr, TimeStampStartIndex,
-                                TimeStampLen, this.asciiCharSet);
-                    } else if (this.posInArr == this.EventNameStartIndex) {
-                        throw new IOException("Empty Time Stamp!");
-                    } else {
-                        int sizInOldBuf = this.BufSize - TimeStampStartIndex;
-                        out = new String(this.oldByteArr, TimeStampStartIndex,
-                                sizInOldBuf, this.asciiCharSet) +
-                                new String(this.byteArr, 0, TimeStampLen - sizInOldBuf, this.asciiCharSet);
-                    }
-
-                    TimeStamp = Math.round(Double.parseDouble(out));
-
+                if (b == newLine) {
                     return;
                 }
             }
-
-            this.refill("Unexpected end of file while parsing a time stamp");
+            this.refill("Unexpected end of file while removing the current line.");
         }
     }
 
-    //b > 47 && b < 58 then b is a digit char
-    private double getFloatingNumFromBuf(byte delim) throws IOException {
-        int len = 0;
-        String output;
-        if (this.byteArr[this.posInArr] == minus) {
-            this.posInArr++;
-            len++;
-        }
-
+    private String getString() throws IOException {
+        this.rmWhiteSpace();
+        StringBuilder sb = new StringBuilder();
         while (true) {
             while (this.posInArr < this.BufSize) {
                 byte b = byteArr[this.posInArr++];
-                if (b > 47 && b < 58 || b == dot) {
-                    len++;
+                if (b == comma || isWhiteSpace(b)) {
+                    return sb.toString();
                 } else {
-                    output = this.getStringFromBytes(this.paramStartIndex, len);
-                    if (b == delim)
-                        return Double.parseDouble(output);
-
-                    this.rmWhiteSpace();
-                    if (this.byteArr[this.posInArr++] == delim) {
-                        return Double.parseDouble(output);
-                    } else {
-                        throw new IOException("Unexpected delimiter " + (char) this.byteArr[this.posInArr - 1]);
-                    }
+                    sb.append(b);
                 }
             }
-
-            this.refill("Unexpected end of file while parsing a floating number");
+            this.refill("Unexpected end of file while reading a string.");
         }
     }
 
@@ -417,64 +267,6 @@ public class LogEntryExtractor_CSV implements LogExtractor {
 
     }
 
-    private void looseCheckingEventArgs() throws IOException {
-        boolean isCurFieldEmpty = true;
-        boolean canSeeComma = false;
-        boolean canAppend = true;
-
-
-        while (true) {
-            while (this.posInArr < this.BufSize) {
-                byte b = byteArr[this.posInArr++];
-                if (isStringChar(b)) {
-                    canSeeComma = false;
-                    if (isCurFieldEmpty) {
-                        isCurFieldEmpty = false;
-                        canAppend = true;
-                    } else {
-                        if (canAppend) {
-
-                        } else {
-                            throw new IOException("Syntax error found in the event " + this.EventName + "'s args");
-                        }
-                    }
-
-                } else if (b == comma) {
-                    if (isCurFieldEmpty) {
-                        throw new IOException("Should have something before comma in the event " + this.EventName + "'s args");
-                    }
-
-                    isCurFieldEmpty = true;
-                    canSeeComma = true;
-                    canAppend = true;
-                } else if (isWhiteSpace(b)) {
-                    canAppend = false;
-                } else if (b == rpa) {
-
-                    if (canSeeComma)
-                        throw new IOException("Empty between last comma and right bracket in event " + EventName + "'s args");
-
-                    else
-                        return;
-                } else if (b == doubleQuote) {
-                    if (isCurFieldEmpty) {
-                        this.getQuotedStringFromBuf(this.posInArr);
-                        isCurFieldEmpty = false;
-                        canAppend = false;
-                    } else {
-                        throw new IOException("Syntax error found in the event " + this.EventName + "'s args");
-                    }
-
-
-                } else {
-                    throw new IOException("Unknown char " + (char) b);
-                }
-            }
-
-            refill("Unexpected end of file");
-        }
-    }
-
     public void startReadingEventsByteByByte() throws IOException {
 
         RandomAccessFile aFile = new RandomAccessFile
@@ -508,83 +300,16 @@ public class LogEntryExtractor_CSV implements LogExtractor {
 
                 }
 
-
                 this.posInArr = 0;
+                //skip the header line
+                this.skipLine();
                 while (this.posInArr < this.BufSize) {
-                    byte b = this.byteArr[this.posInArr++];
-                    if (isWhiteSpace(b))
-                        continue;
-
-                    //change the order of different branches, cmp whether we can gain perf benefits by
-                    //considering the probabilities.
-                    if (b == lpa) { // read the event args
-                        //ensure it is valid to have an event args followed by prev thing
-                        if (this.prevToken != EventName_TOKEN &&
-                                this.prevToken != EventArgs_TOKEN) {
-                            throw new IOException("Event args should follow an event name or event args");
-                        }
-                        this.prevToken = EventArgs_TOKEN;
-
-
-                        if (this.isAMonitoredEvent) {//do the most rigorous type checking to the event args
-                            this.rmWhiteSpace();
-
-                            this.readEvent();
-                        } else {//event is not monitored, just ensure no syntax error
-                            this.looseCheckingEventArgs();
-                        }
-                    } else if (isStringChar(b) || b == doubleQuote) { //read an event
-                        if (this.prevToken == NULL_TOKEN) {
-                            throw new IOException("Event name should follow a time stamp or event args or event name");
-                        }
-
-                        this.prevToken = EventName_TOKEN;
-
-                        if (b == doubleQuote) {
-                            this.EventNameStartIndex = this.posInArr;
-                            this.EventName = this.getQuotedStringFromBuf(this.EventNameStartIndex);
-
-                        } else {
-                            this.EventNameStartIndex = this.posInArr - 1;
-                            this.EventName = this.getEventName();
-
-                        }
-
-                        this.typesInTuple = TableCol.get(EventName);
-                        if (this.typesInTuple == null) {
-                            throw new IOException("Unknown event " + EventName);
-                        }
-
-                        if (LogReader.isMonitoredEvent(EventName)) {
-                            this.isAMonitoredEvent = true;
-//                        the boolean list contains info about how to skip certain fields when output the violations
-//                            this.unPrintedFields = EventSigExtractor.skippedFieldsMap.get(EventName);
-                        } else {
-                            this.isAMonitoredEvent = false;
-                        }
-
-                    } else if (b == at) {
-
-                        //handle all the violations found in the previous log entry!
-                        if (this.violationsInCurLogEntry.size() > 0) {
-                            handleViolationsInLogEntry();
-                        }
-
-                        if (this.prevToken != EventArgs_TOKEN && this.prevToken != NULL_TOKEN) {
-                            throw new IOException("Time stamp should follow event args or null (if it is the first token in the file)");
-                        }
-                        this.prevToken = TS_TOKEN;
-
-                        this.rmWhiteSpace();
-                        this.getTSFromBuf();
-                        numOfLogEntries++;
-                    } else if (b == hash) {
-                        this.skipComment();
-                    } else if (b == 0) {
-                        break;
-                    } else {
-                        throw new IOException("Unexpected char'" + (char) b + "'");
+                    this.readLine();    //read one line
+                    //handle all the violations found in the previous log entry!
+                    if (this.violationsInCurLogEntry.size() > 0) {
+                        handleViolationsInLogEntry();
                     }
+                    numOfLogEntries++;
                 }
 
                 this.posInArr = 0;
@@ -611,6 +336,7 @@ public class LogEntryExtractor_CSV implements LogExtractor {
         Utils.MyUtils.flushOutput();
     }
 
+
     /**
      * We may decide whether to invoke an event method or not;
      * Only parse the event arg if we know we will invoke the method;
@@ -618,79 +344,32 @@ public class LogEntryExtractor_CSV implements LogExtractor {
      *
      * @throws IOException
      */
-    private void readEvent() throws IOException {
-        Object[] tupleData = new Object[typesInTuple.length];
-        int i = 0;
-        for (; i < typesInTuple.length - 1; i++) {
-            this.paramStartIndex = this.posInArr;
+    private void readLine() throws IOException {
+        EventName = this.getString();
 
-            switch (typesInTuple[i]) {
-                case RegHelper.INT_TYPE:
-                    tupleData[i] = this.getIntFromBuf(comma);
-                    break;
+        //finally we can have two version of the log reader.
+        //if the strict option is on, then use this version, otherwise, there will be
+        //no such check like the one at below...
+//        if (!this.eventArgsMap.keySet().contains(EventName) && LogReader.strictLogReader) {
+//            throw new IOException("Unknown event " + EventName);
+//        }
 
-                case RegHelper.FLOAT_TYPE:
-                    tupleData[i] = this.getFloatingNumFromBuf(comma);
-                    break;
-
-                case RegHelper.STRING_TYPE:
-                    tupleData[i] = this.getStringFromBuf(comma);
-                    break;
+        if (LogReader.isMonitoredEvent(EventName)) {
+            String[] argsOfMeth = new String[this.eventArgsMap.get(EventName)];
+            for (int i = 0; i < argsOfMeth.length; i++) {
+                String curArg = this.getString();
+                if (curArg.equals("")) {
+                    i--;
+                } else {
+                    argsOfMeth[i] = curArg;
+                }
             }
-            this.rmWhiteSpace();
+
+            MonitorMethodsInvoker.invoke(EventName, argsOfMeth, this.violationsInCurLogEntry);
+        } else {
+            this.skipLine();
+            return;
         }
-
-        if (typesInTuple.length > 0) {
-            //the last field should be followed by a right parenthesis
-//            this.curParamIndex = typesInTuple.length - 1;
-            this.paramStartIndex = this.posInArr;
-
-            switch (typesInTuple[i]) {
-                case RegHelper.INT_TYPE:
-                    tupleData[i] = this.getIntFromBuf(rpa);
-                    break;
-
-                case RegHelper.FLOAT_TYPE:
-                    tupleData[i] = this.getFloatingNumFromBuf(rpa);
-                    break;
-
-                case RegHelper.STRING_TYPE:
-                    tupleData[i] = this.getStringFromBuf(rpa);
-                    break;
-            }
-        }
-
-
-        MonitorMethodsInvoker.invoke(EventName, tupleData, this.violationsInCurLogEntry);
-        // the customized method invoker will call the method as well as update the violation list
-
-
-//        this.EventNameMethodMap.get(EventName).invoke(null, tupleData);
-//
-
-
-//        InsertRuntimeMonitor.insertEvent((String) tupleData[0], (String) tupleData[1], (String) tupleData[2], (String) tupleData[3]);
-
-
-//        this.printEvent(tupleData);
-
-//        if (EventName.equals(SigExtractor.INSERT)) {
-//            if (tupleData[1].equals("MYDB") && !tupleData[0].equals("notARealUserInTheDB"))
-//                this.printEvent(tupleData);
-//        }
-
-//        if (EventName.equals(SigExtractor.INSERT)) {
-//            if (tupleData[1].equals("db2") && !tupleData[0].equals("script1")) {
-//                this.violationsInCurLogEntry.add(tupleData);
-//            }
-//        }
-
-
-//        if (EventName.equals(SigExtractor.SCRIPT_MD5)) {
-//            //script_md5 (MY_Script,myMD5)
-//            if (tupleData[0].equals("MY_Script") && !tupleData[1].equals("ItsMD5"))
-//                this.printEvent(tupleData);
-//        }
     }
 
 
@@ -766,30 +445,6 @@ public class LogEntryExtractor_CSV implements LogExtractor {
         Utils.MyUtils.writeToOutputFileUsingBW(sb.toString());
 
         this.violationsInCurLogEntry.clear();
-    }
-
-
-    private String getStringFromBytes(int start, int len) throws IOException {
-        String output;
-
-        if (this.posInArr > start) {
-            output = new String(this.byteArr, start,
-                    len, this.asciiCharSet);
-        } else if (this.posInArr == this.EventNameStartIndex) {
-            throw new IOException("Empty String!");
-        } else {//start index is a pos in the old byte array.
-            int remainingSizInOldBuf = this.oldByteArr.length - start;
-//            System.out.println("Remaining siz of old buf is "+remainingSizInOldBuf+";\nstart: "
-//            +start+"\nlen is "+len);
-            if (remainingSizInOldBuf >= len)
-                output = new String(this.oldByteArr, start, len, this.asciiCharSet);
-            else
-                output = new String(this.oldByteArr, start,
-                        remainingSizInOldBuf, this.asciiCharSet) +
-                        new String(this.byteArr, 0, len - remainingSizInOldBuf, this.asciiCharSet);
-        }
-
-        return output;
     }
 
     private void refill(String errInfo) throws IOException {

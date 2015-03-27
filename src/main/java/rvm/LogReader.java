@@ -9,7 +9,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class LogReader {
-
+    //a strict log reader will reject a log if it contains an event with unknown name (not occur
+    // in the specification file)
+    public static boolean strictLogReader;
     private static HashSet<String> monitoredEventSet = LogReader.initMonitoredEventsSet();
     public static Path outputPath = Paths.get("./test-out/violation.txt");
     public static int maxNumOfParams = 1;
