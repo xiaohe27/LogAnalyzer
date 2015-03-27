@@ -2,6 +2,7 @@ package fsl.uiuc;
 
 import log.LogEntryExtractor_CSV;
 import log.LogExtractor;
+import scala.Int;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,7 +17,7 @@ public class Main {
     private static HashSet<String> monitoredEventSet = initMonitoredEventsSet();
     public static Path outputPath = Paths.get("./test-out/violation.txt");
     public static int maxNumOfParams = 1;
-    private static HashMap<String, int[]> methodInfo = initMethodInfo();
+    private static HashMap<String, Integer> methodInfo = initMethodInfo();
 
     private static HashSet<String> initMonitoredEventsSet() {
         HashSet<String> setOfEvents = new HashSet<String>();
@@ -29,10 +30,10 @@ public class Main {
         return monitoredEventSet.contains(event);
     }
 
-    private static HashMap<String, int[]> initMethodInfo() {
-        HashMap<String, int[]> methodInfoTable = new HashMap<String, int[]>();
-        methodInfoTable.put("approve", new int[] { 0 });
-        methodInfoTable.put("publish", new int[] { 0 });
+    private static HashMap<String, Integer> initMethodInfo() {
+        HashMap<String, Integer> methodInfoTable = new HashMap<>();
+        methodInfoTable.put("approve", 1);
+        methodInfoTable.put("publish", 1);
         return methodInfoTable;
     }
 
